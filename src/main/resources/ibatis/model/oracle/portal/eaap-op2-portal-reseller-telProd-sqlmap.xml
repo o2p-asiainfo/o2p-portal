@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="eaap-op2-portal-reseller-telProd">
+	
+	<select id="queryAttrValueList" parameterClass="com.ailk.eaap.op2.bo.Product" resultClass="com.ailk.eaap.op2.bo.AttrValue">
+		SELECT C.ATTR_VALUE_ID AS attrValueId , C.ATTR_VALUE_NAME AS attrValueName , C.ATTR_VALUE AS attrValue 
+		FROM PRODUCT_ATTR A , PROD_ATTR_VALUE B , ATTR_VALUE C 
+		WHERE A.PRODUCT_ATTR_ID = B.PRODUCT_ATTR_ID AND B.ATTR_VALUE_ID = C.ATTR_VALUE_ID AND A.PRODUCT_ID = #productId#
+
+		AND A.tenant_id=#tenantId#
+		AND B.tenant_id=#tenantId#
+		AND C.tenant_id=#tenantId#
+	</select>
+	 	
+	<select id="queryProduct" parameterClass="com.ailk.eaap.op2.bo.Product" resultClass="com.ailk.eaap.op2.bo.Product">
+		SELECT PRODUCT_ID as productId ,PRODUCT_NBR as productNbr ,PRODUCT_NAME as productName , PRODUCT_DESC  as productDesc ,PROD_FUNC_TYPE as prodFuncType ,PRODUCT_TYPE as productType ,VALUE_ADDED_FLAG as valueAddedFlag ,EFF_DATE as effDate ,EXP_DATE as expDate   
+		FROM PRODUCT 
+		WHERE PRODUCT_ID = #productId#
+		and tenant_id=#tenantId#
+	</select>
+	
+	<select id="selectProdOfferCount" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+		SELECT COUNT(1) FROM PROD_OFFER P,PROD_OFFER_DISTRIBUTOR A WHERE P.PROD_OFFER_ID = A.PROD_OFFER_ID AND P.STATUS_CD = '1000'  
+		<dynamic>
+		 	<isNotNull prepend="AND" property="prodOfferStatusCd"> STATUS_CD = #prodOfferStatusCd# </isNotNull>
+		 	<isNotNull prepend="AND" property="prodOfferName"> PROD_OFFER_NAME LIKE '%'||#prodOfferName#||'%' </isNotNull>
+		 	<isNotNull prepend="AND" property="orgCode"> A.DISTRIBUTOR_ID = #orgCode# </isNotNull>
+		        <isNotNull prepend="AND" property="tenantId"> P.tenant_id=#tenantId#</isNotNull>
+		        <isNotNull prepend="AND" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		</dynamic>
+ 	</select>
+ 	
+ 	 <select id="selectProdOfferList" parameterClass="java.util.HashMap" resultClass="com.ailk.eaap.op2.bo.ProdOffer">	
+		 SELECT * FROM (SELECT ROW_NUMBER() OVER( ORDER BY prodOfferId DESC ) rn , newtab.* FROM (
+		    SELECT P.PROD_OFFER_ID as prodOfferId ,P.OFFER_NBR as offerNbr ,P.PROD_OFFER_NAME as prodOfferName , P.PROD_OFFER_DESC  as prodOfferDesc  , P.STATUS_CD as statusCd  
+		    FROM PROD_OFFER P,PROD_OFFER_DISTRIBUTOR A WHERE P.PROD_OFFER_ID = A.PROD_OFFER_ID AND P.STATUS_CD = '1000'
+		 <dynamic>
+		 	<isNotNull prepend="AND" property="prodOfferStatusCd"> STATUS_CD = #prodOfferStatusCd# </isNotNull>
+		 	<isNotNull prepend="AND" property="prodOfferName"> PROD_OFFER_NAME LIKE '%'||#prodOfferName#||'%' </isNotNull>
+		 	<isNotNull prepend="AND" property="orgCode"> A.DISTRIBUTOR_ID = #orgCode# </isNotNull>
+	        	<isNotNull prepend="AND" property="tenantId"> P.tenant_id=#tenantId#</isNotNull>
+		 	<isNotNull prepend="AND" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		 </dynamic>
+		  ) newtab ) WHERE rn BETWEEN #pro# AND #end# 
+	</select>
+	
+	<select id="selectProduct" parameterClass="java.util.HashMap" resultClass="com.ailk.eaap.op2.bo.Product">	
+		 SELECT * FROM (SELECT ROW_NUMBER() OVER( ORDER BY productId DESC ) rn , newtab.* FROM (
+		    SELECT P.PRODUCT_ID as productId ,P.PRODUCT_NBR as productNbr ,P.PRODUCT_NAME as productName , P.PRODUCT_DESC  as productDesc ,P.PROD_FUNC_TYPE as prodFuncType ,P.PRODUCT_TYPE as productType ,P.VALUE_ADDED_FLAG as valueAddedFlag ,P.EFF_DATE as effDate ,P.EXP_DATE as expDate ,P.STATUS_CD as statusCd   
+		    FROM PRODUCT P,PRODUCT_DISTRIBUTOR A WHERE P.PRODUCT_ID = A.PRODUCT_ID AND P.STATUS_CD = '1000'
+		 <dynamic>
+		 	<isNotNull prepend="AND" property="productStatusCd"> P.STATUS_CD = #productStatusCd# </isNotNull>
+		 	<isNotNull prepend="AND" property="productName"> P.PRODUCT_NAME LIKE '%'||#productName#||'%' </isNotNull>
+		 	<isNotNull prepend="AND" property="orgCode"> A.DISTRIBUTOR_ID = #orgCode# </isNotNull>
+	        	<isNotNull prepend="AND" property="tenantId"> P.tenant_id=#tenantId#</isNotNull>
+		 	<isNotNull prepend="AND" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		 </dynamic>
+		  ) newtab ) WHERE rn BETWEEN #pro# AND #end# 
+	</select>
+	
+	 <select id="selectProductCount" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+		SELECT COUNT(1) FROM PRODUCT P,PRODUCT_DISTRIBUTOR A WHERE P.PRODUCT_ID = A.PRODUCT_ID AND P.STATUS_CD = '1000'  
+		<dynamic>
+		 	<isNotNull prepend="AND" property="productStatusCd"> P.STATUS_CD = #productStatusCd# </isNotNull>
+		 	<isNotNull prepend="AND" property="productName"> P.PRODUCT_NAME LIKE '%'||#productName#||'%' </isNotNull>
+		 	<isNotNull prepend="AND" property="orgCode"> A.DISTRIBUTOR_ID = #orgCode# </isNotNull>
+	         	<isNotNull prepend="AND" property="tenantId"> P.tenant_id=#tenantId#</isNotNull>
+			<isNotNull prepend="AND" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		</dynamic>
+ 	</select>
+ 	
+ 	<select id="queryProdOfferConstituteList" parameterClass="com.ailk.eaap.op2.bo.ProdOffer"  resultClass="java.util.HashMap">
+		   SELECT DISTINCT C.PRODUCT_ID , C.PRODUCT_NBR , C.PRODUCT_NAME  ,  B.COMPOENT_TYPE , B.MIN_COUNT , B.MAX_COUNT  
+		   FROM PROD_OFFER A,OFFER_PROD_REL B , PRODUCT C   
+		   WHERE  A.PROD_OFFER_ID = B.PROD_OFFER_ID AND B.PRODUCT_ID = C.PRODUCT_ID AND   A.PROD_OFFER_ID = #prodOfferId#
+		   AND A.tenant_id=#tenantId#
+		   AND B.tenant_id=#tenantId#
+		   AND C.tenant_id=#tenantId#
+ 	</select>
+ 	
+ 	<select id="queryProdOffer" parameterClass="com.ailk.eaap.op2.bo.ProdOffer" resultClass="com.ailk.eaap.op2.bo.ProdOffer">
+		SELECT  PROD_OFFER_ID as prodOfferId , OFFER_NBR as offerNbr ,   PROD_OFFER_NAME as prodOfferName , OFFER_TYPE as offerType , PROD_OFFER_DESC as prodOfferDesc , EFF_DATE as effDate , EXP_DATE as expDate  
+		FROM PROD_OFFER 
+		WHERE PROD_OFFER_ID = #prodOfferId#
+	   AND tenant_id=#tenantId#
+
+	</select>
+	
+	<select id="queryRequestInfo" resultClass="com.ailk.eaap.op2.bo.RequestInfo">
+		SELECT  REQUEST_TEMPLATE_INST_ID requestTemplateInstId ,BATCH_NO batchNo ,NAME name , 
+		DESCRIPTION description , DEPT_CODE deptCode , CONT_NAME contName ,CONT_TELE contTele,
+		CREATE_DATE createDate,FINISH_DATE finishDate,EXPECT_FINISH_DATE expectFinishDate,REQUEST_TYPE requestType,ACTION_TYPE actionType  
+		FROM REQUEST_INFO WHERE tenant_id=#tenantId#  ORDER BY CREATE_DATE DESC
+	</select>
+	
+	<select id="queryRequestObject" parameterClass="com.ailk.eaap.op2.bo.RequestObject" resultClass="com.ailk.eaap.op2.bo.RequestObject">
+		SELECT REQUEST_OBJECT_ID requestObjectId ,REQUEST_TEMPLATE_INST_ID requestTemplateInstId ,OBJECT_TYPE objectType ,OBJECT_CODE objectCode,OBJECT_NAME objectName
+		FROM REQUEST_OBJECT WHERE 1=1
+		<dynamic>
+		 	<isNotNull prepend="AND" property="requestTemplateInstId"> REQUEST_TEMPLATE_INST_ID = #requestTemplateInstId# </isNotNull>
+   	                <isNotNull prepend="AND" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		</dynamic>
+	</select>
+	
+	<!-- 销售品报文入参 -->
+	<select id="selectProdOfferClob" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">	
+		SELECT A.MSG FROM INTF_LOG_CLOB A,INTF_LOG B,PROD_OFFER C,PROD_OFFER_DISTRIBUTOR D
+		WHERE A.CONTRACT_INTERACTION_ID = B.CONTRACT_INTERACTION_ID
+		  AND A.SRC_TRAN_ID = B.SRC_TRAN_ID
+	      AND B.BUS_OBJ_ID = C.OFFER_NBR
+	      AND B.BUS_OBJ_TYPE = 'PROD_OFFER'
+	      AND C.PROD_OFFER_ID = D.PROD_OFFER_ID
+	      AND A.tenant_id=B.tenant_id AND B.tenant_id=C.tenant_id AND C.tenant_id=D.tenant_id 
+		 <dynamic>
+		 	<isNotNull prepend="AND" property="orgCode"> D.DISTRIBUTOR_ID = #orgCode# </isNotNull>
+		 	<isNotNull prepend="AND" property="busObjId"> B.BUS_OBJ_ID = #busObjId# </isNotNull>
+                	<isNotNull prepend="AND" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		 </dynamic>
+		 ORDER BY A.CREATE_TIME DESC
+	</select>
+	
+	<!-- 产品报文入参 -->
+	<select id="selectProdClob" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		  SELECT A.MSG FROM INTF_LOG_CLOB A,INTF_LOG B,PRODUCT C,PRODUCT_DISTRIBUTOR D
+		    WHERE A.CONTRACT_INTERACTION_ID = B.CONTRACT_INTERACTION_ID
+		      AND A.SRC_TRAN_ID = B.SRC_TRAN_ID
+		      AND B.BUS_OBJ_ID = C.PRODUCT_ID
+		      AND C.PRODUCT_ID = D.PRODUCT_ID
+		      AND B.BUS_OBJ_TYPE = 'PRODUCT'
+                     AND A.tenant_id=B.tenant_id AND B.tenant_id=C.tenant_id AND C.tenant_id=D.tenant_id 
+		   <dynamic>
+		 	<isNotNull prepend="AND" property="orgCode"> D.DISTRIBUTOR_ID = #orgCode# </isNotNull>
+	       <isNotNull prepend="AND" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		 </dynamic>
+		 ORDER BY A.CREATE_TIME DESC
+	</select>
+	
+	<!-- 销售品配置 -->
+	<select id="queryProdOfferConfigCount" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	  	  SELECT COUNT(1) ALLNUM 
+		    FROM PROD_OFFER P 
+       LEFT JOIN (SELECT PO.PROD_OFFER_ID,
+                         PO.DEFAULT_VALUE
+                    FROM PROD_OFFER_ATTR PO
+              INNER JOIN ATTR_SPEC ASP
+	                  ON ASP.ATTR_SPEC_ID = PO.ATTR_SPEC_ID
+	                 AND ASP.ATTR_SPEC_CODE = 'OFR10006') POA
+	          ON POA.PROD_OFFER_ID = P.PROD_OFFER_ID
+       LEFT JOIN REQUEST_OBJECT RO
+              ON RO.OBJECT_CODE = to_char(P.PROD_OFFER_ID)
+      INNER JOIN REQUEST_INFO RI
+              ON RI.REQUEST_TEMPLATE_INST_ID = RO.REQUEST_TEMPLATE_INST_ID
+		<dynamic prepend="where">
+		 	<isNotNull prepend="AND" property="prodOfferStatusCd"> P.STATUS_CD = #prodOfferStatusCd# </isNotNull>
+		 	<isNotNull prepend="AND" property="prodOfferName"> P.PROD_OFFER_NAME LIKE '%'||#prodOfferName#||'%' </isNotNull>
+		 	<isNotNull prepend="AND" property="beginTime"> <![CDATA[ TO_CHAR(P.CREATE_DT,'YYYY-MM-DD') >= #beginTime# ]]></isNotNull>
+	   		<isNotNull prepend="AND" property="endTime"> <![CDATA[ TO_CHAR(P.CREATE_DT,'YYYY-MM-DD') <= #endTime# ]]></isNotNull>
+		</dynamic>
+ 	</select>
+ 	
+ 	<select id="queryProdOfferConfigList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">	
+		 SELECT * FROM (SELECT ROW_NUMBER() OVER( ORDER BY PROD_OFFER_ID DESC ) rn , newtab.* FROM (
+		  SELECT P.PROD_OFFER_ID,
+               P.OFFER_TYPE,
+               P.PROD_OFFER_NAME,
+               P.INNER_OFFER_NAME,
+               POA.DEFAULT_VALUE,
+               P.EFF_DATE,
+               P.EXP_DATE,
+               RI.STATUS_CD,
+               P.PROD_OFFER_DESC
+        FROM PROD_OFFER P 
+       LEFT JOIN (SELECT PO.PROD_OFFER_ID,
+                         PO.DEFAULT_VALUE
+                    FROM PROD_OFFER_ATTR PO
+              INNER JOIN ATTR_SPEC ASP
+                    ON ASP.ATTR_SPEC_ID = PO.ATTR_SPEC_ID
+                   AND ASP.ATTR_SPEC_CODE = 'OFR10006') POA
+	          ON POA.PROD_OFFER_ID = P.PROD_OFFER_ID
+       LEFT JOIN REQUEST_OBJECT RO
+              ON RO.OBJECT_CODE = to_char(P.PROD_OFFER_ID)
+      INNER JOIN REQUEST_INFO RI
+              ON RI.REQUEST_TEMPLATE_INST_ID = RO.REQUEST_TEMPLATE_INST_ID
+		<dynamic prepend="where">
+		 	<isNotNull prepend="AND" property="prodOfferStatusCd"> P.STATUS_CD = #prodOfferStatusCd# </isNotNull>
+		 	<isNotNull prepend="AND" property="prodOfferName"> P.PROD_OFFER_NAME LIKE '%'||#prodOfferName#||'%' </isNotNull>
+		 	<isNotNull prepend="AND" property="beginTime"> <![CDATA[ TO_CHAR(P.CREATE_DT,'YYYY-MM-DD') >= #beginTime# ]]></isNotNull>
+	   		<isNotNull prepend="AND" property="endTime"> <![CDATA[ TO_CHAR(P.CREATE_DT,'YYYY-MM-DD') <= #endTime# ]]></isNotNull>
+		</dynamic>    
+		  ) newtab ) WHERE rn BETWEEN #pro# AND #end# 
+	</select>
+ 	
+</sqlMap>

@@ -1,0 +1,219 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="eaap-op2-portal-pardProd">
+	<!-- 查询某供应者下合作伙伴产品信息 -->
+	<select id="showProdOfferList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">	
+		 SELECT * FROM (SELECT ROW_NUMBER() OVER( ORDER BY PROD_OFFER_ID DESC ) rn , newtab.* FROM (
+		 	SELECT A.PROD_OFFER_ID  PROD_OFFER_ID ,A.PROD_OFFER_NAME PROD_OFFER_NAME,A.STATUS_CD STATUS_CD,A.PROD_OFFER_DESC PROD_OFFER_DESC  FROM  PROD_OFFER  A
+		 <dynamic prepend="WHERE">
+		 	<isNotNull prepend="AND" property="orgId"> A.OFFER_PROVIDER_ID=#orgId#</isNotNull>
+		 	<isNotNull prepend="AND" property="prodOfferName"> A.PROD_OFFER_NAME LIKE '%'||#prodOfferName#||'%'</isNotNull>
+		 </dynamic>
+		   AND A.STATUS_CD != '1300'
+		   AND A.COOPERATION_TYPE != '13'
+		   AND A.tenant_id=#tenantId#
+		  ) newtab ) WHERE rn BETWEEN #pro# AND #end# 
+	</select>
+	
+	<!-- 查询某供应者下合作伙伴产品信息总记录数 -->
+	<select id="queryProdOfferCount" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	  SELECT COUNT(1) ALLNUM  FROM PROD_OFFER A
+		<dynamic prepend="WHERE">
+		 	<isNotNull prepend="AND" property="orgId"> A.OFFER_PROVIDER_ID=#orgId#</isNotNull>
+		 	<isNotNull prepend="AND" property="prodOfferName"> A.PROD_OFFER_NAME LIKE '%'||#prodOfferName#||'%'</isNotNull>
+		</dynamic>
+		  AND A.STATUS_CD != '1300'
+		  AND A.COOPERATION_TYPE != '13'
+		  AND A.TENANT_ID=#tenantId#
+ 	</select>
+ 	<!-- 查询某供应者的产品受理服务 -->
+ 	<select id="showProdDealSvcList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+ 		SELECT D.SERVICE_ID SERVICE_ID, D.SERVICE_CN_NAME SERVICE_CN_NAME ,D.SERVICE_EN_NAME SERVICE_EN_NAME,A.COMPONENT_ID  COMPONENT_ID 
+ 		FROM  COMPONENT A,TECH_IMPL B,SER_TECH_IMPL C,SERVICE D
+ 		<dynamic prepend="WHERE">
+		 	<isNotNull prepend="AND" property="orgId"> A.ORG_ID=#orgId#</isNotNull>
+		 	<isNotNull prepend="AND" property="serviceId"> D.SERVICE_ID=#serviceId#</isNotNull>
+		</dynamic>
+		AND C.STATE NOT IN ('X','G','C')
+		AND A.COMPONENT_ID = B.COMPONENT_ID
+		AND B.TECH_IMPL_ID = C.TECH_IMPL_ID
+		AND C.SERVICE_ID = D.SERVICE_ID
+		AND A.TENANT_ID=#tenantId#
+		AND B.TENANT_ID=#tenantId#
+		AND C.TENANT_ID=#tenantId#
+		AND D.TENANT_ID=#tenantId#
+ 	</select>
+ 	
+ 	<!-- 获取某个能力下的能力配置属性 -->
+ 	<select id="queryAbilityAttr" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+ 		SELECT a. PROC_MODE_ATTR_ID, a.FORMAT, a.ATTR_SPEC_ID, a.ATTR_SPEC_NAME,a.PROC_MODE_ID
+		  FROM (SELECT B.PROC_MODE_ATTR_ID PROC_MODE_ATTR_ID,
+		               A.FORMAT            FORMAT,
+		               C.ATTR_SPEC_ID      ATTR_SPEC_ID,
+		               C.ATTR_SPEC_NAME    ATTR_SPEC_NAME,
+		               A.PROC_MODE_ID      PROC_MODE_ID
+		          FROM PROC_MODE A, PROC_MODE_ATTR B, ATTR_SPEC C
+	    <dynamic prepend="WHERE">
+		 	<isNotNull prepend="AND" property="procModeId"> A.PROC_MODE_ID=#procModeId#</isNotNull>
+		</dynamic>
+		           AND A.PROC_MODE_ID = B.PROC_MODE_ID
+		           AND B.ATTR_SPEC_ID = C.ATTR_SPEC_ID
+		           AND A.STATUS_CD = '10'
+			   		AND A.TENANT_ID=#tenantId#
+					AND B.TENANT_ID=#tenantId#
+					AND C.TENANT_ID=#tenantId#
+		         ORDER BY B.PROC_MODE_SEQ) a
+ 	</select>
+ 	
+ 	<!-- 获取配置能力属性可选值 -->
+ 	<select id="queryAttrValue" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+ 		SELECT A.PROC_MODE_ATTR_ID PROC_MODE_ATTR_ID,
+	           C.ATTR_VALUE_NAME   ATTR_VALUE_NAME,
+	           C.attr_value_id     ATTR_VALUE_ID,
+	           b.proc_mode_value_id  PROC_MODE_VALUE_ID
+	    FROM PROC_MODE_ATTR A, PROC_MODE_ATTR_VALUE B, ATTR_VALUE C
+	       WHERE  A.PROC_MODE_ATTR_ID = B.PROC_MODE_ATTR_ID
+	         AND  B.ATTR_VALUE_ID = C.ATTR_VALUE_ID
+	         AND  A.PROC_MODE_ATTR_ID=#procModeAttrId#
+		 	AND A.TENANT_ID=#tenantId#
+			AND B.TENANT_ID=#tenantId#
+			AND C.TENANT_ID=#tenantId#
+ 	</select>
+ 	
+ 	<!-- 获取资费配置界面 资费内容 -->
+ 	<select id="queryProcModeDesc" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+ 		SELECT A.PRICING_INFO_ID PRICING_INFO_ID,
+ 			   A.PROC_MODE_INST_ID PROC_MODE_INST_ID,
+ 		       B.PROC_MODE_DESC PROC_MODE_DESC
+	    FROM PRICING_PLAN_2_PROC_MODE_INST A, PROC_MODE_INST B
+	       WHERE  A.PROC_MODE_INST_ID = B.PROC_MODE_INST_ID
+	         AND  B.STATUS_CD = '10'
+	         AND  A.RELA_TYPE = #relaType#
+	         AND  A.PRICING_INFO_ID = #pricingInfoId#
+		 	ND A.TENANT_ID=#tenantId#
+			AND B.TENANT_ID=#tenantId#
+	       ORDER BY A.SEQ_ID ASC
+ 	</select>
+ 	
+ 	<select id="queryPricingClassify" parameterClass="java.util.HashMap" resultClass="com.ailk.eaap.op2.bo.PricingClassify">
+	  SELECT D.NAME NAME,F.PROC_MODE_DESC EXPLAIN from PROD_OFFER A , PROD_OFFER_PRICING B , PRICING_PLAN C , PRICING_CLASSIFY D  ,PRICING_PLAN_2_PROC_MODE_INST E ,  
+      PROC_MODE_INST F  WHERE A.PROD_OFFER_ID = B.PROD_OFFER_ID and B.PRICING_INFO_ID = C.PRICING_INFO_ID and C.PRICING_CLASSIFY = D.CD and C.PRICING_INFO_ID = E.PRICING_INFO_ID and F.PROC_MODE_INST_ID = E.PROC_MODE_INST_ID  
+	   AND A.PROD_OFFER_ID=#offerId#
+	   			AND A.TENANT_ID=#tenantId#
+			AND B.TENANT_ID=#tenantId#
+			AND C.TENANT_ID=#tenantId#
+			AND D.TENANT_ID=#tenantId#
+			AND E.TENANT_ID=#tenantId#
+			AND F.TENANT_ID=#tenantId#
+	</select>
+	
+	<select id="queryPardProdInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	  SELECT * FROM (SELECT ROW_NUMBER() OVER( ORDER BY PROD_OFFER_ID DESC ) rn , newtab.* FROM (
+		 	SELECT A.PROD_OFFER_ID,A.PROD_OFFER_NAME,A.STATUS_CD,A.PROD_OFFER_DESC,A.LOGO_FILE_ID  FROM  PROD_OFFER  A
+		  WHERE A.OFFER_PROVIDER_ID=#ORG_ID#
+		   AND A.STATUS_CD != '1300'
+		   AND A.COOPERATION_TYPE = #COOPERATION_TYPE#
+		  ) newtab ) WHERE rn BETWEEN #BEGIN# AND #END# 
+	</select>
+	
+ 	<select id="queryPardSellInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">	
+		SELECT * FROM (SELECT ROW_NUMBER() OVER( ORDER BY PROD_OFFER_ID DESC ) rn , newtab.* FROM (
+		SELECT T.PROD_OFFER_ID, T.PROD_OFFER_NAME, T.OFFER_NBR, A.NAME, 
+		 	   T.PROD_OFFER_DESC, TT.STATUS_CD, T.LOGO_FILE_ID
+ 		FROM PROD_OFFER T,PROD_OFFER_CHANNEL TT, CHANNEL TTT, PROD_OFFER_CHANNEL_TYPE TTTT, ORG A
+ 	    WHERE T.OFFER_PROVIDER_ID = #ORG_ID#
+ 	    AND T.PROD_OFFER_ID = TT.PROD_OFFER_ID
+ 	    AND TT.CHANNEL_ID = TTT.CHANNEL_ID
+ 	    AND TT.STATUS_CD = '1000'
+ 	    AND TTT.STATUS_CD = '1000'
+ 	    AND T.PROD_OFFER_ID = TTTT.PROD_OFFER_ID
+ 	    AND TTTT.CHANNEL_TYPE = '20'
+ 	    AND T.OFFER_PROVIDER_ID = A.ORG_ID
+ 	    AND T.STATUS_CD = '1000'
+	    		  AND T.TENANT_ID=#tenantId#
+		  AND TT.TENANT_ID=#tenantId#
+		  AND TTT.TENANT_ID=#tenantId#
+		  AND TTTT.TENANT_ID=#tenantId#
+		  AND A.TENANT_ID=#tenantId#
+		  ) newtab ) WHERE rn BETWEEN #BEGIN# AND #PROD_END# 
+	 </select>
+	
+	 <select id="queryProductAttrGroupRelaAndProductAttr" resultClass="com.ailk.eaap.op2.bo.ProductAttr" parameterClass="java.util.HashMap">	
+          select c.PRODUCT_ATTR_ID as productAttrId, c.DEFAULT_VALUE as defaultValue, c.ATTR_SPEC_ID as attrSpecId from PRODUCT_ATTR c where  c.product_attr_id in( select b.product_attr_id from PRODUCT_ATTR_GROUP_RELA b  where b.product_attr_group_id=#productAttrGroupId# )
+          and c.attr_spec_id=#attrSpecId#
+	 </select>
+	 
+	 
+	 
+	 
+	 
+	
+	 <insert id="insertProcModeInstAttr" parameterClass="com.ailk.eaap.op2.bo.ProcModeInstAttr">
+    <selectKey resultClass="int" keyProperty="procModeInstAttrId">
+		 SELECT  SEQ_PROC_MODE_INST_ATTR.NEXTVAL  FROM DUAL
+    </selectKey>	
+	  INSERT INTO proc_mode_inst_attr
+	  (CREATE_DATE,STATUS_DATE
+	  <dynamic>
+	 	<isNotNull prepend="," property="procModeInstAttrId">PROC_MODE_INST_ATTR_ID</isNotNull>
+	    <isNotNull prepend="," property="procModeInstId">PROC_MODE_INST_ID</isNotNull>
+	    <isNotNull prepend="," property="procModeAttrId">PROC_MODE_ATTR_ID</isNotNull>
+	    <isNotNull prepend="," property="procModeInstAttrValue">PROC_MODE_INST_ATTR_VALUE</isNotNull>
+	    <isNotNull prepend="," property="procModeValueId">PROC_MODE_VALUE_ID</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  VALUES
+	  (SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0
+	  <dynamic>
+	  	<isNotNull prepend="," property="procModeInstAttrId">#procModeInstAttrId#</isNotNull>
+	    <isNotNull prepend="," property="procModeInstId">#procModeInstId#</isNotNull>
+	    <isNotNull prepend="," property="procModeAttrId">#procModeAttrId#</isNotNull>
+	    <isNotNull prepend="," property="procModeInstAttrValue">#procModeInstAttrValue#</isNotNull>
+	    <isNotNull prepend="," property="procModeValueId">#procModeValueId#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+	</insert>
+	
+	
+	 
+	 <select id="queryProductAttrValueAndAttrValue" resultClass="com.ailk.eaap.op2.bo.AttrValue" parameterClass="com.ailk.eaap.op2.bo.ProductAttr">	
+          select m.attr_desc as attrDesc  from ATTR_VALUE m ,PROD_ATTR_VALUE n where m.attr_value_id = n.attr_value_id and  n.product_attr_id=#productAttrId#
+	 </select>
+	 
+	 <select id="compareProdOfferId" resultClass="com.ailk.eaap.op2.bo.ProdOffer" parameterClass="com.ailk.eaap.op2.bo.ProdOffer">	
+          select a.EXT_PROD_OFFER_ID as extProdOfferId from prod_offer a where a.EXT_PROD_OFFER_ID=#extProdOfferId#
+	 </select>
+	 <select id="queryProduct" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">	
+          select * from PRODUCT  a where a.product_id=#productId# 
+	 </select>
+	 <select id="queryPricingPlan" resultClass="java.util.HashMap" parameterClass="com.ailk.eaap.op2.bo.OfferProdRel">
+	 select *
+        from OFFER_PROD_REL, OFFER_PROD_REL_PRICING, PRICING_PLAN,PRICING_PLAN_CLASSIFY_REL,PRICING_CLASSIFY
+        where OFFER_PROD_REL.OFFER_PROD_RELA_ID =
+        OFFER_PROD_REL_PRICING.OFFER_PROD_RELA_ID
+        and   OFFER_PROD_REL_PRICING.PRICING_INFO_ID=PRICING_PLAN.PRICING_INFO_ID
+        and   PRICING_PLAN.PRICING_INFO_ID=PRICING_PLAN_CLASSIFY_REL.PRICING_INFO_ID
+        and   PRICING_PLAN_CLASSIFY_REL.PRICING_CLASSIFY=PRICING_CLASSIFY.CD
+        and   OFFER_PROD_REL.PROD_OFFER_ID=#prodOfferId#	
+        and  OFFER_PROD_REL.tenant_id=#tenantId#
+        and  OFFER_PROD_REL_PRICING.tenant_id=#tenantId#
+        and  PRICING_PLAN.tenant_id=#tenantId#
+        and  PRICING_PLAN_CLASSIFY_REL.tenant_id=#tenantId#
+        and  PRICING_CLASSIFY.tenant_id=#tenantId#
+	 </select>
+	 <delete id="deleteOfferProdRelPricing" parameterClass="com.ailk.eaap.op2.bo.ProdOfferPricing" >
+	   delete OFFER_PROD_REL_PRICING where OFFER_PROD_REL_PRICING.PRICING_INFO_ID=#pricingInfoId#
+	 </delete>
+	 <select id="queryPricingPlanClassfiyRelSeq" resultClass="java.lang.String">
+		select Seq_Pricing_Plan_Classify_Rel.Nextval from dual
+	 </select>
+	 <delete id="deletePricingPlanClassifyRel" parameterClass="com.ailk.eaap.op2.bo.PricingPlanClassifyRel" >
+	   delete PRICING_PLAN_CLASSIFY_REL where PRICING_PLAN_CLASSIFY_REL.PRICING_INFO_ID=#pricingInfoId#
+	 </delete>
+</sqlMap>

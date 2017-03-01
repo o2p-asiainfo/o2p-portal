@@ -1,0 +1,96 @@
+<!-- BEGIN SECTION 1 -->
+
+<div class="section clearfix">
+  <h3 class="form-section mt5">Base Information</h3>
+  <div class="form-body">
+    <div class="form-group">
+      <label class="col-md-4 control-label"> <font color="FF0000">*</font>Name:</label>
+      <div class="col-md-8">
+        <input type="text" name="priceName" placeholder="" class="form-control input-medium">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label"><i title="First settlement date means when the settlement cycle starts." data-placement="top" data-toggle="tooltip" class="fa fa-question-circle"></i> <font color="FF0000">*</font>First Settlement Date :</label>
+      <div class="col-md-8">
+        <div class="input-group input-medium date date-picker" data-date-format="dd-mm-yyyy" data-date-start-date="+0d">
+          <input type="text" class="form-control" readonly>
+          <span class="input-group-btn">
+          <button class="btn default" type="button"><i class="fa fa-calendar"></i></button>
+          </span> </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label"><i title="Define how long to make a settlement. For example, make one settlement per month, and then configure the cycle type as 1 month" data-placement="top" data-toggle="tooltip" class="fa fa-question-circle"></i> <font color="FF0000">*</font>Cycle Type:</label>
+      <div class="col-md-8 form-inline">
+        <input type="text" class="form-control input-medium" placeholder="1">
+        <select class="form-control input-medium">
+          <option value="3">Month</option>
+          <option selected="" value="2">Week</option>
+          <option value="1">Day</option>
+          <option value="5">Year</option>
+          <option value="4">Quarter</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label"><i title="Defining the product category" data-placement="top" data-toggle="tooltip" class="fa fa-question-circle"></i> <font color="FF0000">*</font>Product Category:</label>
+      <div class="col-md-8 form-inline">
+        <select class="form-control input-medium">
+          <option value="3">WAP</option>
+          <option value="2">MMS</option>
+          <option value="10">mobile TV(stream media)</option>
+          <option value="1">ISMG</option>
+          <option value="0">Voice Magazine</option>
+          <option value="7">business trip service</option>
+          <option value="6">KJAVA</option>
+          <option value="5">PDA</option>
+          <option value="4">CRBT</option>
+          <option value="9">Flash</option>
+          <option value="8">USSD</option>
+          <option value="13">ContentMT</option>
+          <option value="14">Office365</option>
+          <option value="11">mobile map</option>
+          <option value="12">WiMP</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label"> <font color="FF0000">*</font>Valid Period:</label>
+      <div class="col-md-8 form-inline">
+        <div data-date-format="mm/dd/yyyy" data-date-start-date="+0d" data-date="10/11/2012" class="input-group input-medium date-picker input-daterange" data-error-container="#here5">
+          <input type="text" name="from5" class="form-control od">
+          <span class="input-group-addon"> To </span>
+          <input type="text" name="to5" class="form-control od">
+        </div>
+        <div id="here5"></div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label">Description:</label>
+      <div class="col-md-8">
+        <textarea rows="3" class="form-control"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- END SECTION 1 --> 
+<!-- BEGIN SECTION 2 -->
+<div class="portlet">
+  <div style="margin:30px 0 25px!important;" class="portlet-title">
+    <div style="font-size: 24px; font-weight: 300 ! important;" class="caption"> Settlement Information </div>
+    <div class="actions dropdown">
+      <a class="btn default btn-select" href="javascript:;"><i class="fa fa-check-square-o"></i> Select </a>      
+      <a class="btn default btn-delete" href="javascript:;"><i class="fa fa-trash-o"></i> Delete </a>      
+      <a class="btn default" data-toggle="dropdown" href="javascript:;"> Add <i class="fa fa-angle-down"></i> </a>
+      <ul class="dropdown-menu pull-right tpl" role="menu" data-set="addTarget">
+        <li> <a data-url="ajax/basicTariff.shtml" data-draw="0" href="javascript:;" data-action="addTabMenu" data-container=".tabsArea" data-type="1" data-unique="true"> One-Time Charge Rule </a> </li>
+        <li> <a data-url="ajax/recurringRule.shtml" data-draw="0" href="javascript:;" data-action="addTabMenu" data-container=".tabsArea" data-type="2" data-unique="true"> Recurring Rule </a> </li>
+        <li> <a data-url="" href="javascript:;" data-draw="0" data-action="addTabMenu" data-container=".tabsArea" data-type="3" data-unique="true"> Aggregation Rule </a> </li>       
+      </ul>
+    </div>
+  </div>
+  <div class="portlet-body tabsArea" data-addTpl="false">
+    <div class="well">您还未填写'Charge Information'，请点击右上方的添加按钮</div>
+  </div>
+</div>
+<!-- END SECTION 2 --> 

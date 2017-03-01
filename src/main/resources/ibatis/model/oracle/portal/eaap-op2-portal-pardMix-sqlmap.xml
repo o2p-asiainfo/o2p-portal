@@ -1,0 +1,769 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-pardMix">
+  <delete id="deleteProdOffer" parameterClass="com.ailk.eaap.op2.bo.ProdOffer">
+  delete PROD_OFFER
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="prodOfferId">PROD_OFFER_ID=#prodOfferId#</isNotNull>
+    <isNotNull prepend="and"  property="tenantId"> TENANT_ID=#tenantId#</isNotNull>
+  </dynamic>
+</delete>
+<update id="updateProdOffer" parameterClass="com.ailk.eaap.op2.bo.ProdOffer">
+  update PROD_OFFER
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="offerType">OFFER_TYPE=#offerType#</isNotNull>
+    <isNotNull prepend="," property="prodOfferName">PROD_OFFER_NAME=#prodOfferName#</isNotNull>
+    <isNotNull prepend="," property="innerOfferName">INNER_OFFER_NAME=#innerOfferName#</isNotNull>
+    <isNotNull prepend="," property="statusDate">STATUS_DATE=#statusDate#</isNotNull>
+    <isNotNull prepend="," property="prodOfferPublisher">PROD_OFFER_PUBLISHER=#prodOfferPublisher#</isNotNull>
+    <isNotNull prepend="," property="statusCd">STATUS_CD=#statusCd#</isNotNull>
+    <isNotNull prepend="," property="effDate">EFF_DATE=#effDate#</isNotNull>
+    <isNotNull prepend="," property="expDate">EXP_DATE=#expDate#</isNotNull>
+    <isNotNull prepend="," property="offerNbr">OFFER_NBR=#offerNbr#</isNotNull>
+    <isNotNull prepend="," property="offerProviderId">OFFER_PROVIDER_ID=#offerProviderId#</isNotNull>
+    <isNotNull prepend="," property="brandId">BRAND_ID=#brandId#</isNotNull>
+    <isNotNull prepend="," property="servBrandId">SERV_BRAND_ID=#servBrandId#</isNotNull>
+    <isNotNull prepend="," property="templetId">TEMPLET_ID=#templetId#</isNotNull>
+    <isNotNull prepend="," property="defaultTimePeriod">DEFAULT_TIME_PERIOD=#defaultTimePeriod#</isNotNull>
+    <isNotNull prepend="," property="prodOfferDesc">PROD_OFFER_DESC=#prodOfferDesc#</isNotNull>
+    <isNotNull prepend="," property="extProdOfferId">EXT_PROD_OFFER_ID=#extProdOfferId#</isNotNull>
+    <isNotNull prepend="," property="expProcMethod">EXP_PROC_METHOD=#expProcMethod#</isNotNull>
+    <isNotNull prepend="," property="valueAddedFlag">VALUE_ADDED_FLAG=#valueAddedFlag#</isNotNull>
+    <isNotNull prepend="," property="manageGrade">MANAGE_GRADE=#manageGrade#</isNotNull>
+    <isNotNull prepend="," property="prodOfferInitialamount">PROD_OFFER_INITIALAMOUNT=#prodOfferInitialamount#</isNotNull>
+    <isNotNull prepend="," property="expireHandleCondition">EXPIRE_HANDLE_CONDITION=#expireHandleCondition#</isNotNull>
+    <isNotNull prepend="," property="commonRegionId">COMMON_REGION_ID=#commonRegionId#</isNotNull>
+    <isNotNull prepend="," property="manageGrade2">MANAGE_GRADE2=#manageGrade2#</isNotNull>
+    <isNotNull prepend="," property="createDt">CREATE_DT=#createDt#</isNotNull>
+    <isNotNull prepend="," property="simpleSpell">SIMPLE_SPELL=#simpleSpell#</isNotNull>
+    <isNotNull prepend="," property="version">VERSION=#version#</isNotNull>
+    <isNotNull prepend="," property="innerOfferNbr">INNER_OFFER_NBR=#innerOfferNbr#</isNotNull>
+    <isNotNull prepend="," property="prodOfferTrait">PROD_OFFER_TRAIT=#prodOfferTrait#</isNotNull>
+    <isNotNull prepend="," property="cooperationType">COOPERATION_TYPE=#cooperationType#</isNotNull>
+    <isNotNull prepend="," property="logoFileId">LOGO_FILE_ID=#logoFileId#</isNotNull>
+  </dynamic>	<isNotNull prepend="," property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="prodOfferId">PROD_OFFER_ID=#prodOfferId#</isNotNull>
+  </dynamic>
+</update>
+<insert id="insertProdOffer" parameterClass="com.ailk.eaap.op2.bo.ProdOffer">
+       <selectKey resultClass="int" keyProperty="prodOfferId">
+			SELECT SEQ_PROD_OFFER.NEXTVAL FROM DUAL
+		</selectKey>	
+ insert into PROD_OFFER
+ (STATUS_DATE,CREATE_DT,VERSION  
+  <dynamic>
+    <isNotNull prepend="," property="prodOfferId">PROD_OFFER_ID</isNotNull>
+    <isNotNull prepend="," property="offerType">OFFER_TYPE</isNotNull>
+    <isNotNull prepend="," property="prodOfferName">PROD_OFFER_NAME</isNotNull>
+    <isNotNull prepend="," property="innerOfferName">INNER_OFFER_NAME</isNotNull>
+    
+    <isNotNull prepend="," property="prodOfferPublisher">PROD_OFFER_PUBLISHER</isNotNull>
+    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+    <isNotNull prepend="," property="effDate">EFF_DATE</isNotNull>
+    <isNotNull prepend="," property="expDate">EXP_DATE</isNotNull>
+    <isNotNull prepend="," property="offerNbr">OFFER_NBR</isNotNull>
+    <isNotNull prepend="," property="offerProviderId">OFFER_PROVIDER_ID</isNotNull>
+    <isNotNull prepend="," property="brandId">BRAND_ID</isNotNull>
+    <isNotNull prepend="," property="servBrandId">SERV_BRAND_ID</isNotNull>
+    <isNotNull prepend="," property="templetId">TEMPLET_ID</isNotNull>
+    <isNotNull prepend="," property="defaultTimePeriod">DEFAULT_TIME_PERIOD</isNotNull>
+    <isNotNull prepend="," property="prodOfferDesc">PROD_OFFER_DESC</isNotNull>
+    <isNotNull prepend="," property="extProdOfferId">EXT_PROD_OFFER_ID</isNotNull>
+    <isNotNull prepend="," property="expProcMethod">EXP_PROC_METHOD</isNotNull>
+    <isNotNull prepend="," property="valueAddedFlag">VALUE_ADDED_FLAG</isNotNull>
+    <isNotNull prepend="," property="manageGrade">MANAGE_GRADE</isNotNull>
+    <isNotNull prepend="," property="prodOfferInitialamount">PROD_OFFER_INITIALAMOUNT</isNotNull>
+    <isNotNull prepend="," property="expireHandleCondition">EXPIRE_HANDLE_CONDITION</isNotNull>
+    <isNotNull prepend="," property="commonRegionId">COMMON_REGION_ID</isNotNull>
+    <isNotNull prepend="," property="manageGrade2">MANAGE_GRADE2</isNotNull>
+    
+    <isNotNull prepend="," property="simpleSpell">SIMPLE_SPELL</isNotNull>
+     
+    <isNotNull prepend="," property="innerOfferNbr">INNER_OFFER_NBR</isNotNull>
+    <isNotNull prepend="," property="prodOfferTrait">PROD_OFFER_TRAIT</isNotNull>
+    <isNotNull prepend="," property="cooperationType">COOPERATION_TYPE</isNotNull>
+    <isNotNull prepend="," property="logoFileId">LOGO_FILE_ID</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+ )
+  values
+  (SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0
+  <dynamic>
+    <isNotNull prepend="," property="offerType">#offerType#</isNotNull>
+    <isNotNull prepend="," property="prodOfferName">#prodOfferName#</isNotNull>
+    <isNotNull prepend="," property="innerOfferName">#innerOfferName#</isNotNull>
+   
+    <isNotNull prepend="," property="prodOfferPublisher">#prodOfferPublisher#</isNotNull>
+    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+    <isNotNull prepend="," property="effDate">#effDate#</isNotNull>
+    <isNotNull prepend="," property="expDate">#expDate#</isNotNull>
+    <isNotNull prepend="," property="offerNbr">#offerNbr#</isNotNull>
+    <isNotNull prepend="," property="offerProviderId">#offerProviderId#</isNotNull>
+    <isNotNull prepend="," property="brandId">#brandId#</isNotNull>
+    <isNotNull prepend="," property="servBrandId">#servBrandId#</isNotNull>
+    <isNotNull prepend="," property="templetId">#templetId#</isNotNull>
+    <isNotNull prepend="," property="defaultTimePeriod">#defaultTimePeriod#</isNotNull>
+    <isNotNull prepend="," property="prodOfferDesc">#prodOfferDesc#</isNotNull>
+    <isNotNull prepend="," property="extProdOfferId">#extProdOfferId#</isNotNull>
+    <isNotNull prepend="," property="expProcMethod">#expProcMethod#</isNotNull>
+    <isNotNull prepend="," property="valueAddedFlag">#valueAddedFlag#</isNotNull>
+    <isNotNull prepend="," property="manageGrade">#manageGrade#</isNotNull>
+    <isNotNull prepend="," property="prodOfferInitialamount">#prodOfferInitialamount#</isNotNull>
+    <isNotNull prepend="," property="expireHandleCondition">#expireHandleCondition#</isNotNull>
+    <isNotNull prepend="," property="commonRegionId">#commonRegionId#</isNotNull>
+    <isNotNull prepend="," property="manageGrade2">#manageGrade2#</isNotNull>
+ 
+    <isNotNull prepend="," property="simpleSpell">#simpleSpell#</isNotNull>
+   
+    <isNotNull prepend="," property="innerOfferNbr">#innerOfferNbr#</isNotNull>
+    <isNotNull prepend="," property="prodOfferTrait">#prodOfferTrait#</isNotNull>
+    <isNotNull prepend="," property="cooperationType">#cooperationType#</isNotNull>
+    <isNotNull prepend="," property="logoFileId">#logoFileId#</isNotNull>
+   <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+  </dynamic>
+  )
+</insert>
+<select id="selectProdOffer" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  select * from PROD_OFFER
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="prodOfferId"> PROD_OFFER_ID=#prodOfferId#</isNotNull>
+    <isNotNull prepend="and" property="offerType"> OFFER_TYPE=#offerType#</isNotNull>
+    <isNotNull prepend="and" property="prodOfferName"> PROD_OFFER_NAME=#prodOfferName#</isNotNull>
+    <isNotNull prepend="and" property="innerOfferName"> INNER_OFFER_NAME=#innerOfferName#</isNotNull>
+    <isNotNull prepend="and" property="statusDate"> STATUS_DATE=#statusDate#</isNotNull>
+    <isNotNull prepend="and" property="statusCd"> STATUS_CD=#statusCd#</isNotNull>
+    <isNotNull prepend="and" property="effDate"> EFF_DATE=#effDate#</isNotNull>
+    <isNotNull prepend="and" property="prodOfferPublisher"> PROD_OFFER_PUBLISHER=#prodOfferPublisher#</isNotNull>
+    <isNotNull prepend="and" property="expDate"> EXP_DATE=#expDate#</isNotNull>
+    <isNotNull prepend="and" property="offerProviderId"> OFFER_PROVIDER_ID=#offerProviderId#</isNotNull>
+    <isNotNull prepend="and" property="offerNbr"> OFFER_NBR=#offerNbr#</isNotNull>
+    <isNotNull prepend="and" property="brandId"> BRAND_ID=#brandId#</isNotNull>
+    <isNotNull prepend="and" property="servBrandId"> SERV_BRAND_ID=#servBrandId#</isNotNull>
+    <isNotNull prepend="and" property="templetId"> TEMPLET_ID=#templetId#</isNotNull>
+    <isNotNull prepend="and" property="defaultTimePeriod"> DEFAULT_TIME_PERIOD=#defaultTimePeriod#</isNotNull>
+    <isNotNull prepend="and" property="prodOfferDesc"> PROD_OFFER_DESC=#prodOfferDesc#</isNotNull>
+    <isNotNull prepend="and" property="extProdOfferId"> EXT_PROD_OFFER_ID=#extProdOfferId#</isNotNull>
+    <isNotNull prepend="and" property="expProcMethod"> EXP_PROC_METHOD=#expProcMethod#</isNotNull>
+    <isNotNull prepend="and" property="valueAddedFlag"> VALUE_ADDED_FLAG=#valueAddedFlag#</isNotNull>
+    <isNotNull prepend="and" property="manageGrade"> MANAGE_GRADE=#manageGrade#</isNotNull>
+    <isNotNull prepend="and" property="prodOfferInitialamount"> PROD_OFFER_INITIALAMOUNT=#prodOfferInitialamount#</isNotNull>
+    <isNotNull prepend="and" property="expireHandleCondition"> EXPIRE_HANDLE_CONDITION=#expireHandleCondition#</isNotNull>
+    <isNotNull prepend="and" property="commonRegionId"> COMMON_REGION_ID=#commonRegionId#</isNotNull>
+    <isNotNull prepend="and" property="manageGrade2"> MANAGE_GRADE2=#manageGrade2#</isNotNull>
+    <isNotNull prepend="and" property="createDt"> CREATE_DT=#createDt#</isNotNull>
+    <isNotNull prepend="and" property="version"> VERSION=#version#</isNotNull>
+    <isNotNull prepend="and" property="simpleSpell"> SIMPLE_SPELL=#simpleSpell#</isNotNull>
+    <isNotNull prepend="and" property="innerOfferNbr"> INNER_OFFER_NBR=#innerOfferNbr#</isNotNull>
+    <isNotNull prepend="and" property="prodOfferTrait"> PROD_OFFER_TRAIT=#prodOfferTrait#</isNotNull>
+    <isNotNull prepend="and" property="cooperationType"> COOPERATION_TYPE=#cooperationType#</isNotNull>
+    <isNotNull prepend="and" property="logoFileId">LOGO_FILE_ID=#logoFileId#</isNotNull>
+   <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+  </dynamic>
+ 
+   and STATUS_CD!='1300'
+</select>
+
+
+<select id="selectProdOfferCount" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  select count(1) ALLNUM from PROD_OFFER
+  <dynamic prepend="where">
+	<isNotNull prepend="and" property="prodOfferId"> PROD_OFFER_ID=#prodOfferId#</isNotNull>
+     <isNotNull prepend="and" property="offerProviderId"> OFFER_PROVIDER_ID=#offerProviderId#</isNotNull>
+  <isNotNull prepend="and" property="prodOfferName"> PROD_OFFER_NAME like concat('%',#prodOfferName#,'%')</isNotNull>
+     <isNotNull prepend="and" property="cooperationType"> COOPERATION_TYPE in 
+        <iterate property="cooperationType" conjunction="," close=")" open="(">
+            #cooperationType[]#
+        </iterate>
+    </isNotNull>
+  </dynamic>
+   and STATUS_CD!='1300'
+   and TENANT_ID=#tenantId#
+</select>
+
+
+<select id="selectProdOfferList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  select PROD_OFFER.*   from PROD_OFFER 
+  <dynamic prepend="where">
+     <isNotNull prepend="and" property="offerProviderId"> PROD_OFFER.OFFER_PROVIDER_ID=#offerProviderId#</isNotNull>
+     <isNotNull prepend="and" property="cooperationType"> PROD_OFFER.COOPERATION_TYPE in 
+        <iterate property="cooperationType" conjunction="," close=")" open="(">
+            #cooperationType[]#
+        </iterate>
+    </isNotNull>
+  </dynamic>
+   and PROD_OFFER.STATUS_CD!='1300'  
+   and TENANT_ID=#tenantId#
+    ORDER BY  PROD_OFFER.prod_offer_id DESC
+</select>
+
+
+<select id="selectProdOfferListToPard" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  select * from (select row_number() over( order by PROD_OFFER_ID desc ) rn , newtab.* from (
+  select PROD_OFFER.* ,offer_Prod_Rel.Product_Id   from PROD_OFFER  ,offer_Prod_Rel
+  <dynamic prepend="where">
+     <isNotNull prepend="and" property="offerProviderId"> PROD_OFFER.OFFER_PROVIDER_ID=#offerProviderId#</isNotNull>
+     <isNotNull prepend="and" property="cooperationType"> PROD_OFFER.COOPERATION_TYPE=#cooperationType#</isNotNull>
+  </dynamic>
+   and PROD_OFFER.STATUS_CD!='1300' and PROD_OFFER.Prod_Offer_Id = offer_Prod_Rel.Prod_Offer_Id
+   and PROD_OFFER.TENANT_ID=#tenantId#
+   and offer_Prod_Rel.TENANT_ID=#tenantId#
+     ) newtab ) where rn between #pro# and #end# 
+</select>
+
+
+
+
+
+<select id="selectProdOfferCountToyys" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+select count(1) ALLNUM from(
+select PROD_OFFER.* ,offer_Prod_Rel.Product_Id   from PROD_OFFER  ,offer_Prod_Rel
+ where ((PROD_OFFER.COOPERATION_TYPE =#cooperationType#
+        and PROD_OFFER.Prod_Offer_Id
+     
+         
+       (select Prod_Offer_Id
+            from PROD_OFFER_CHANNEL
+           where CHANNEL_ID in
+                 (select CHANNEL_ID from CHANNEL where ORG_ID =#offerProviderId#))
+        and
+       offer_Prod_Rel.Product_Id in
+       (select Product_Id from Product pro where pro.product_type =#telProductType#)
+       ) or
+       (PROD_OFFER.COOPERATION_TYPE =#othercooperationType# and PROD_OFFER.OFFER_PROVIDER_ID !=#offerProviderId#
+         and PROD_OFFER.Prod_Offer_Id in
+       (select Prod_Offer_Id
+            from PROD_OFFER_CHANNEL
+           where CHANNEL_ID in
+                 (select CHANNEL_ID from CHANNEL where ORG_ID =#offerProviderId#))
+       ))
+   and PROD_OFFER.STATUS_CD != '1300' and PROD_OFFER.Prod_Offer_Id = offer_Prod_Rel.Prod_Offer_Id
+      and PROD_OFFER.TENANT_ID=#tenantId#
+      and offer_Prod_Rel.TENANT_ID=#tenantId#
+   )
+</select>
+
+<select id="selectProdOfferListToyys" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+select * from (select row_number() over( order by PROD_OFFER_ID desc ) rn , newtab.* from (
+select PROD_OFFER.* ,offer_Prod_Rel.Product_Id   from PROD_OFFER  ,offer_Prod_Rel
+ where ((PROD_OFFER.COOPERATION_TYPE =#cooperationType#
+       
+       and PROD_OFFER.Prod_Offer_Id in
+       (select Prod_Offer_Id
+            from PROD_OFFER_CHANNEL
+           where CHANNEL_ID in
+                 (select CHANNEL_ID from CHANNEL where ORG_ID =#offerProviderId#))
+        and offer_Prod_Rel.Product_Id in (select Product_Id from Product pro where pro.product_type =#telProductType#)
+       ) or
+       (PROD_OFFER.COOPERATION_TYPE =#othercooperationType# and PROD_OFFER.OFFER_PROVIDER_ID !=#offerProviderId#
+       and PROD_OFFER.Prod_Offer_Id in
+       (select Prod_Offer_Id
+            from PROD_OFFER_CHANNEL
+           where CHANNEL_ID in
+                 (select CHANNEL_ID from CHANNEL where ORG_ID =#offerProviderId#))
+       ))
+   and PROD_OFFER.STATUS_CD != '1300' and PROD_OFFER.Prod_Offer_Id = offer_Prod_Rel.Prod_Offer_Id
+  ) newtab ) where rn between #pro# and #end# 
+</select>
+
+
+<select id="selectPricingClassifyByPid" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  select pc.cd,pc.name
+    from pricing_classify pc, ATTR_PRICING_CLASSIFY_RELA apcr
+   where pc.cd = apcr.pricing_classify
+       and pc.tetenant_id=#tenantId#
+       
+   	 and apcr.tetenant_id=#tenantId#
+     and apcr.attr_spec_id in (select distinct attr_spec_id
+                                 from product_attr
+                                where status_cd = #statuscd#
+       				and tetenant_id=#tenantId#
+                               <dynamic>
+	                                <isNotNull prepend="and" property="pids"> 
+	                                	product_id in 
+	                                	<iterate property="pids" conjunction="," close=")" open="(">
+							            	#pids[]#
+							        	</iterate>
+	                                </isNotNull>
+                               </dynamic>
+                         )
+</select>
+
+
+
+<delete id="deleteProdOfferChannelType" parameterClass="com.ailk.eaap.op2.bo.ProdOfferChannelType">
+  delete PROD_OFFER_CHANNEL_TYPE
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="prodOfferChannelTypeId">PROD_OFFER_CHANNEL_TYPE_ID=#prodOfferChannelTypeId#</isNotNull>
+    <isNotNull prepend="and" property="prodOfferId">PROD_OFFER_ID=#prodOfferId#</isNotNull>
+  <isNotNull prepend="and" property="tenantId"> TENANT_ID=#tenantId#</isNotNull>
+  </dynamic>
+</delete>
+
+<insert id="insertProdOfferChannelType" parameterClass="com.ailk.eaap.op2.bo.ProdOfferChannelType">
+       <selectKey resultClass="int" keyProperty="prodOfferChannelTypeId">
+			SELECT SEQ_PROD_OFFER_CHANNEL_TYPE.NEXTVAL FROM DUAL
+		</selectKey>	
+		  insert into PROD_OFFER_CHANNEL_TYPE
+		  (PROD_OFFER_CHANNEL_TYPE_ID,PROD_OFFER_ID,CHANNEL_TYPE,TENANT_ID)
+		  values
+		  (#prodOfferChannelTypeId# ,#prodOfferId# ,#channelType#,#tenantId#)
+ </insert>
+
+
+<select id="selectProdOfferChannelType" parameterClass="com.ailk.eaap.op2.bo.ProdOfferChannelType" resultClass="com.ailk.eaap.op2.bo.ProdOfferChannelType">
+  select PROD_OFFER_CHANNEL_TYPE_ID prodOfferChannelTypeId,
+         PROD_OFFER_ID prodOfferId,
+         CHANNEL_TYPE channelType
+ 	 TENANT_ID tenantId 
+   from PROD_OFFER_CHANNEL_TYPE
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="prodOfferChannelTypeId">PROD_OFFER_CHANNEL_TYPE_ID=#prodOfferChannelTypeId#</isNotNull>
+    <isNotNull prepend="and" property="prodOfferId">PROD_OFFER_ID=#prodOfferId#</isNotNull>
+    <isNotNull prepend="and" property="channelType">CHANNEL_TYPE=#channelType#</isNotNull>
+ <isNotNull prepend="and" property="tenantId">TENANT_ID=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+
+
+
+<select id="selectProduct" parameterClass="com.ailk.eaap.op2.bo.Product" resultClass="com.ailk.eaap.op2.bo.Product">
+  select    PRODUCT_ID  productId,
+			PRODUCT_NBR productNbr,
+			PRODUCT_NAME productName,
+			PRODUCT_DESC productDesc,
+			MANAGE_GRADE manageGrade,
+			PRODUCT_TYPE productType,
+			PRODUCT_PROVIDER_ID productProviderId,
+			STATUS_CD statusCd,
+			EFF_DATE effDate,
+			EXP_DATE expDate,
+			PROD_FUNC_TYPE prodFuncType,
+			EXT_PROD_ID extProdId,
+			VALUE_ADDED_FLAG valueAddedFlag,
+			INNER_PROD_NBR innerProdNbr,
+			COMMON_REGION_ID commonRegionId,
+			IS_TEMPLATE isTemplate,
+			PARENT_PRODUCT_ID parentProductId,
+            STATUS_DATE statusDate ,
+            CREATE_DATE createDate ,
+            COOPERATION_TYPE cooperationType
+ 	    TENANT_ID tenantId
+  from PRODUCT
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="productId">PRODUCT_ID=#productId#</isNotNull>
+   <isNotNull prepend="and" property="tenantId">TENANT_ID=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+
+ <insert id="insertProduct" parameterClass="com.ailk.eaap.op2.bo.Product">
+         <selectKey resultClass="java.math.BigDecimal" keyProperty="productId">
+			 SELECT SEQ_PRODUCT.NEXTVAL FROM DUAL
+		</selectKey>	
+  	   INSERT INTO PRODUCT
+  	  ( STATUS_DATE,CREATE_DATE
+	  <dynamic>
+	  	<isNotNull prepend="," property="productId">PRODUCT_ID</isNotNull>
+	    <isNotNull prepend="," property="productNbr">PRODUCT_NBR</isNotNull>
+	    <isNotNull prepend="," property="productName">PRODUCT_NAME</isNotNull>
+	    <isNotNull prepend="," property="productDesc">PRODUCT_DESC</isNotNull>
+	    <isNotNull prepend="," property="manageGrade">MANAGE_GRADE</isNotNull>
+	    <isNotNull prepend="," property="productType">PRODUCT_TYPE</isNotNull>
+	    <isNotNull prepend="," property="productProviderId">PRODUCT_PROVIDER_ID</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+	    <isNotNull prepend="," property="effDate">EFF_DATE</isNotNull>
+	    <isNotNull prepend="," property="expDate">EXP_DATE</isNotNull>
+	    <isNotNull prepend="," property="prodFuncType">PROD_FUNC_TYPE</isNotNull>
+	    <isNotNull prepend="," property="extProdId">EXT_PROD_ID</isNotNull>
+	    <isNotNull prepend="," property="valueAddedFlag">VALUE_ADDED_FLAG</isNotNull>
+	    <isNotNull prepend="," property="innerProdNbr">INNER_PROD_NBR</isNotNull>
+	    <isNotNull prepend="," property="commonRegionId">COMMON_REGION_ID</isNotNull>
+	    <isNotNull prepend="," property="isTemplate">IS_TEMPLATE</isNotNull>
+	    <isNotNull prepend="," property="parentProductId">PARENT_PRODUCT_ID</isNotNull>
+	    <isNotNull prepend="," property="cooperationType">COOPERATION_TYPE</isNotNull>
+	    <isNotNull prepend="," property="tenantId">TENANT_ID</isNotNull>
+	  </dynamic>
+	  )
+	  VALUES
+	  (SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0
+	  <dynamic>
+	    <isNotNull prepend="," property="productId">#productId#</isNotNull>
+	    <isNotNull prepend="," property="productNbr">#productNbr#</isNotNull>
+	    <isNotNull prepend="," property="productName">#productName#</isNotNull>
+	    <isNotNull prepend="," property="productDesc">#productDesc#</isNotNull>
+	    <isNotNull prepend="," property="manageGrade">#manageGrade#</isNotNull>
+	    <isNotNull prepend="," property="productType">#productType#</isNotNull>
+	    <isNotNull prepend="," property="productProviderId">#productProviderId#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="effDate">#effDate#</isNotNull>
+	    <isNotNull prepend="," property="expDate">#expDate#</isNotNull>
+	    <isNotNull prepend="," property="prodFuncType">#prodFuncType#</isNotNull>
+	    <isNotNull prepend="," property="extProdId">#extProdId#</isNotNull>
+	    <isNotNull prepend="," property="valueAddedFlag">#valueAddedFlag#</isNotNull>
+	    <isNotNull prepend="," property="innerProdNbr">#innerProdNbr#</isNotNull>
+	    <isNotNull prepend="," property="commonRegionId">#commonRegionId#</isNotNull>
+	    <isNotNull prepend="," property="isTemplate">#isTemplate#</isNotNull>
+	    <isNotNull prepend="," property="parentProductId">#parentProductId#</isNotNull>
+	    <isNotNull prepend="," property="cooperationType">#cooperationType#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	   </dynamic>
+	  )
+	</insert>
+	
+	
+	<insert id="insertProductAttr" parameterClass="com.ailk.eaap.op2.bo.ProductAttr">
+	    <selectKey resultClass="int" keyProperty="productAttrId">
+			 SELECT SEQ_PRODUCT_ATTR.NEXTVAL FROM DUAL
+		</selectKey>	
+  insert into PRODUCT_ATTR
+  (CREATE_DATE ,STATUS_DATE
+  <dynamic>
+    <isNotNull prepend="," property="productAttrId">PRODUCT_ATTR_ID</isNotNull>
+    <isNotNull prepend="," property="productId">PRODUCT_ID</isNotNull>
+    <isNotNull prepend="," property="attrSpecId">ATTR_SPEC_ID</isNotNull>
+    <isNotNull prepend="," property="defaultValue">DEFAULT_VALUE</isNotNull>
+    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+    <isNotNull prepend="," property="productAttrDesc">PRODUCT_ATTR_DESC</isNotNull>
+    <isNotNull prepend="," property="displayType">DISPLAY_TYPE</isNotNull>
+    <isNotNull prepend="," property="isAffirmOption">IS_AFFIRM_OPTION</isNotNull>
+    <isNotNull prepend="," property="seqId">SEQ_ID</isNotNull>
+   <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+  values
+  (SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0
+  <dynamic>
+    <isNotNull prepend="," property="productAttrId">#productAttrId#</isNotNull>
+    <isNotNull prepend="," property="productId">#productId#</isNotNull>
+    <isNotNull prepend="," property="attrSpecId">#attrSpecId#</isNotNull>
+    <isNotNull prepend="," property="defaultValue">#defaultValue#</isNotNull>
+    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+    <isNotNull prepend="," property="productAttrDesc">#productAttrDesc#</isNotNull>
+    <isNotNull prepend="," property="displayType">#displayType#</isNotNull>
+    <isNotNull prepend="," property="isAffirmOption">#isAffirmOption#</isNotNull>
+    <isNotNull prepend="," property="seqId">#seqId#</isNotNull>
+   <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+  </dynamic>
+  )
+</insert>
+
+
+<insert id="insertProductAttrGroup" parameterClass="com.ailk.eaap.op2.bo.ProductAttrGroup">
+	    <selectKey resultClass="int" keyProperty="productAttrGroupId">
+			 SELECT SEQ_PRODUCT_ATTR_GROUP.NEXTVAL FROM DUAL
+		</selectKey>	
+  insert into PRODUCT_ATTR_GROUP
+  (PRODUCT_ATTR_GROUP_ID ,CREATE_DATE,STATUS_DATE
+  <dynamic>
+    <isNotNull prepend="," property="productId">PRODUCT_ID</isNotNull>
+    <isNotNull prepend="," property="groupName">GROUP_NAME</isNotNull>
+    <isNotNull prepend="," property="parentGroupId">PARENT_GROUP_ID</isNotNull>
+    <isNotNull prepend="," property="SeqId">SEQ_ID</isNotNull>
+    <isNotNull prepend="," property="stateCd">STATUS_CD</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+  values
+  (#productAttrGroupId#,SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0 
+  <dynamic>
+    <isNotNull prepend="," property="productId">#productId#</isNotNull>
+    <isNotNull prepend="," property="groupName">#groupName#</isNotNull>
+    <isNotNull prepend="," property="parentGroupId">#parentGroupId#</isNotNull>
+    <isNotNull prepend="," property="SeqId">#SeqId#</isNotNull>
+    <isNotNull prepend="," property="stateCd">#stateCd#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+  </dynamic>
+  )
+</insert>
+
+
+<insert id="insertProductAttrGroupRela" parameterClass="com.ailk.eaap.op2.bo.ProductAttrGroupRela">
+	    <selectKey resultClass="int" keyProperty="groupRelaId">
+			 SELECT Seq_Product_Attr_Group_Rela.NEXTVAL FROM DUAL
+		</selectKey>	
+  insert into PRODUCT_ATTR_GROUP_RELA
+  (GROUP_RELA_ID
+  <dynamic>
+    <isNotNull prepend="," property="productAttrId">PRODUCT_ATTR_ID</isNotNull>
+    <isNotNull prepend="," property="productAttrGroupId">PRODUCT_ATTR_GROUP_ID</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+  values
+  (#groupRelaId#
+  <dynamic>
+    <isNotNull prepend="," property="productAttrId">#productAttrId#</isNotNull>
+    <isNotNull prepend="," property="productAttrGroupId">#productAttrGroupId#</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+</insert>
+
+<select id="selectProductAttrGroupRela" parameterClass="com.ailk.eaap.op2.bo.ProductAttrGroupRela" resultClass="com.ailk.eaap.op2.bo.ProductAttrGroupRela">
+  select GROUP_RELA_ID          productAttrGroupId,
+       PRODUCT_ATTR_ID          productAttrId,
+       PRODUCT_ATTR_GROUP_ID    productAttrGroupId 
+       tenant_id tenantId 
+       from PRODUCT_ATTR_GROUP_RELA
+           <dynamic prepend="where">
+            1=1 and
+            <isNotNull prepend="and" property="groupRelaId"> GROUP_RELA_ID = #groupRelaId#</isNotNull>
+		    <isNotNull prepend="and" property="productAttrId"> PRODUCT_ATTR_ID =#productAttrId#</isNotNull>
+		    <isNotNull prepend="and" property="productAttrGroupId"> PRODUCT_ATTR_GROUP_ID=#productAttrGroupId#</isNotNull>
+		    <isNotNull prepend="and" property="tenantId">tenant_id=#tenantId#</isNotNull>
+		    </dynamic>
+		  
+</select>
+
+
+<select id="selectProductAttrGroup" parameterClass="com.ailk.eaap.op2.bo.ProductAttrGroup" resultClass="com.ailk.eaap.op2.bo.ProductAttrGroup">
+  select PRODUCT_ATTR_GROUP_ID productAttrGroupId,
+       PRODUCT_ID            productId,
+       GROUP_NAME            groupName,
+       PARENT_GROUP_ID       parentGroupId,
+       SEQ_ID                SeqId,
+       CREATE_DATE          createDate,
+       STATUS_CD             stateCd,
+       STATUS_DATE          stateDate
+       tenant_id tenantId 
+       from PRODUCT_ATTR_GROUP
+           <dynamic prepend="where">
+            1=1 and
+            <isNotNull prepend="and" property="productAttrGroupId"> PRODUCT_ATTR_GROUP_ID = #productAttrGroupId#</isNotNull>
+		    <isNotNull prepend="and" property="productId"> PRODUCT_ID =#productId#</isNotNull>
+		    <isNotNull prepend="and" property="parentGroupId"> PARENT_GROUP_ID=#parentGroupId#</isNotNull>
+		 	    <isNotNull prepend="and" property="tenantId"> TENANT_ID=#tenantId#</isNotNull>
+		    </dynamic>
+		    order by seq_id 
+</select>
+
+
+
+<select id="selectProductAttrInGroup" parameterClass="com.ailk.eaap.op2.bo.ProductAttr" resultClass="java.util.HashMap">
+   select attr.*,
+        spec.attr_spec_name,
+        spec.attr_spec_desc,
+        pagr.product_attr_group_id group_id,
+        par.group_name,
+        spec.default_value default_value_spec
+   from PRODUCT_ATTR attr, ATTR_SPEC spec,PRODUCT_ATTR_GROUP_RELA  pagr, PRODUCT_ATTR_GROUP  par
+           <dynamic prepend="where">
+            attr.attr_spec_id = spec.attr_spec_id
+             
+            and attr.product_attr_id = pagr.product_attr_id
+            and par.product_attr_group_id = pagr.product_attr_group_id
+            and attr.TENANT_ID=#tenantId#
+            and spec.TENANT_ID=#tenantId#
+            and pagr.TENANT_ID=#tenantId#
+            and par.TENANT_ID=#tenantId#
+            and
+            <isNotNull prepend="and" property="isAffirmOption"> attr.IS_AFFIRM_OPTION = #isAffirmOption#</isNotNull>
+		    <isNotNull prepend="and" property="productId"> attr.product_id =#productId#</isNotNull>
+		    <isNotNull prepend="and" property="statusCd">  attr.STATUS_CD =#statusCd#</isNotNull>
+		    </dynamic>
+	       order by attr.seq_id 
+</select>
+
+
+<select id="selectProductAttrNotInGroup" parameterClass="com.ailk.eaap.op2.bo.ProductAttr" resultClass="java.util.HashMap">
+   select attr.*,
+        spec.attr_spec_name,
+        spec.attr_spec_desc,
+        spec.default_value default_value_spec
+             tenant_id tenantId 
+   from PRODUCT_ATTR attr, ATTR_SPEC spec 
+           <dynamic prepend="where">
+            attr.attr_spec_id = spec.attr_spec_id
+               and attr.product_attr_id not in
+		       (select product_attr_id
+		          from PRODUCT_ATTR_GROUP_RELA pagr, PRODUCT_ATTR_GROUP pag
+		         where pag.product_id =#productId#
+		           and pag.product_attr_group_id = pagr.product_attr_group_id)
+ 			  and pag.tenant_id=pagr.tenant_id
+            and attr.TENANT_ID=#tenantId#
+            and spec.TENANT_ID=#tenantId#
+		 
+            <isNotNull prepend="and" property="isAffirmOption"> attr.IS_AFFIRM_OPTION = #isAffirmOption#</isNotNull>
+		    <isNotNull prepend="and" property="productId"> attr.product_id =#productId#</isNotNull>
+		    <isNotNull prepend="and" property="statusCd">  attr.STATUS_CD =#statusCd#</isNotNull>
+		    </dynamic>
+	       order by attr.seq_id 
+</select>
+
+
+<select id="selectProductAttr" parameterClass="com.ailk.eaap.op2.bo.ProductAttr" resultClass="java.util.HashMap">
+   select attr.*,
+        spec.attr_spec_name,
+        spec.attr_spec_desc,
+        pagr.product_attr_group_id group_id,
+        par.group_name,
+        spec.default_value default_value_spec
+   from PRODUCT_ATTR attr, ATTR_SPEC spec,PRODUCT_ATTR_GROUP_RELA  pagr, PRODUCT_ATTR_GROUP  par
+           <dynamic prepend="where">
+            attr.attr_spec_id = spec.attr_spec_id
+            and attr.product_attr_id = pagr.product_attr_id
+            and par.product_attr_group_id = pagr.product_attr_group_id
+            and attr.TENANT_ID=#tenantId#
+            and spec.TENANT_ID=#tenantId#
+            and pagr.TENANT_ID=#tenantId#
+            and par.TENANT_ID=#tenantId#
+            and
+            <isNotNull prepend="and" property="isAffirmOption"> attr.IS_AFFIRM_OPTION = #isAffirmOption#</isNotNull>
+		    <isNotNull prepend="and" property="productId"> attr.product_id =#productId#</isNotNull>
+		    </dynamic>
+	       order by attr.seq_id 
+</select>
+
+
+<select  id="selectGroupInfoByProductId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+			 select tab.*,
+			 row_number() over(partition by PARENT_GROUP_ID order by group_id ) rn
+			 from (
+			select distinct (par.product_attr_group_id) group_id,
+			                par.group_name,
+			                par.PARENT_GROUP_ID,
+			                par.seq_id
+			  from PRODUCT_ATTR_GROUP par, PRODUCT_ATTR_GROUP_RELA pagr
+			 where par.product_attr_group_id = pagr.product_attr_group_id
+			   and par.product_id =#productId#
+			   and par.status_cd='1000'
+                           and pagr.TENANT_ID=#tenantId#
+                          and par.TENANT_ID=#tenantId#
+			 order by par.seq_id, group_id) tab
+</select>
+<select id="selectPricingListByOfferId" parameterClass="com.ailk.eaap.op2.bo.ProdOffer" resultClass="java.util.HashMap">
+    select pcl.NAME, ppl.PRICING_DESC, ppl.BEYOND_DESC
+     from PRICING_PLAN ppl, PRICING_CLASSIFY pcl
+    where ppl.PRICING_CLASSIFY = pcl.cd
+      and ppl.PRICING_INFO_ID in
+          (select PRICING_INFO_ID
+             from PROD_OFFER_PRICING
+            where PROD_OFFER_ID =#prodOfferId# and TENANT_ID=#tenantId#)
+      and ppl.TENANT_ID=#tenantId#
+      and pcl.TENANT_ID=#tenantId#
+</select>
+
+
+<select id="selectAllAttrValueByOfferId" parameterClass="com.ailk.eaap.op2.bo.Product" resultClass="java.util.HashMap">
+           select av.ATTR_VALUE_NAME, av.ATTR_VALUE,av.ATTR_VALUE_ID,attr.ATTR_SPEC_ID, attr.PRODUCT_ATTR_ID
+            from ATTR_VALUE av, PRODUCT_ATTR attr
+           where av.attr_spec_id = attr.attr_spec_id
+             and attr.product_id =#productId#
+	    and av.TENANT_ID=#tenantId#
+	   and attr.TENANT_ID=#tenantId#
+           order by av.SEQ_ID
+</select>
+
+
+<insert id="insertProdAttrValue" parameterClass="com.ailk.eaap.op2.bo.ProdAttrValue">
+        <selectKey resultClass="int" keyProperty="prodAttrValueId">
+			  SELECT SEQ_PROD_ATTR_VALUE.NEXTVAL FROM DUAL
+		</selectKey>
+  insert into PROD_ATTR_VALUE
+  (RULE_TYPE
+  <dynamic>
+    <isNotNull prepend="," property="prodAttrValueId">PROD_ATTR_VALUE_ID</isNotNull>
+    <isNotNull prepend="," property="productAttrId">PRODUCT_ATTR_ID</isNotNull>
+    <isNotNull prepend="," property="attrValueId">ATTR_VALUE_ID</isNotNull>
+    <isNotNull prepend="," property="tenantId"> tenant_id</isNotNull>
+  </dynamic>
+  ) 
+  values(''
+  <dynamic>
+    <isNotNull prepend="," property="prodAttrValueId">#prodAttrValueId#</isNotNull>
+    <isNotNull prepend="," property="productAttrId">#productAttrId#</isNotNull>
+    <isNotNull prepend="," property="attrValueId">#attrValueId#</isNotNull>
+     <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+  </dynamic>
+  )
+</insert>
+
+<select id="selectProdAttrValue" parameterClass="com.ailk.eaap.op2.bo.ProdAttrValue" resultClass="com.ailk.eaap.op2.bo.ProdAttrValue">
+  select PROD_ATTR_VALUE_ID prodAttrValueId,PRODUCT_ATTR_ID productAttrId,ATTR_VALUE_ID attrValueId,RULE_TYPE ruleType
+    from PROD_ATTR_VALUE
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="prodAttrValueId"> PROD_ATTR_VALUE_ID=#prodAttrValueId#</isNotNull>
+    <isNotNull prepend="and" property="productAttrId"> PRODUCT_ATTR_ID=#productAttrId#</isNotNull>
+    <isNotNull prepend="and" property="attrValueId"> ATTR_VALUE_ID=#attrValueId#</isNotNull>
+    <isNotNull prepend="and" property="ruleType"> RULE_TYPE=#ruleType#</isNotNull>
+  <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+
+<update id="updateProductAttr" parameterClass="com.ailk.eaap.op2.bo.ProductAttr">
+  update PRODUCT_ATTR
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="productId"> PRODUCT_ID=#productId#</isNotNull>
+    <isNotNull prepend="," property="attrSpecId"> ATTR_SPEC_ID=#attrSpecId#</isNotNull>
+    <isNotNull prepend="," property="defaultValue"> DEFAULT_VALUE=#defaultValue#</isNotNull>
+    <isNotNull prepend="," property="createDate"> CREATE_DATE=#createDate#</isNotNull>
+    <isNotNull prepend="," property="statusCd"> STATUS_CD=#statusCd#</isNotNull>
+    <isNotNull prepend="," property="statusDate"> STATUS_DATE=#statusDate#</isNotNull>
+    <isNotNull prepend="," property="productAttrDesc"> PRODUCT_ATTR_DESC=#productAttrDesc#</isNotNull>
+    <isNotNull prepend="," property="displayType"> DISPLAY_TYPE=#displayType#</isNotNull>
+    <isNotNull prepend="," property="isAffirmOption"> IS_AFFIRM_OPTION=#isAffirmOption#</isNotNull>
+    <isNotNull prepend="," property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="productAttrId">PRODUCT_ATTR_ID=#productAttrId#</isNotNull>
+    <isNotNull prepend="and" property="tenantId">TENANT_ID=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+  
+<update id="updateProductAttrStatueByGroupId" parameterClass="com.ailk.eaap.op2.bo.ProductAttrGroup">
+ update PRODUCT_ATTR
+   set STATUS_CD =#stateCd#
+ where PRODUCT_ATTR_ID in
+       (select PRODUCT_ATTR_ID
+          from PRODUCT_ATTR_GROUP_RELA
+         where PRODUCT_ATTR_GROUP_ID=#productAttrGroupId#)
+       and TENANT_ID=#tenantId#
+</update>
+</update>
+
+
+<update id="updateProductAttrGroup" parameterClass="com.ailk.eaap.op2.bo.ProductAttrGroup">
+  update PRODUCT_ATTR_GROUP
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="groupName"> GROUP_NAME=#groupName#</isNotNull>
+    <isNotNull prepend="," property="parentGroupId"> PARENT_GROUP_ID=#parentGroupId#</isNotNull>
+    <isNotNull prepend="," property="SeqId"> SEQ_ID=#SeqId#</isNotNull>
+    <isNotNull prepend="," property="createDate"> CREATE_DATE=#createDate#</isNotNull>
+    <isNotNull prepend="," property="stateCd"> STATUS_CD=#stateCd#</isNotNull>
+    <isNotNull prepend="," property="stateDate"> STATUS_DATE=#stateDate#</isNotNull>
+  <isNotNull prepend="," property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="productAttrGroupId">PRODUCT_ATTR_GROUP_ID=#productAttrGroupId#</isNotNull>
+    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+
+
+    <update id="updatePricingPlan" parameterClass="com.ailk.o2p.portal.bo.PricingPlan">
+    update PRICING_PLAN
+    <dynamic prepend="set">
+			<isNotNull prepend="," property="pricingDesc">PRICING_DESC=#pricingDesc#</isNotNull>
+			<isNotNull prepend="," property="pricingClassify">PRICING_CLASSIFY=#pricingClassify#</isNotNull>
+			<isNotNull prepend="," property="beyondDesc">BEYOND_DESC=#beyondDesc#</isNotNull>
+    <isNotNull prepend="," property="tenantId"> tenant_id=#tenantId#</isNotNull>  
+    </dynamic>
+   	<dynamic prepend="where">
+			<isNotNull prepend="and" property="pricingInfoId">PRICING_INFO_ID=#pricingInfoId#</isNotNull>
+    </dynamic>
+    </update>
+    
+    
+     <delete id="deletePricingPlan" parameterClass="com.ailk.o2p.portal.bo.PricingPlan">
+		delete PRICING_PLAN
+		<dynamic prepend="where">
+			<isNotNull prepend="and" property="pricingInfoId">PRICING_INFO_ID=#pricingInfoId#</isNotNull>
+		</dynamic>
+	</delete>
+	
+	 <delete id="deleteProdOfferPricing" parameterClass="com.ailk.eaap.op2.bo.ProdOfferPricing">
+		delete PROD_OFFER_PRICING where PRICING_INFO_ID=#pricingInfoId# and TENANT_ID=#tenantId#
+	</delete>
+	
+ </sqlMap>

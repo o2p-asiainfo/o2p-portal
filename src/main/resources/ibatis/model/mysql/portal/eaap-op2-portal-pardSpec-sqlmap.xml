@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-pardSpec">
+
+  <select id="queryFeatureSpec" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+      select * 
+      from ATTR_SPEC 
+      where state='D'  
+      <dynamic>
+      	<isNotNull prepend="and" property="pageInType"> PAGE_IN_TYPE=#pageInType# </isNotNull>
+      	<isNotNull prepend="and" property="attrSpecName"> ATTR_SPEC_NAME like concat('%',#attrSpecName#,'%') </isNotNull>
+      	<isNotNull prepend="and" property="attrSpecCode"> ATTR_SPEC_CODE like concat('%',#attrSpecCode#,'%') </isNotNull>
+      	<isNotNull prepend="and" property="isCustomized"> IS_CUSTOMIZED=#isCustomized# </isNotNull>
+      	<isNotNull prepend="and" property="attrSpecId"> ATTR_SPEC_ID=#attrSpecId# </isNotNull>
+      	<isNotNull prepend="and" property="specId"> ATTR_SPEC_ID not in (#specId#)</isNotNull>
+      	<isNotNull prepend="and" property="isMulti"> IS_MULTI = #isMulti#</isNotNull>
+      	<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      	<isEqual prepend="and" property="specMaintainType" compareValue="2"> SPEC_MAINTAIN_TYPE = 2 and ORG_ID=#orgId# </isEqual>
+		<isEqual prepend="and" property="specMaintainType" compareValue="3"> SPEC_MAINTAIN_TYPE = 3 </isEqual>
+		<isEqual prepend="and" property="specMaintainType" compareValue="4"> SPEC_MAINTAIN_TYPE = 4 </isEqual>
+      	<isNull prepend="and" property="specMaintainType"> (SPEC_MAINTAIN_TYPE = 3 or SPEC_MAINTAIN_TYPE = 2 and ORG_ID=#orgId#)</isNull>
+      	
+      </dynamic>
+       ORDER BY ATTR_SPEC_ID DESC 
+       limit #pro_mysql#,#page_record#
+ </select>
+ 
+  <select id="getFeatureSpec" parameterClass="java.lang.String"  resultClass="java.util.HashMap">
+      select * 
+      from ATTR_SPEC 
+      where state='D'  and ATTR_SPEC_ID = #attrSpecId#  AND TENANT_ID=#tenantId# 
+ </select>
+ <select id="countFeatureSpec" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+ 	select count(1) 
+ 	from ATTR_SPEC 
+    where state='D' 
+      <dynamic>
+	      	<isNotNull prepend="and" property="pageInType"> PAGE_IN_TYPE=#pageInType# </isNotNull>
+	      	<isNotNull prepend="and" property="attrSpecName"> ATTR_SPEC_NAME like concat('%',#attrSpecName#,'%') </isNotNull>
+	      	<isNotNull prepend="and" property="attrSpecCode"> ATTR_SPEC_CODE like concat('%',#attrSpecCode#,'%') </isNotNull>
+	      	<isNotNull prepend="and" property="isCustomized"> IS_CUSTOMIZED=#isCustomized# </isNotNull>
+	      	<isNotNull prepend="and" property="attrSpecId"> ATTR_SPEC_ID=#attrSpecId# </isNotNull>
+	      	<isNotNull prepend="and" property="specId"> ATTR_SPEC_ID not in (#specId#)</isNotNull>
+	      	<isNotNull prepend="and" property="isMulti"> IS_MULTI = #isMulti#</isNotNull>
+	      	<isEqual prepend="and" property="specMaintainType" compareValue="2"> SPEC_MAINTAIN_TYPE = 2 and ORG_ID=#orgId# </isEqual>
+			<isEqual prepend="and" property="specMaintainType" compareValue="3"> SPEC_MAINTAIN_TYPE = 3 </isEqual>
+			<isEqual prepend="and" property="specMaintainType" compareValue="4"> SPEC_MAINTAIN_TYPE = 4 </isEqual>
+			<isNull prepend="and" property="specMaintainType"> (SPEC_MAINTAIN_TYPE = 3 or SPEC_MAINTAIN_TYPE = 2 and ORG_ID=#orgId#)</isNull>
+			<isNotNull prepend="and" property="attrSpecCodeEqual"> ATTR_SPEC_CODE=#attrSpecCodeEqual# </isNotNull>
+			<isNotNull prepend="and" property="attrSpecIdNotEqual"> ATTR_SPEC_ID&lt;&gt;#attrSpecIdNotEqual# </isNotNull>
+   	        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>  
+ </select>
+ <select id="countFeatureSpecAll" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+ 	select count(1) 
+ 	from ATTR_SPEC 
+    where state='D' 
+      <dynamic>
+	      	<isNotNull prepend="and" property="pageInType"> PAGE_IN_TYPE=#pageInType# </isNotNull>
+	      	<isNotNull prepend="and" property="attrSpecName"> ATTR_SPEC_NAME like concat('%',#attrSpecName#,'%') </isNotNull>
+	      	<isNotNull prepend="and" property="attrSpecCode"> ATTR_SPEC_CODE like concat('%',#attrSpecCode#,'%') </isNotNull>
+	      	<isNotNull prepend="and" property="isCustomized"> IS_CUSTOMIZED=#isCustomized# </isNotNull>
+	      	<isNotNull prepend="and" property="attrSpecId"> ATTR_SPEC_ID=#attrSpecId# </isNotNull>
+	      	<isNotNull prepend="and" property="specId"> ATTR_SPEC_ID not in (#specId#)</isNotNull>
+	      	<isNotNull prepend="and" property="isMulti"> IS_MULTI = #isMulti#</isNotNull>
+	      	<isNull prepend="and" property="specMaintainType"> (SPEC_MAINTAIN_TYPE = 3 or SPEC_MAINTAIN_TYPE = 2 and ORG_ID=#orgId#)</isNull>
+            <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>  
+ </select>
+ 
+ <select id="isUD" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+ 	select count(1) from PRODUCT_ATTR
+ 	where ATTR_SPEC_ID=#attrSpecId# AND TENANT_ID=#tenantId# 
+ </select>
+
+ <select id="getFeatureSpecId" resultClass="java.math.BigDecimal">
+ 	SELECT nextval('SEQ_O2P2UPC_ATTR_ID');
+ </select>
+ 
+ <insert id="addFeatureSpec" parameterClass="java.util.HashMap">
+	 	insert into ATTR_SPEC 
+	 	(CREATE_DATE, STATE 
+	  <dynamic>
+	    <isNotNull prepend="," property="attrSpecId">ATTR_SPEC_ID</isNotNull>
+	    <isNotNull prepend="," property="attrSpecName">ATTR_SPEC_NAME</isNotNull>
+	    <isNotNull prepend="," property="attrSpecCode">ATTR_SPEC_CODE</isNotNull>
+	    <isNotNull prepend="," property="valueFrom">VALUE_FROM</isNotNull>
+	    <isNotNull prepend="," property="valueTo">VALUE_TO</isNotNull>
+	    <isNotNull prepend="," property="defaultValue">DEFAULT_VALUE</isNotNull>
+	    <isNotNull prepend="," property="pageInType">PAGE_IN_TYPE</isNotNull>
+	    <isNotNull prepend="," property="specMaintainType">SPEC_MAINTAIN_TYPE</isNotNull> 
+	    <isNotNull prepend="," property="orgId">ORG_ID</isNotNull> 
+	    <isNotNull prepend="," property="isCustomized">IS_CUSTOMIZED</isNotNull> 
+	    <isNotNull prepend="," property="attrSpecDesc">ATTR_SPEC_DESC</isNotNull> 
+	    <isNotNull prepend="," property="minCharacterister">MIN_CARDINALITY</isNotNull> 
+	    <isNotNull prepend="," property="maxCharacterister">MAX_CARDINALITY</isNotNull> 
+	    <isNotNull prepend="," property="isMulti"> IS_MULTI</isNotNull>
+	    <isNotNull prepend="," property="tenantId"> TENANT_ID</isNotNull>
+	  </dynamic>
+	  )
+	  values(utc_timestamp() ,'D' 
+	  <dynamic>
+	    <isNotNull prepend="," property="attrSpecId">#attrSpecId#</isNotNull>
+	    <isNotNull prepend="," property="attrSpecName">#attrSpecName#</isNotNull>
+	    <isNotNull prepend="," property="attrSpecCode">#attrSpecCode#</isNotNull>
+	    <isNotNull prepend="," property="valueFrom">#valueFrom#</isNotNull>
+	    <isNotNull prepend="," property="valueTo">#valueTo#</isNotNull>
+	    <isNotNull prepend="," property="defaultValue">#defaultValue#</isNotNull>
+	    <isNotNull prepend="," property="pageInType">#pageInType#</isNotNull>
+	    <isNotNull prepend="," property="specMaintainType">#specMaintainType#</isNotNull> 
+	    <isNotNull prepend="," property="orgId">#orgId#</isNotNull> 
+	    <isNotNull prepend="," property="isCustomized">#isCustomized#</isNotNull> 
+	    <isNotNull prepend="," property="attrSpecDesc">#attrSpecDesc#</isNotNull> 
+	    <isNotNull prepend="," property="minCharacterister">#minCharacterister#</isNotNull> 
+	    <isNotNull prepend="," property="maxCharacterister">#maxCharacterister#</isNotNull> 
+	    <isNotNull prepend="," property="isMulti"> #isMulti#</isNotNull>
+	    <isNotNull prepend="," property="tenantId"> #tenantId#</isNotNull>
+	  	
+	  </dynamic>
+	  )
+  </insert>
+  
+  <delete id="delFeatureSpecTrue" parameterClass="java.lang.String">
+  	delete from attr_spec where attr_spec_id = #attrSpecId# AND TENANT_ID=#tenantId# 
+  </delete>
+  
+  <update id="updateFeatureSpec" parameterClass="java.util.HashMap" >
+  	update ATTR_SPEC  
+  	 <dynamic prepend="set">
+	    <isNotNull prepend="," property="attrSpecName">ATTR_SPEC_NAME=#attrSpecName#</isNotNull>
+	    <isNotNull prepend="," property="attrSpecCode">ATTR_SPEC_CODE=#attrSpecCode#</isNotNull>
+	    <isNotNull prepend="," property="valueFrom">VALUE_FROM=#valueFrom#</isNotNull>
+	    <isNotNull prepend="," property="valueTo">VALUE_TO=#valueTo#</isNotNull>
+	    <isNotNull prepend="," property="defaultValue">DEFAULT_VALUE=#defaultValue#</isNotNull>
+	    <isNotNull prepend="," property="pageInType">PAGE_IN_TYPE=#pageInType#</isNotNull>
+	    <isNotNull prepend="," property="specMaintainType">SPEC_MAINTAIN_TYPE=#specMaintainType#</isNotNull> 
+	    <isNotNull prepend="," property="orgId">ORG_ID=#orgId#</isNotNull> 
+	    <isNotNull prepend="," property="isCustomized">IS_CUSTOMIZED=#isCustomized#</isNotNull> 
+	    <isNotNull prepend="," property="state">STATE=#state#</isNotNull> 
+	    <isNotNull prepend="," property="attrSpecDesc">ATTR_SPEC_DESC=#attrSpecDesc#</isNotNull> 
+	    <isNotNull prepend="," property="minCharacterister">MIN_CARDINALITY=#minCharacterister#</isNotNull> 
+	    <isNotNull prepend="," property="maxCharacterister">MAX_CARDINALITY=#maxCharacterister#</isNotNull> 
+	    <isNotNull prepend="," property="isMulti"> IS_MULTI = #isMulti#</isNotNull>
+	  </dynamic>
+	  where ATTR_SPEC_ID = #attrSpecId# AND TENANT_ID=#tenantId# 
+  </update>
+  
+  <!-- //////////////////////////////////////////////////////////////////////////// -->
+  <select id="queryFeatureSpecValList" parameterClass="java.lang.String"  resultClass="java.util.HashMap">
+      select * 
+      from ATTR_VALUE 
+      where ATTR_SPEC_ID=#attrSpecId# 
+      AND TENANT_ID=#tenantId# 
+      order by SEQ_ID asc 
+ </select>
+ 
+  <select id="queryFeatureSpecVal" parameterClass="java.lang.Integer"  resultClass="java.util.HashMap">
+      select * 
+      from ATTR_VALUE 
+      where ATTR_VALUE_ID=#attrValId#
+      and TENANT_ID=#tenantId# 
+ </select>
+ 
+ <delete id="delFeatureSpecValue" parameterClass="java.lang.String">
+  	delete from attr_value where attr_spec_id = #attrSpecId# and tenant_id=#tenantId# 
+  </delete>
+ 
+ <update id="updateFeatureVal" parameterClass="java.util.HashMap" >
+  	update ATTR_VALUE set STATUS_DATE = utc_timestamp() 
+  	 <dynamic>
+	    <isNotNull prepend="," property="attrValName">ATTR_VALUE_NAME=#attrSpecName#</isNotNull>
+	    <isNotNull prepend="," property="attrValue">ATTR_VALUE=#attrValue#</isNotNull>
+	    <isNotNull prepend="," property="state">STATUS_CD=#state#</isNotNull>
+	    <isNotNull prepend="," property="seqId">SEQ_ID=#seqId#</isNotNull>
+	    <isNotNull prepend="," property="attrDesc">ATTR_DESC=#attrDesc#</isNotNull>
+	    <isNotNull prepend="," property="isDefault">IS_DEFAULT=#isDefault#</isNotNull>
+	  </dynamic>
+	  where ATTR_VALUE_ID = #attrValId#  AND TENANT_ID=#tenantId# 
+  </update>
+  
+  <insert id="addFeatureVal" parameterClass="java.util.HashMap">
+ 	 <selectKey resultClass="Integer" keyProperty="attrValId">
+			SELECT nextval('SEQ_ATTR_VALUE');
+		</selectKey>
+	 	insert into ATTR_VALUE 
+	 	(CREATE_DATE, STATUS_DATE  
+	  <dynamic>
+	    <isNotNull prepend="," property="attrValId">ATTR_VALUE_ID</isNotNull>
+	    <isNotNull prepend="," property="attrSpecId">ATTR_SPEC_ID</isNotNull>
+	    <isNotNull prepend="," property="attrValName">ATTR_VALUE_NAME</isNotNull>
+	    <isNotNull prepend="," property="attrDesc">ATTR_DESC</isNotNull>
+	    <isNotNull prepend="," property="attrVal">ATTR_VALUE</isNotNull>
+	    <isNotNull prepend="," property="statueCd">STATUS_CD</isNotNull>
+	    <isNotNull prepend="," property="seqId">SEQ_ID</isNotNull>
+	    <isNotNull prepend="," property="isDefault">IS_DEFAULT</isNotNull>
+	    <isNotNull prepend="," property="tenantId"> TENANT_ID</isNotNull>
+	  </dynamic>
+	  )
+	  values(utc_timestamp() , utc_timestamp() 
+	  <dynamic>
+	    <isNotNull prepend="," property="attrValId">#attrValId#</isNotNull>
+	    <isNotNull prepend="," property="attrSpecId">#attrSpecId#</isNotNull>
+	    <isNotNull prepend="," property="attrValName">#attrValName#</isNotNull>
+	    <isNotNull prepend="," property="attrDesc">#attrDesc#</isNotNull>
+	    <isNotNull prepend="," property="attrVal">#attrVal#</isNotNull>
+	    <isNotNull prepend="," property="statueCd">#statueCd#</isNotNull>
+	    <isNotNull prepend="," property="seqId">#seqId#</isNotNull>
+	    <isNotNull prepend="," property="isDefault">#isDefault#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+  <!-- ////////////////////////////////////////////////// -->
+  <insert id="addProdAttrVal" parameterClass="java.util.HashMap">
+   <selectKey resultClass="Integer" keyProperty="prodAttrValId">
+			SELECT nextval('SEQ_PROD_ATTR_VALUE');
+		</selectKey>
+	 	insert into PROD_ATTR_VALUE 
+	 	( 
+	  <dynamic>
+	    <isNotNull prepend="," property="prodAttrValId">ATTR_VALUE_ID</isNotNull>
+	    <isNotNull prepend="," property="productAttrId">PRODUCT_ATTR_ID</isNotNull>
+	    <isNotNull prepend="," property="attrValueId">ATTR_VALUE_ID</isNotNull>
+	    <isNotNull prepend="," property="ruleType">RULE_TYPE</isNotNull>
+	    <isNotNull prepend="," property="tenantId">TENANT_ID</isNotNull>
+	  </dynamic>
+	  )
+	  values(
+	  <dynamic>
+	    <isNotNull prepend="," property="prodAttrValId">#prodAttrValId#</isNotNull>
+	    <isNotNull prepend="," property="productAttrId">#productAttrId#</isNotNull>
+	    <isNotNull prepend="," property="attrValueId">#attrValueId#</isNotNull>
+	    <isNotNull prepend="," property="ruleType">#ruleType#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+  
+  <!-- /////////////////////////////////////////////////////////////////// -->
+	<select id="queryProductList" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+      select t.*,org.name name 
+		from product t, org org
+		 where t.COOPERATION_TYPE = #cooperationType# 
+		 and t.STATUS_CD != '1300' 
+		<dynamic>
+			<isNotNull prepend="and" property="providerId"> t.product_provider_id=#providerId# </isNotNull>
+			<isNull prepend="and" property="providerId"> t.parent_product_id IS NULL</isNull>
+			<isNotNull prepend="and" property="prodName"> t.PRODUCT_NAME like concat('%',#prodName#,'%')</isNotNull>
+			<isNotNull prepend="and" property="prodCode"> t.PRODUCT_NBR like concat('%',#prodCode#,'%')</isNotNull>
+		</dynamic>
+		and t.product_provider_id = org.org_id 
+		and t.TENANT_ID=#tenantId#
+		and org.TENANT_ID=#tenantId#
+		ORDER BY t.PRODUCT_ID DESC 
+       limit #pro_mysql#,#page_record#
+ 	</select>
+ 	
+ 	<select id="countProductList" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+      select count(1) 
+		from product 
+		 where COOPERATION_TYPE = #cooperationType# 
+		 and STATUS_CD != '1300'
+		 and TENANT_ID=#tenantId#
+		<dynamic>
+			<isNotNull prepend="and" property="providerId"> product_provider_id=#providerId# </isNotNull>
+			<isNull prepend="and" property="providerId"> parent_product_id IS NULL</isNull>
+			<isNotNull prepend="and" property="prodName"> PRODUCT_NAME like concat('%',#prodName#,'%')</isNotNull>
+			<isNotNull prepend="and" property="prodCode"> PRODUCT_NBR like concat('%',#prodCode#,'%')</isNotNull>
+		</dynamic>
+ 	</select>
+ 	
+	<select id="getProductId" resultClass="java.lang.Integer">
+		 SELECT nextval('SEQ_PRODUCT') FROM DUAL
+	</select>
+ 	<insert id="insertProduct" parameterClass="com.ailk.eaap.op2.bo.Product">
+  	   INSERT INTO PRODUCT
+  	  ( STATUS_DATE,CREATE_DATE
+	  <dynamic>
+	  	<isNotNull prepend="," property="productId">PRODUCT_ID</isNotNull>
+	    <isNotNull prepend="," property="productNbr">PRODUCT_NBR</isNotNull>
+	    <isNotNull prepend="," property="productName">PRODUCT_NAME</isNotNull>
+	    <isNotNull prepend="," property="productDesc">PRODUCT_DESC</isNotNull>
+	    <isNotNull prepend="," property="manageGrade">MANAGE_GRADE</isNotNull>
+	    <isNotNull prepend="," property="productType">PRODUCT_TYPE</isNotNull>
+	    <isNotNull prepend="," property="productProviderId">PRODUCT_PROVIDER_ID</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+	    <isNotNull prepend="," property="effDate">EFF_DATE</isNotNull>
+	    <isNotNull prepend="," property="expDate">EXP_DATE</isNotNull>
+	    <isNotNull prepend="," property="prodFuncType">PROD_FUNC_TYPE</isNotNull>
+	    <isNotNull prepend="," property="extProdId">EXT_PROD_ID</isNotNull>
+	    <isNotNull prepend="," property="valueAddedFlag">VALUE_ADDED_FLAG</isNotNull>
+	    <isNotNull prepend="," property="innerProdNbr">INNER_PROD_NBR</isNotNull>
+	    <isNotNull prepend="," property="commonRegionId">COMMON_REGION_ID</isNotNull>
+	    <isNotNull prepend="," property="isTemplate">IS_TEMPLATE</isNotNull>
+	    <isNotNull prepend="," property="parentProductId">PARENT_PRODUCT_ID</isNotNull>
+	    <isNotNull prepend="," property="cooperationType">COOPERATION_TYPE</isNotNull>
+	     <isNotNull prepend="," property="tenantId">TENANT_ID</isNotNull>
+	  </dynamic>
+	  )
+	  VALUES
+	  (utc_timestamp(),utc_timestamp()
+	  <dynamic>
+	    <isNotNull prepend="," property="productId">#productId#</isNotNull>
+	    <isNotNull prepend="," property="productNbr">#productNbr#</isNotNull>
+	    <isNotNull prepend="," property="productName">#productName#</isNotNull>
+	    <isNotNull prepend="," property="productDesc">#productDesc#</isNotNull>
+	    <isNotNull prepend="," property="manageGrade">#manageGrade#</isNotNull>
+	    <isNotNull prepend="," property="productType">#productType#</isNotNull>
+	    <isNotNull prepend="," property="productProviderId">#productProviderId#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="effDate">#effDate#</isNotNull>
+	    <isNotNull prepend="," property="expDate">#expDate#</isNotNull>
+	    <isNotNull prepend="," property="prodFuncType">#prodFuncType#</isNotNull>
+	    <isNotNull prepend="," property="extProdId">#extProdId#</isNotNull>
+	    <isNotNull prepend="," property="valueAddedFlag">#valueAddedFlag#</isNotNull>
+	    <isNotNull prepend="," property="innerProdNbr">#innerProdNbr#</isNotNull>
+	    <isNotNull prepend="," property="commonRegionId">#commonRegionId#</isNotNull>
+	    <isNotNull prepend="," property="isTemplate">#isTemplate#</isNotNull>
+	    <isNotNull prepend="," property="parentProductId">#parentProductId#</isNotNull>
+	    <isNotNull prepend="," property="cooperationType">#cooperationType#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	   </dynamic>
+	  )
+	</insert>
+	
+	<select id="getPageInTypeIds" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	 	select max,length,next from sequenceconftable where name=#pageInTypeName#
+	</select>
+ 	
+ 	<select id="isExitAttrByCode" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		select count(1) from attr_spec where attr_spec_code = #attrCode# and ORG_ID = #orgId# and state= 'D' and TENANT_ID=#tenantId#
+	</select>
+</sqlMap>

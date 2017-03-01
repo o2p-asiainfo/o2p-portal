@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+	xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+	typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath"
+	targetNamespace="http://www.activiti.org/test">
+	<process id="myProcess" name="My process" isExecutable="true">
+		<startEvent id="T100003142" name="startEvent" />
+		<endEvent id="T100003143" name="endEvent" />
+		<receiveTask id="T100003144" name="receiveTaskT100003144">
+			<extensionElements>
+				<activiti:executionListener event="start"
+					delegateExpression="${receiveTaskListener}" />
+			</extensionElements>
+		</receiveTask>
+		<userTask id="T100003145" name="userTaskT100003145">
+			<extensionElements>
+				<activiti:taskListener event="create"
+					delegateExpression="${userTaskListener}" />
+			</extensionElements>
+		</userTask>
+		<inclusiveGateway id="T100003146" name="inclusiveGatewayT100003146" />
+		<sequenceFlow id="transition100003147" sourceRef="T100003142"
+			targetRef="T100003146" />
+		<sequenceFlow id="transition100003148" sourceRef="T100003146"
+			targetRef="T100003144" />
+		<sequenceFlow id="transition100003149" sourceRef="T100003144"
+			targetRef="T100003143" />
+		<sequenceFlow id="transition100003150" sourceRef="T100003146"
+			targetRef="T100003145" />
+		<sequenceFlow id="transition100003151" sourceRef="T100003145"
+			targetRef="T100003143" />
+	</process>
+	<bpmndi:BPMNDiagram id="BPMNDiagram_myProcess">
+		<bpmndi:BPMNPlane bpmnElement="myProcess" id="BPMNPlane_myProcess">
+			<bpmndi:BPMNShape bpmnElement="T100003142" id="BPMNShape_T100003142">
+				<omgdc:Bounds width="48" height="48" x="200.669982910156"
+					y="95.9700012207031" />
+			</bpmndi:BPMNShape>
+			<bpmndi:BPMNShape bpmnElement="T100003143" id="BPMNShape_T100003143">
+				<omgdc:Bounds width="48" height="48" x="887.669982910156"
+					y="79.9700012207031" />
+			</bpmndi:BPMNShape>
+			<bpmndi:BPMNShape bpmnElement="T100003144" id="BPMNShape_T100003144">
+				<omgdc:Bounds width="95" height="50" x="660.669982910156"
+					y="27.9700012207031" />
+			</bpmndi:BPMNShape>
+			<bpmndi:BPMNShape bpmnElement="T100003145" id="BPMNShape_T100003145">
+				<omgdc:Bounds width="95" height="50" x="699.669982910156"
+					y="129.970001220703" />
+			</bpmndi:BPMNShape>
+			<bpmndi:BPMNShape bpmnElement="T100003146" id="BPMNShape_T100003146">
+				<omgdc:Bounds width="48" height="48" x="355.669982910156"
+					y="96.9700012207031" />
+			</bpmndi:BPMNShape>
+			<bpmndi:BPMNEdge bpmnElement="transition100003147"
+				id="BPMNShape_transition100003147">
+				<omgdi:waypoint x="248" y="119" />
+				<omgdi:waypoint x="355" y="120" />
+			</bpmndi:BPMNEdge>
+			<bpmndi:BPMNEdge bpmnElement="transition100003148"
+				id="BPMNShape_transition100003148">
+				<omgdi:waypoint x="403" y="120" />
+				<omgdi:waypoint x="660" y="52" />
+			</bpmndi:BPMNEdge>
+			<bpmndi:BPMNEdge bpmnElement="transition100003149"
+				id="BPMNShape_transition100003149">
+				<omgdi:waypoint x="755" y="52" />
+				<omgdi:waypoint x="887" y="103" />
+			</bpmndi:BPMNEdge>
+			<bpmndi:BPMNEdge bpmnElement="transition100003150"
+				id="BPMNShape_transition100003150">
+				<omgdi:waypoint x="403" y="120" />
+				<omgdi:waypoint x="699" y="154" />
+			</bpmndi:BPMNEdge>
+			<bpmndi:BPMNEdge bpmnElement="transition100003151"
+				id="BPMNShape_transition100003151">
+				<omgdi:waypoint x="794" y="154" />
+				<omgdi:waypoint x="887" y="103" />
+			</bpmndi:BPMNEdge>
+		</bpmndi:BPMNPlane>
+	</bpmndi:BPMNDiagram>
+</definitions>

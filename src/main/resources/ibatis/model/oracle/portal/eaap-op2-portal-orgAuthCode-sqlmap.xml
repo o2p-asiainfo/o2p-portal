@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="orgAuthCode">
+	<select id="selectOrgAuthCodeSeq" resultClass="java.lang.String">
+		SELECT SEQ_ORG_AUTH_CODE.NEXTVAL FROM DUAL
+	 </select>
+	 
+<insert id="insertOrgAuthCode" parameterClass="com.ailk.eaap.op2.bo.OrgAuthCode">
+     <selectKey resultClass="int" keyProperty="orgAuthId">
+			SELECT SEQ_ORG_AUTH_CODE.NEXTVAL FROM DUAL
+	</selectKey>	
+  insert into org_auth_code
+  (AUTH_TIME, DISABLE_TIME
+  <dynamic >
+    <isNotNull prepend="," property="orgAuthId">ORG_AUTH_ID</isNotNull>
+    <isNotNull prepend="," property="orgId">ORG_ID</isNotNull>
+    <isNotNull prepend="," property="authType">AUTH_TYPE</isNotNull>
+    <isNotNull prepend="," property="authCode">AUTH_CODE</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+  values
+  (sysdate, sysdate+(30/24/60)
+   <dynamic >
+    <isNotNull prepend="," property="orgAuthId">#orgAuthId#</isNotNull>
+    <isNotNull prepend="," property="orgId">#orgId#</isNotNull>
+    <isNotNull prepend="," property="authType">#authType#</isNotNull>
+    <isNotNull prepend="," property="authCode">#authCode#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+   </dynamic>
+  )
+</insert>
+
+<update id="updateOrgAuthDisableTime" parameterClass="java.lang.String" >
+  	update org_auth_code set auth_type = 2  where AUTH_CODE = #authCode# 
+</update>
+
+<select id="selectOrgAuthCode" parameterClass="com.ailk.eaap.op2.bo.OrgAuthCode" resultClass="com.ailk.eaap.op2.bo.OrgAuthCode">
+  select ORG_AUTH_ID ORGAUTHID,
+         ORG_ID ORGID,
+         AUTH_TYPE AUTHTYPE,
+         AUTH_CODE AUTHCODE,
+         AUTH_TIME AUTHTIME,
+         DISABLE_TIME DISABLETIME,
+         tenant_id tenantId
+    from org_auth_code 
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="orgId"> ORG_ID=#orgId#</isNotNull>
+    <isNotNull prepend="and" property="orgAuthId"> ORG_AUTH_ID=#orgAuthId#</isNotNull>
+    <isNotNull prepend="and" property="authCode"> AUTH_CODE=#authCode#</isNotNull>
+    <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  and auth_type = 1
+</select>
+
+<select id="getCurrentDateTime"  resultClass="java.lang.String">
+SELECT TO_CHAR(sysdate,'YYYY-MM-DD HH24:MI:SS') AS CurrentDateTime  FROM DUAL
+</select>
+
+</sqlMap>

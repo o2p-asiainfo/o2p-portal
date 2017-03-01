@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-attrSpec">
+
+<!-- 时间规格 -->
+  <select id="queryTimeSegDef" parameterClass="java.util.HashMap"  resultClass="com.ailk.eaap.op2.bo.TimeSegDef">
+      select b_.*  from (select rownum RECNO,a_.* from (
+      select  seg_id segId,
+              seg_name segName,
+			  (SELECT d.cep_name from main_data d,main_data_type  t WHERE t.mdt_cd=d.mdt_cd and t.tenant_id=#tenantId# and d.tenant_id=#tenantId# and t.mdt_sign='TimeSegDef_DateMode' and d.cep_values=DATE_MODE) dateMode,
+			  (SELECT d.cep_name from main_data d,main_data_type  t WHERE t.mdt_cd=d.mdt_cd and t.tenant_id=#tenantId# and d.tenant_id=#tenantId# and t.mdt_sign='TimeSegDef_TimeMode' and d.cep_values=TIME_MODE) timeMode,
+      		  DESCRIPTION description,
+      		  STATUS_CD statusCd,
+      		  STATUS_DATE statusDate,
+      		  CREATE_DATE createDate,
+      		  version version,
+      		  MAINTAIN_TYPE maintainType ,
+      		  tenant_id tenantId ,
+      		  OPERATE_CODE operateCode 
+      from TIME_SEG_DEF  where status_cd = 1000 
+      <dynamic>
+      	<isNotNull prepend="and" property="segId"> seg_id=#segId# </isNotNull>
+      	<isNotNull prepend="and" property="sourceType"> SOURCE_TYPE=#sourceType# </isNotNull>
+      	<isNotNull prepend="and" property="segNameOrId"> (seg_name like '%'||#segNameOrId#||'%' or seg_id like '%'||#segNameOrId#||'%') </isNotNull>
+      	<isNotNull prepend="and" property="dateMode"> DATE_MODE = #dateMode# </isNotNull>
+      	<isNotNull prepend="and" property="timeMode"> TIME_MODE = #timeMode# </isNotNull>
+      	<isNotNull prepend="and" property="org_id"> org_id = #org_id# </isNotNull>
+      	<isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+      	<isNotNull prepend="and" property="operateCode">  OPERATE_CODE=#operateCode#</isNotNull>
+      </dynamic>
+      order by seg_id desc 
+     ) a_ where <![CDATA[ ROWNUM <= (#pro_mysql# + #page_record# ) ]]> ORDER BY ROWNUM  ) b_ where RECNO BETWEEN (#pro_mysql#+1) AND (#pro_mysql# + #page_record# ) 
+      
+ </select>
+ 
+ <select id="countTimeSegDef" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+ 	select count(1) 
+ 	from TIME_SEG_DEF where status_cd = 1000 
+   <dynamic>
+      	<isNotNull prepend="and" property="segId"> seg_id=#segId# </isNotNull>
+      	<isNotNull prepend="and" property="sourceType"> SOURCE_TYPE=#sourceType# </isNotNull>
+      	<isNotNull prepend="and" property="segNameOrId"> (seg_name like '%'||#segNameOrId#||'%' or seg_id like '%'||#segNameOrId#||'%') </isNotNull>
+      	<isNotNull prepend="and" property="dateMode"> DATE_MODE = #dateMode# </isNotNull>
+      	<isNotNull prepend="and" property="timeMode"> TIME_MODE = #timeMode# </isNotNull>
+      	<isNotNull prepend="and" property="org_id"> org_id = #org_id# </isNotNull>
+      	<isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+      	<isNotNull prepend="and" property="operateCode">  OPERATE_CODE=#operateCode#</isNotNull>
+      </dynamic>
+ </select>
+ 
+  <insert id="addTimesegDef" parameterClass="com.ailk.eaap.op2.bo.TimeSegDef">
+  	<selectKey resultClass="int" keyProperty="segId">
+		  SELECT SEQ_TIME_SEG_DEF.NEXTVAL from dual
+    </selectKey>
+	 	insert into TIME_SEG_DEF 
+	 	(create_date,status_date, version
+	  <dynamic>
+	    <isNotNull prepend="," property="segId">SEG_ID</isNotNull>
+	    <isNotNull prepend="," property="segName">SEG_NAME</isNotNull>
+	    <isNotNull prepend="," property="dateMode">DATE_MODE</isNotNull>
+	    <isNotNull prepend="," property="timeMode">TIME_MODE</isNotNull>
+	    <isNotNull prepend="," property="description">description</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+	    <isNotNull prepend="," property="maintainType">MAINTAIN_TYPE</isNotNull>
+	    <isNotNull prepend="," property="orgId">ORG_ID</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	    <isNotNull prepend="," property="operateCode">  OPERATE_CODE</isNotNull> 
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0 ,SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0 
+	  <dynamic>
+	    <isNotNull prepend="," property="segId">#segId#</isNotNull>
+	    <isNotNull prepend="," property="segName">#segName#</isNotNull>
+	    <isNotNull prepend="," property="dateMode">#dateMode#</isNotNull>
+	    <isNotNull prepend="," property="timeMode">#timeMode#</isNotNull>
+	    <isNotNull prepend="," property="description">#description#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="maintainType">#maintainType#</isNotNull> 
+	    <isNotNull prepend="," property="orgId">#orgId#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	    <isNotNull prepend="," property="operateCode"> #operateCode#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+ 
+  <update id="updateTimeSegDef" parameterClass="com.ailk.eaap.op2.bo.TimeSegDef" >
+  	update TIME_SEG_DEF   set version=SYS_EXTRACT_UTC(current_timestamp)+0,status_date=SYS_EXTRACT_UTC(current_timestamp)+0
+  	 <dynamic>
+	    <isNotNull prepend="," property="segName">SEG_NAME=#segName#</isNotNull>
+	    <isNotNull prepend="," property="dateMode">DATE_MODE=#dateMode#</isNotNull>
+	    <isNotNull prepend="," property="timeMode">TIME_MODE=#timeMode#</isNotNull>
+	    <isNotNull prepend="," property="description">description=#description#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD=#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+	    <isNotNull prepend="," property="operateCode">  OPERATE_CODE=#operateCode#</isNotNull>
+	  </dynamic>
+	  where seg_id = #segId#
+	  <dynamic >
+            <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+            <isNotNull prepend="and" property="operateCode"> OPERATE_CODE=#operateCode#</isNotNull>
+      </dynamic>  
+  </update>
+  
+  <!--时间规格详情 -->
+  <select id="queryTimeSegDtl" parameterClass="java.util.HashMap"  resultClass="com.ailk.eaap.op2.bo.TimeSegDtl">
+      select a.SEG_ID segId,
+             a.START_DATE startDate,
+             a.START_TIME startTime,
+             a.END_DATE endDate,
+             a.END_TIME endTime,
+             a.CREATE_DATE createDate,
+             a.VERSION version,
+             a.STATUS_CD statusCd,
+             a.STATUS_DATE statusDate ,
+             a.tenant_id tenantId,
+             a.OPERATE_CODE operateCode 
+      from TIME_SEG_DTL a where status_cd = 1000 
+      and a.SEG_ID=#segId# and tenant_id=#tenantId#
+ </select>
+
+ <update id="updateTimeSegDtl" parameterClass="com.ailk.eaap.op2.bo.TimeSegDtl" >
+  	update TIME_SEG_DTL set version = SYS_EXTRACT_UTC(current_timestamp)+0 ,STATUS_DATE = SYS_EXTRACT_UTC(current_timestamp)+0 
+  	 <dynamic>
+	    <isNotNull prepend="," property="startDate">START_DATE=#startDate#</isNotNull>
+	    <isNotNull prepend="," property="startTime">START_TIME=#startTime#</isNotNull>
+	    <isNotNull prepend="," property="endDate">END_DATE=#endDate#</isNotNull>
+	    <isNotNull prepend="," property="endTime">END_TIME=#endTime#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD=#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+	    <isNotNull prepend="," property="operateCode"> OPERATE_CODE=#operateCode#</isNotNull>
+	  </dynamic>
+	  where  time_seg_dtl_id=#timeSegDtlId# 
+	  <dynamic >
+            <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>  
+  </update>
+  
+  <insert id="addTimeSegDtl" parameterClass="com.ailk.eaap.op2.bo.TimeSegDtl">
+  	<selectKey resultClass="int" keyProperty="timeSegDtlId">
+		  SELECT SEQ_TIME_SEG_DTL.NEXTVAL from dual
+    </selectKey>
+	 	insert into TIME_SEG_DTL  
+	 	(CREATE_DATE, version ,STATUS_DATE 
+	  <dynamic>
+	    <isNotNull prepend="," property="timeSegDtlId">time_seg_dtl_id</isNotNull>
+	    <isNotNull prepend="," property="segId">SEG_ID</isNotNull>
+	    <isNotNull prepend="," property="startDate">START_DATE</isNotNull>
+	    <isNotNull prepend="," property="startTime">START_TIME</isNotNull>
+	    <isNotNull prepend="," property="endDate">END_DATE</isNotNull>
+	    <isNotNull prepend="," property="endTime">END_TIME</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	    <isNotNull prepend="," property="operateCode"> OPERATE_CODE</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0 , SYS_EXTRACT_UTC(current_timestamp)+0 ,SYS_EXTRACT_UTC(current_timestamp)+0  
+	  <dynamic>
+	    <isNotNull prepend="," property="timeSegDtlId">#timeSegDtlId#</isNotNull>
+	    <isNotNull prepend="," property="segId">#segId#</isNotNull>
+	    <isNotNull prepend="," property="startDate">#startDate#</isNotNull>
+	    <isNotNull prepend="," property="startTime">#startTime#</isNotNull>
+	    <isNotNull prepend="," property="endDate">#endDate#</isNotNull>
+	    <isNotNull prepend="," property="endTime">#endTime#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	    <isNotNull prepend="," property="operateCode"> #operateCode#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+  <delete id="deleteTimeSeqDtl" parameterClass="com.ailk.eaap.op2.bo.TimeSegDef">
+     delete from TIME_SEG_DTL where seg_id =#segId# and tenant_id=#tenantId#
+  </delete>
+   <delete id="deleteTimeSegDef" parameterClass="java.util.HashMap">
+     delete from TIME_SEG_DEF where seg_id =#segId# and tenant_id=#tenantId#
+  </delete>
+  <select id="countDiscountPrice" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+ 	select count(1) 
+ 	from DISCOUNT_PRICE where seg_id = #segId# and tenant_id=#tenantId#
+ </select>
+  <!-- 基站 -->
+   <select id="queryRsSysCellDef" parameterClass="java.util.HashMap"  resultClass="com.ailk.eaap.op2.bo.RsSysCellDef">
+     select b_.*  from (select rownum RECNO,a_.* from (
+      select  op_id opId,
+              name opName,
+      		  DESCRIPTION description,
+      		  STATUS_CD statusCd,
+      		  STATUS_DATE statusDate,
+      		  CREATE_DATE createDate,
+      		  longitude longitude,
+      		  latitude latitude,
+      		  version version ,
+      		  tenant_id tenantId,
+      		  OPERATE_CODE operateCode 
+      from RS_SYS_CELL_DEF   where status_cd = 1000 
+      <dynamic >
+      	<isNotNull prepend="and" property="opId"> OP_ID=#opId# </isNotNull>
+      	<isNotNull prepend="and" property="opNameOrOpId"> (op_id like '%'||#opNameOrOpId#||'%' or name like '%'||#opNameOrOpId#||'%') </isNotNull>
+      	<isNotNull prepend="and" property="nameOrId"> (op_id like concat('%',#nameOrId#,'%') or name like concat('%',#nameOrId#,'%')) </isNotNull>
+      	<isNotNull prepend="" property="lat">
+			<isNotNull prepend="" property="lng">
+				<isNotNull prepend="and" property="radius">
+					<![CDATA[
+						12756274*asin(Sqrt(power(sin((#lat#-latitude)*0.008726646),2) + Cos(#lat#*0.0174533)*Cos(latitude*0.0174533)*power(sin((#lng#-longitude)*0.008726646),2)))<=#radius#
+					]]>
+				</isNotNull>
+			</isNotNull>
+		</isNotNull>
+		<isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+	    <isNotNull prepend="and" property="operateCode"> OPERATE_CODE=#operateCode#</isNotNull>
+      </dynamic>
+      order by op_id desc 
+    ) a_ where <![CDATA[ ROWNUM <= (#pro_mysql# + #page_record# ) ]]> ORDER BY ROWNUM  ) b_ where RECNO BETWEEN (#pro_mysql#+1) AND (#pro_mysql# + #page_record# ) 
+ 
+ </select>
+ <select id="selRsSysCellDef" parameterClass="java.util.HashMap"  resultClass="com.ailk.eaap.op2.bo.RsSysCellDef">
+      select  op_id opId,
+              name opName,
+      		  DESCRIPTION description,
+      		  STATUS_CD statusCd,
+      		  STATUS_DATE statusDate,
+      		  CREATE_DATE createDate,
+      		  longitude longitude,
+      		  latitude latitude,
+      		  version version ,
+      		  tenant_id tenantId
+      from RS_SYS_CELL_DEF   where status_cd = 1000 
+      and OP_ID in 
+      <dynamic>
+      	<isNotNull prepend="" property="defaultValue"> 
+      		<iterate  prepend="" property="defaultValue"  open="("  close=")"  conjunction="," >
+             				  #defaultValue[]#
+	  		</iterate>
+      	</isNotNull>
+      	<isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+      	<isNotNull prepend="and" property="operateCode"> OPERATE_CODE=#operateCode#</isNotNull>
+      </dynamic>
+      order by op_id desc 
+ </select>
+ 
+ <select id="countRsSysCellDef" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+ 	select count(1) 
+ 	from RS_SYS_CELL_DEF where status_cd = 1000 
+   <dynamic>
+      	<isNotNull prepend="and" property="opId"> OP_ID=#opId# </isNotNull>
+      	<isNotNull prepend="and" property="opNameOrOpId"> (op_id like '%'||#opNameOrOpId#||'%' or name like '%'||#opNameOrOpId#||'%') </isNotNull>
+      	<isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+        <isNotNull prepend="and" property="operateCode"> OPERATE_CODE=#operateCode#</isNotNull>
+      </dynamic>
+ </select>
+ 
+  <insert id="addPricngPlanAttr" parameterClass="com.ailk.eaap.op2.bo.PricngPlanAttr">
+  	<selectKey resultClass="int" keyProperty="pricingPlanAttrId">
+		  SELECT SEQ_PRICING_PLAN_ATTR.NEXTVAL from dual
+    </selectKey>
+	 	insert into PRICING_PLAN_ATTR 
+	 	(create_date,status_date 
+	  <dynamic>
+	    <isNotNull prepend="," property="pricingPlanAttrId">PRICING_PLAN_ATTR_ID</isNotNull>
+	    <isNotNull prepend="," property="pricingInfoId">PRICING_INFO_ID</isNotNull>
+	    <isNotNull prepend="," property="attrSpecId">ATTR_SPEC_ID</isNotNull>
+	    <isNotNull prepend="," property="defaultValue">DEFAULT_VALUE</isNotNull>
+	    <isNotNull prepend="," property="description">description</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+	    <isNotNull prepend="," property="seqId">SEQ_ID</isNotNull>
+	    <isNotNull prepend="," property="defaultValueName">DEFAULT_VALUE_NAME</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0 ,SYS_EXTRACT_UTC(current_timestamp)+0 
+	  <dynamic>
+	    <isNotNull prepend="," property="pricingPlanAttrId">#pricingPlanAttrId#</isNotNull>
+	    <isNotNull prepend="," property="pricingInfoId">#pricingInfoId#</isNotNull>
+	    <isNotNull prepend="," property="attrSpecId">#attrSpecId#</isNotNull>
+	    <isNotNull prepend="," property="defaultValue">#defaultValue#</isNotNull>
+	    <isNotNull prepend="," property="description">#description#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="seqId">#seqId#</isNotNull>
+	    <isNotNull prepend="," property="defaultValueName">#defaultValueName#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+  
+  <update id="updatePricngPlanAttr" parameterClass="com.ailk.eaap.op2.bo.PricngPlanAttr" >
+  	update PRICING_PLAN_ATTR set STATUS_DATE = SYS_EXTRACT_UTC(current_timestamp)+0 
+  	 <dynamic>
+	    <isNotNull prepend="," property="defaultValue">DEFAULT_VALUE=#defaultValue#</isNotNull>
+	    <isNotNull prepend="," property="defaultValueName">DEFAULT_VALUE_NAME=#defaultValueName#</isNotNull>
+	    <isNotNull prepend="," property="seqId">SEQ_ID=#seqId#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD=#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+ 	<dynamic prepend=" where ">
+	    <isNotNull prepend="and" property="pricingPlanAttrId"> PRICING_PLAN_ATTR_ID=#pricingPlanAttrId#</isNotNull>
+	    <isNotNull prepend="and" property="pricingInfoId"> PRICING_INFO_ID=#pricingInfoId#</isNotNull>
+	    <isNotNull prepend="and" property="attrSpecId"> ATTR_SPEC_ID=#attrSpecId#</isNotNull>
+	    <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+  </update>
+ <select id="queryPricngPlanAttr" parameterClass="com.ailk.eaap.op2.bo.PricngPlanAttr"  resultClass="com.ailk.eaap.op2.bo.PricngPlanAttr">
+      select  p.PRICING_PLAN_ATTR_ID pricingPlanAttrId,
+              p.PRICING_INFO_ID pricingInfoId,
+      		  p.ATTR_SPEC_ID attrSpecId,
+      		  p.DEFAULT_VALUE defaultValue,
+      		  p.DEFAULT_VALUE_NAME defaultValueName,
+      		  p.STATUS_CD statusCd,
+      		  p.SEQ_ID seqId,
+      		  a.CHOOSE_URL chooseURL,
+      		  a.PAGE_IN_TYPE pageInType ,
+      		  a.ATTR_SPEC_NAME attrSpecName ,
+      		  a.ATTR_SPEC_DESC attrSpecDesc ,
+      		  p.tenant_id
+      from PRICING_PLAN_ATTR p,ATTR_SPEC a  where p.status_cd = 10 and p.ATTR_SPEC_ID = a.ATTR_SPEC_ID  
+      and p.tenant_id=#tenantId#
+      and a.tenant_id=#tenantId#
+      <dynamic >
+      	<isNotNull prepend="and" property="pricingPlanAttrId"> p.PRICING_PLAN_ATTR_ID=#pricingPlanAttrId# </isNotNull>
+	    <isNotNull prepend="and" property="pricingInfoId"> p.PRICING_INFO_ID=#pricingInfoId# </isNotNull>
+	    <isNotNull prepend="and" property="attrSpecId"> p.ATTR_SPEC_ID=#attrSpecId# </isNotNull>
+      </dynamic>
+      order by p.PRICING_PLAN_ATTR_ID desc 
+ </select>
+ <select id="queryPricePlanLifeCycle" parameterClass="com.ailk.eaap.op2.bo.PricePlanLifeCycle"  resultClass="com.ailk.eaap.op2.bo.PricePlanLifeCycle">
+       select  p.PRICE_PLAN_ID pricePlanId,
+              p.HALF_CYCLE_FLAG halfCycleFlag,
+      		  p.CYCLE_UNIT cycleUnit,
+      		  p.CYCLE_TYPE cycleType,
+      		  p.CYCLE_SYNC_FLAG cycleSyncFlag,
+      		  p.SUB_EFFECT_MODE subEffectMode,
+      		  p.SUB_DELAY_UNIT subDelayUnit,
+      		  p.SUB_DELAY_CYCLE subDelayCycle,
+      		  p.UNSUB_EFFECT_MODE unSubEffectMode ,
+      		  p.UNSUB_DELAY_UNIT unSubDelayUnit ,
+      		  p.UNSUB_DELAY_CYCLE unSubDelayCycle,
+      		  p.VALID_UNIT validUnit,
+      		  p.VALID_TYPE vaildType,
+      		  p.FIXED_EXPIRE_DATE fixedExpireDate,
+      		  p.MODIFY_DATE modifyDate,
+      		  p.STATUS_CD statusCd,
+      		  p.tenant_id tenantId
+      		  
+      from PRICE_PLAN_LIFECYCLE p where p.status_cd = 10 
+      <dynamic >
+      	<isNotNull prepend="and" property="pricePlanId"> p.PRICE_PLAN_ID=#pricePlanId# </isNotNull>
+      	<isNotNull prepend="and" property="tenantId">  p.tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ </select>
+ <update id="updatePricePlanLifeCycle" parameterClass="com.ailk.eaap.op2.bo.PricePlanLifeCycle" >
+  	update PRICE_PLAN_LIFECYCLE set STATUS_DATE = SYS_EXTRACT_UTC(current_timestamp)+0 
+  	 <dynamic>
+	     <isNotNull prepend="," property="cycleUnit">CYCLE_UNIT=#cycleUnit#</isNotNull>
+	    <isNotNull prepend="," property="cycleType">CYCLE_TYPE=#cycleType#</isNotNull>
+	    <isNotNull prepend="," property="cycleSyncFlag">CYCLE_SYNC_FLAG=#cycleSyncFlag#</isNotNull>
+	    <isNotNull prepend="," property="subEffectMode">SUB_EFFECT_MODE=#subEffectMode#</isNotNull>
+	    <isNotNull prepend="," property="subDelayUnit">SUB_DELAY_UNIT=#subDelayUnit#</isNotNull>
+	    <isNotNull prepend="," property="subDelayCycle">SUB_DELAY_CYCLE=#subDelayCycle#</isNotNull>
+	    <isNotNull prepend="," property="validUnit">VALID_UNIT=#validUnit#</isNotNull>
+	    <isNotNull prepend="," property="vaildType">VALID_TYPE=#vaildType#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD=#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="fixedExpireDate">FIXED_EXPIRE_DATE=#fixedExpireDate#</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+ 	<dynamic prepend=" where ">
+	    <isNotNull prepend="and" property="pricePlanId"> PRICE_PLAN_ID=#pricePlanId#</isNotNull>
+	    <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+	 </dynamic>
+  </update>
+  <insert id="addPricePlanLifeCycle" parameterClass="com.ailk.eaap.op2.bo.PricePlanLifeCycle">
+	 	insert into PRICE_PLAN_LIFECYCLE 
+	 	(MODIFY_DATE,STATUS_DATE ,CREATE_DATE 
+	  <dynamic>
+	    <isNotNull prepend="," property="pricePlanId">PRICE_PLAN_ID</isNotNull>
+	    <isNotNull prepend="," property="cycleUnit">CYCLE_UNIT</isNotNull>
+	    <isNotNull prepend="," property="cycleType">CYCLE_TYPE</isNotNull>
+	    <isNotNull prepend="," property="cycleSyncFlag">CYCLE_SYNC_FLAG</isNotNull>
+	    <isNotNull prepend="," property="subEffectMode">SUB_EFFECT_MODE</isNotNull>
+	    <isNotNull prepend="," property="subDelayUnit">SUB_DELAY_UNIT</isNotNull>
+	    <isNotNull prepend="," property="subDelayCycle">SUB_DELAY_CYCLE</isNotNull>
+	    <isNotNull prepend="," property="validUnit">VALID_UNIT</isNotNull>
+	    <isNotNull prepend="," property="vaildType">VALID_TYPE</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+	    <isNotNull prepend="," property="fixedExpireDate">FIXED_EXPIRE_DATE</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0  ,SYS_EXTRACT_UTC(current_timestamp)+0  ,SYS_EXTRACT_UTC(current_timestamp)+0 
+	  <dynamic>
+	   <isNotNull prepend="," property="pricePlanId">#pricePlanId#</isNotNull>
+	    <isNotNull prepend="," property="cycleUnit">#cycleUnit#</isNotNull>
+	    <isNotNull prepend="," property="cycleType">#cycleType#</isNotNull>
+	    <isNotNull prepend="," property="cycleSyncFlag">#cycleSyncFlag#</isNotNull>
+	    <isNotNull prepend="," property="subEffectMode">#subEffectMode#</isNotNull>
+	    <isNotNull prepend="," property="subDelayUnit">#subDelayUnit#</isNotNull>
+	    <isNotNull prepend="," property="subDelayCycle">#subDelayCycle#</isNotNull>
+	    <isNotNull prepend="," property="validUnit">#validUnit#</isNotNull>
+	    <isNotNull prepend="," property="vaildType">#vaildType#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="fixedExpireDate">#fixedExpireDate#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+  <!-- /////////////////////////////////////////////////////////////////// -->
+	
+</sqlMap>

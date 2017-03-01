@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="eaap-op2-portal-reseller-resourceApply">
+	<!-- 卡资源查询列表 -->
+	<select id="queryApplyCardList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">	
+		 SELECT * FROM (SELECT ROW_NUMBER() OVER( ORDER BY APPLY_ID DESC ) rn , newtab.* FROM (
+		 	SELECT A.APPLY_ID,B.APPLY_DETAIL_ID ,B.PRIOVINCE,B.CITY,B.RES_TYPE_ID,C.RES_TYPE_NAME,C.APPLY_TYPE_ID,B.AMOUNT,A.APPLY_DATE,A.DESCRIPTOR,A.STATE,B.NUMBER_SEGMENT,F.RES_TYPE_NAME FRES_TYPE_NAME,B.RESULT_AMOUNT,A.AUDIT_DESCRIPTOR ,A.FILE_NAME ,        
+			  (SELECT D.ZONE_NAME FROM AREA D WHERE B.PRIOVINCE = D.AREA_ID) AREA_PROVINCE,
+			  (SELECT T.ZONE_NAME FROM AREA T WHERE B.CITY = T.AREA_ID) AREA_CITY
+		   FROM APPLY_INFO A,APPLY_INFO_DETAIL B,APPLY_RESOURCE_TYPE C , APPLY_RESOURCE_TYPE F 
+		   WHERE A.APPLY_ID = B.APPLY_ID AND B.RES_TYPE_ID = C.RES_TYPE_ID AND F.RES_TYPE_ID = B.RESULT_RES_TYPE_ID  
+		   AND A.tenant_id=B.tenant_id AND B.tenant_id=C.tenant_id AND C.tenant_id=F.tenant_id
+		 <dynamic>
+		 	<isNotNull prepend="AND" property="state"> A.STATE=#state#</isNotNull>
+		 	<isNotNull prepend="AND" property="applyTypeId"> A.APPLY_TYPE_ID=#applyTypeId#</isNotNull>
+		 	<isNotNull prepend="AND" property="priovince"> B.PRIOVINCE=#priovince#</isNotNull>
+		 	<isNotNull prepend="AND" property="city"> B.CITY=#city#</isNotNull>
+		 	<isNotNull prepend="and" property="beginTime"> <![CDATA[ TO_CHAR(A.APPLY_DATE,'YYYY-MM-DD') >= #beginTime# ]]></isNotNull>
+	   		<isNotNull prepend="and" property="endTime"> <![CDATA[ TO_CHAR(A.APPLY_DATE,'YYYY-MM-DD') <= #endTime# ]]></isNotNull>
+	   		<!-- 此字段 区分号码资源发展计划申请与实时申请 -->
+	   		<isNotNull prepend="AND" property="resTypeId"> B.RES_TYPE_ID=#resTypeId#</isNotNull>
+		    <isNotNull prepend="AND" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		 </dynamic>
+		  ) newtab ) WHERE rn BETWEEN #pro# AND #end# 
+	</select>
+	
+	<!-- 总记录数 -->
+	<select id="queryApplyCardCount" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	 SELECT  COUNT(1) ALLNUM FROM  APPLY_INFO A,APPLY_INFO_DETAIL B,APPLY_RESOURCE_TYPE C , APPLY_RESOURCE_TYPE F  
+		  WHERE A.APPLY_ID = B.APPLY_ID AND B.RES_TYPE_ID = C.RES_TYPE_ID AND F.RES_TYPE_ID = B.RESULT_RES_TYPE_ID
+		   AND A.tenant_id=B.tenant_id AND B.tenant_id=C.tenant_id AND C.tenant_id=F.tenant_id
+	 	<dynamic>
+		 	<isNotNull prepend="AND" property="state"> A.STATE=#state#</isNotNull>
+		 	<isNotNull prepend="AND" property="applyTypeId"> A.APPLY_TYPE_ID=#applyTypeId#</isNotNull>
+		 	<isNotNull prepend="AND" property="priovince"> B.PRIOVINCE=#priovince#</isNotNull>
+		 	<isNotNull prepend="AND" property="city"> B.CITY=#city#</isNotNull>
+		 	<isNotNull prepend="and" property="beginTime"> <![CDATA[ TO_CHAR(A.APPLY_DATE,'YYYY-MM-DD') >= #beginTime# ]]></isNotNull>
+	   		<isNotNull prepend="and" property="endTime"> <![CDATA[ TO_CHAR(A.APPLY_DATE,'YYYY-MM-DD') <= #endTime# ]]></isNotNull>
+	   		<isNotNull prepend="AND" property="resTypeId"> B.RES_TYPE_ID=#resTypeId#</isNotNull>
+		    <isNotNull prepend="AND" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		 </dynamic>
+ 	</select>
+ 	
+ 	<!-- 发展计划查询列表 -->
+	<select id="queryNumResPlanList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">	
+		 SELECT * FROM (SELECT ROW_NUMBER() OVER( ORDER BY APPLY_ID DESC ) rn , newtab.* FROM (
+		 	SELECT A.APPLY_ID,B.PRIOVINCE,B.CITY,B.RES_TYPE_ID,C.RES_TYPE_NAME,B.AMOUNT,A.APPLY_DATE,A.DESCRIPTOR,D.CYCLE_NAME,A.STATE,
+			  (SELECT D.ZONE_NAME FROM AREA D WHERE B.PRIOVINCE = D.AREA_ID) AREA_PROVINCE,
+			  (SELECT T.ZONE_NAME FROM AREA T WHERE B.CITY = T.AREA_ID) AREA_CITY
+		   FROM APPLY_INFO A,APPLY_INFO_DETAIL B,APPLY_RESOURCE_TYPE C,APPLY_CYCLE D
+		   WHERE A.APPLY_ID = B.APPLY_ID AND B.RES_TYPE_ID = C.RES_TYPE_ID AND A.CYCLE_ID = D.CYCLE_ID
+		 <dynamic>
+		 	<isNotNull prepend="AND" property="state"> A.STATE=#state#</isNotNull>
+		 	<isNotNull prepend="AND" property="applyTypeId"> A.APPLY_TYPE_ID=#applyTypeId#</isNotNull>
+		 	<isNotNull prepend="AND" property="priovince"> B.PRIOVINCE=#priovince#</isNotNull>
+		 	<isNotNull prepend="AND" property="city"> B.CITY=#city#</isNotNull>
+		 	<isNotNull prepend="and" property="beginTime"> <![CDATA[ TO_CHAR(A.APPLY_DATE,'YYYY-MM-DD') >= #beginTime# ]]></isNotNull>
+	   		<isNotNull prepend="and" property="endTime"> <![CDATA[ TO_CHAR(A.APPLY_DATE,'YYYY-MM-DD') <= #endTime# ]]></isNotNull>
+	   		<!-- 此字段 区分号码资源发展计划申请与实时申请 -->
+	   		<isNotNull prepend="AND" property="resTypeId"> B.RES_TYPE_ID=#resTypeId#</isNotNull>
+		    <isNotNull prepend="AND" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		    <isNotNull prepend="AND" property="tenantId"> B.tenant_id=#tenantId#</isNotNull>
+		    <isNotNull prepend="AND" property="tenantId"> C.tenant_id=#tenantId#</isNotNull>
+		    <isNotNull prepend="AND" property="tenantId"> D.tenant_id=#tenantId#</isNotNull>		
+		 </dynamic>
+		  ) newtab ) WHERE rn BETWEEN #pro# AND #end# 
+	</select>
+	
+	<!--  发展计划查询总记录数 -->
+	<select id="queryNumResPlanCount" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	  SELECT  COUNT(1) ALLNUM FROM  APPLY_INFO A,APPLY_INFO_DETAIL B,APPLY_RESOURCE_TYPE C,APPLY_CYCLE D
+		  WHERE A.APPLY_ID = B.APPLY_ID AND B.RES_TYPE_ID = C.RES_TYPE_ID AND A.CYCLE_ID = D.CYCLE_ID
+	 	<dynamic>
+		 	<isNotNull prepend="AND" property="state"> A.STATE=#state#</isNotNull>
+		 	<isNotNull prepend="AND" property="applyTypeId"> A.APPLY_TYPE_ID=#applyTypeId#</isNotNull>
+		 	<isNotNull prepend="AND" property="priovince"> B.PRIOVINCE=#priovince#</isNotNull>
+		 	<isNotNull prepend="AND" property="city"> B.CITY=#city#</isNotNull>
+		 	<isNotNull prepend="and" property="beginTime"> <![CDATA[ TO_CHAR(A.APPLY_DATE,'YYYY-MM-DD') >= #beginTime# ]]></isNotNull>
+	   		<isNotNull prepend="and" property="endTime"> <![CDATA[ TO_CHAR(A.APPLY_DATE,'YYYY-MM-DD') <= #endTime# ]]></isNotNull>
+	   		<isNotNull prepend="AND" property="resTypeId"> B.RES_TYPE_ID=#resTypeId#</isNotNull>
+		    <isNotNull prepend="AND" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		    <isNotNull prepend="AND" property="tenantId"> B.tenant_id=#tenantId#</isNotNull>
+		    <isNotNull prepend="AND" property="tenantId"> C.tenant_id=#tenantId#</isNotNull>
+		    <isNotNull prepend="AND" property="tenantId"> D.tenant_id=#tenantId#</isNotNull>		
+		 </dynamic>
+ 	</select>
+ 	
+</sqlMap>

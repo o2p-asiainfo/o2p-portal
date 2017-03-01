@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-process">
+
+ <!-- 获取新环节模板序列 -->
+	<select id="getActivityModelSequence" resultClass="String">
+		select to_char(seq_bpm_act_model.nextval) proc_mod from dual
+	</select>
+	
+	<select id="getPathDetConditionList"  resultClass="java.util.HashMap" >	
+		SELECT d.v_def_id,d.v_name ,d.tenant_id
+		from bpm_act_value_def d 
+		where d.v_level='all' 
+			and d.v_def_id not in (10000,10001)
+			and d.tenant_id=#tenantId# 
+	</select>
+	
+	<select id="getPathDetConditionValueList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" >	
+		SELECT value_id,value_text,tenant_id
+		FROM bpm_act_value_def_value
+		WHERE v_def_id = #conditionId#
+			and tenant_id=#tenantId# 
+	</select>
+	
+	<!--保存中间表数据 -->
+	<insert id="saveFlowMid" parameterClass="java.util.HashMap">
+		insert into flow_country_mid(flow_id,country_id,system_id,flow_state,tenant_id) values
+		(#flow_id#,#country_id#,#system_id#,#flow_state#,#tenantId#)
+	</insert>
+	<!--删除中间表数据 -->
+	<delete id="deleteFlowMid" parameterClass="java.util.HashMap">
+		delete from
+		flow_country_mid where flow_id =#flow_id# and tenant_id=#tenantId#
+	</delete>
+	 
+	<select id="getFlowMid" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" >	
+		select country_id as countryId,system_id as systemId,f.flow_id processId,h.NAME_ PROCESSNAME,f. tenant_id
+		from flow_country_mid f ,act_re_model h
+        where f.flow_id = h.ID_
+		  and f.country_id = #country_id# 
+		<isNotNull prepend="and" property="system_id"> 
+		      f.system_id =#system_id# 
+		</isNotNull>
+		<isNotNull prepend="and" property="processId"> 
+		      f.flow_id =#processId#
+		</isNotNull>
+		 <isNotNull prepend="and" property="tenantId">
+		    f.tenant_id=#tenantId#
+		  </isNotNull>
+	</select>
+	
+	<select id="getFlowStatus" parameterClass="java.util.HashMap" resultClass="String" >	
+		select flow_state as flowStatus
+		from flow_country_mid f 
+        where 
+		   f.country_id = #country_id# 
+		<isNotNull prepend="and" property="system_id"> 
+		      f.system_id =#system_id# 
+		</isNotNull>
+		<isNotNull prepend="and" property="processId"> 
+		      f.flow_id =#processId#
+		</isNotNull>
+		<isNotNull prepend="and" property="tenantId">
+		     f.tenant_id=#tenantId#
+		  </isNotNull>
+	</select>
+	
+	<select id="getFlowName" parameterClass="java.util.HashMap" resultClass="String" >	
+		select h.NAME_ PROCESSNAME
+		from flow_country_mid f ,act_re_model h
+        where f.flow_id = h.ID_
+		  and f.country_id = #country_id# 
+		<isNotNull prepend="and" property="system_id"> 
+		      f.system_id =#system_id# 
+		</isNotNull>
+		<isNotNull prepend="and" property="processId"> 
+		      f.flow_id =#processId#
+		</isNotNull>
+		<isNotNull prepend="and" property="tenantId">
+		     f.tenant_id=#tenantId#
+		  </isNotNull>
+	</select>
+	
+	<insert id="insertWorkTaskConf" parameterClass="com.ailk.eaap.op2.bo.WorkTaskConf">
+  	<selectKey resultClass="java.lang.String"  keyProperty="id">
+		  SELECT SEQ_WORK_TASK_CONF.NEXTVAL from dual
+    </selectKey>
+	 	insert into WORK_TASK_CONF
+	 	(create_date 
+	  <dynamic> 
+	    <isNotNull prepend="," property="id">ID</isNotNull>
+	    <isNotNull prepend="," property="modelId">MODEL_ID</isNotNull>
+	    <isNotNull prepend="," property="businessId">BUSINESS_KEY</isNotNull>
+	    <isNotNull prepend="," property="tacheId">TACHE_ID</isNotNull>
+	    <isNotNull prepend="," property="tacheName">TACHE_NAME</isNotNull>
+	    <isNotNull prepend="," property="fromTacheId">FROM_TACHE_ID</isNotNull>
+	    <isNotNull prepend="," property="taskType">TASK_TYPE</isNotNull> 
+	    <isNotNull prepend="," property="invokeApi">INVOKE_API</isNotNull>
+	    <isNotNull prepend="," property="apiParamMode">API_PARAM_MODE</isNotNull> 
+	    <isNotNull prepend="," property="description">DESCRIPTION</isNotNull>  
+	    <isNotNull prepend="," property="apiParamInId">API_PARAM_IN_ID</isNotNull>
+	    <isNotNull prepend="," property="apiParamOutId">API_PARAM_OUT_ID</isNotNull>
+	    <isNotNull prepend="," property="messageFlowId">MESSAGE_FLOW_ID</isNotNull>
+	    <isNotNull prepend="," property="serInvokeInsId">SER_INVOKE_INS_ID</isNotNull>
+	    <isNotNull prepend="," property="isSchedule">IS_SCHEDULE</isNotNull>
+	    <isNotNull prepend="," property="expressId">EXPRESS_ID</isNotNull>
+	    <isNotNull prepend="," property="scheduleCount">SCHEDULE_COUNT</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0
+	  <dynamic> 
+	    <isNotNull prepend="," property="id">#id#</isNotNull>
+	    <isNotNull prepend="," property="modelId">#modelId#</isNotNull>
+	    <isNotNull prepend="," property="businessId">#businessId#</isNotNull>
+	    <isNotNull prepend="," property="tacheId">#tacheId#</isNotNull>
+	    <isNotNull prepend="," property="tacheName">#tacheName#</isNotNull>
+	    <isNotNull prepend="," property="fromTacheId">#fromTacheId#</isNotNull>
+	    <isNotNull prepend="," property="taskType">#taskType#</isNotNull> 
+	    <isNotNull prepend="," property="invokeApi">#invokeApi#</isNotNull> 
+	    <isNotNull prepend="," property="apiParamMode">#apiParamMode#</isNotNull> 
+	    <isNotNull prepend="," property="description">#description#</isNotNull>
+	    <isNotNull prepend="," property="apiParamInId">#apiParamInId#</isNotNull>
+	    <isNotNull prepend="," property="apiParamOutId">#apiParamOutId#</isNotNull> 
+	    <isNotNull prepend="," property="messageFlowId">#messageFlowId#</isNotNull> 
+	    <isNotNull prepend="," property="serInvokeInsId">#serInvokeInsId#</isNotNull>
+	    <isNotNull prepend="," property="isSchedule">#isSchedule#</isNotNull>
+	    <isNotNull prepend="," property="expressId">#expressId#</isNotNull>
+	    <isNotNull prepend="," property="scheduleCount">#scheduleCount#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+  
+  	<insert id="insertWorkTaskContion" parameterClass="com.ailk.eaap.op2.bo.WorkTaskContion">
+  	<selectKey resultClass="java.lang.String"  keyProperty="id">
+		  SELECT SEQ_WORK_TASK_CONTION.NEXTVAL from dual
+    </selectKey>
+	 	insert into WORK_TASK_CONTION
+	 	(create_date 
+	  <dynamic>  
+	    <isNotNull prepend="," property="id">ID</isNotNull>
+	    <isNotNull prepend="," property="confId">CONF_ID</isNotNull>
+	    <isNotNull prepend="," property="contionKey">CONTION_KEY</isNotNull>
+	    <isNotNull prepend="," property="contionValue">CONTION_VALUE</isNotNull>
+	    <isNotNull prepend="," property="transtionId">TRANSTION_ID</isNotNull>
+	    <isNotNull prepend="," property="fromId">FROM_ID</isNotNull>
+	    <isNotNull prepend="," property="toId">TO_ID</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0 
+	  <dynamic>  
+	    <isNotNull prepend="," property="id">#id#</isNotNull>
+	    <isNotNull prepend="," property="confId">#confId#</isNotNull>
+	    <isNotNull prepend="," property="contionKey">#contionKey#</isNotNull>
+	    <isNotNull prepend="," property="contionValue">#contionValue#</isNotNull> 
+	    <isNotNull prepend="," property="transtionId">#transtionId#</isNotNull> 
+	    <isNotNull prepend="," property="fromId">#fromId#</isNotNull> 
+	    <isNotNull prepend="," property="toId">#toId#</isNotNull> 
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+
+  <select id="queryWorkTaskConf" parameterClass="com.ailk.eaap.op2.bo.WorkTaskConf"  resultClass="com.ailk.eaap.op2.bo.WorkTaskConf">
+         select ID id,
+		        MODEL_ID modelId,
+		        BUSINESS_KEY businessId,
+		        TACHE_ID tacheId,
+		        TACHE_NAME tacheName,
+		        FROM_TACHE_ID fromTacheId,
+		        TASK_TYPE taskType,
+		        INVOKE_API invokeApi,
+		        API_PARAM_MODE apiParamMode,
+		        DESCRIPTION description,
+		        CREATE_DATE createTime,
+		        API_PARAM_IN_ID apiParamInId,
+		        API_PARAM_OUT_ID apiParamOutId,
+		        MESSAGE_FLOW_ID messageFlowId,
+		        SER_INVOKE_INS_ID serInvokeInsId,
+		        IS_SCHEDULE isSchedule,
+		        SCHEDULE_COUNT scheduleCount,
+		        tenant_id tenantId
+		 from WORK_TASK_CONF ww 
+		 where ww.MODEL_ID = #modelId#
+             and  ww.tenant_id=#tenantId#
+ </select>	
+   <select id="queryWorkTaskContion" parameterClass="com.ailk.eaap.op2.bo.WorkTaskContion"  resultClass="com.ailk.eaap.op2.bo.WorkTaskContion">
+         select ID id,
+		        CONF_ID confId,
+		        CONTION_KEY contionKey,
+		        CONTION_VALUE contionValue,
+		        TRANSTION_ID transtionId,
+		        CREATE_DATE createDate,
+		        FROM_ID fromId,
+		        TO_ID toId,
+		          tenant_id tenantId
+		 from WORK_TASK_CONTION ww where ww.CONF_ID = #confId#   and  ww.tenant_id=#tenantId#
+      
+ </select>
+ 
+ <select id="getWorkTaskContionList" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+         SELECT 
+		     DD.TRANSTION_ID,
+		     DD.FROM_ID,
+		     DD.TO_ID,
+		     wm_concat(DD.CONTION_VALUE) CONTION_VALUES,
+		     wm_concat(DD.CONTION_KEY) CONTION_KEYS,  
+   DD.tenant_id  tenantId
+		  FROM
+			WORK_TASK_CONTION DD
+		 where  
+		 <dynamic>
+            
+            <isNotNull prepend="" property="confIds"> 
+            DD.CONF_ID IN 
+            <iterate property="confIds" conjunction="," close=")" open="(">
+	            #confIds[]#
+	        </iterate>
+            </isNotNull> 
+            <isNotNull prepend="and" property="tenantId"> DD.tenant_id=#tenantId#</isNotNull>
+		 </dynamic>
+		 GROUP BY DD.TRANSTION_ID,DD.FROM_ID,DD.TO_ID
+      
+ </select>
+ 
+  <select id="selectService" parameterClass="java.util.HashMap"  resultClass="java.lang.String">
+         SELECT DD.SERVICE_CN_NAME SERVICE_NAME FROM SERVICE DD WHERE DD.SERVICE_ID = #SERVICE_ID# and DD.tenant_id=#tenantId#
+ </select>
+ 
+ <delete id="deleteWorkTaskContion" parameterClass="java.util.HashMap">
+		 DELETE FROM WORK_TASK_CONTION WHERE CONF_ID IN(SELECT ID FROM WORK_TASK_CONF WHERE MODEL_ID = #modelId# and tenant_id=#tenantId#)
+ </delete>
+ 
+ <select id="checkSysOrg" parameterClass="java.util.Map"
+		resultClass="java.lang.Integer">
+		 SELECT COUNT(1) COU FROM COMPONENT DD WHERE DD.COMPONENT_ID = #systemId#
+         AND DD.ORG_ID = #orgId# and DD.tenant_id=#tenantId#
+  </select>
+   <delete id="deleteWorkTaskConf" parameterClass="java.util.HashMap">
+		DELETE FROM WORK_TASK_CONF where MODEL_ID = #modelId#  and tenant_id=#tenantId#
+ </delete>
+
+  <update id="updateWorkTaskConf" parameterClass="com.ailk.eaap.op2.bo.WorkTaskConf">
+  update WORK_TASK_CONF
+  <dynamic prepend="set">     
+	    <isNotNull prepend="" property="fromTacheId">FROM_TACHE_ID=#fromTacheId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull  prepend="and"  property="id"> ID=#id# </isNotNull>
+     <isNotNull prepend="and" property="tenantId"> TENANT_ID=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+ <select id="getSystemProduct" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+		SELECT
+			b.product_id value_id,
+			b.product_name value_text,
+			b.tenant_id tenantId
+		FROM
+			product_attr a,
+			product b
+		WHERE a.product_id = b.product_id
+		AND a.attr_spec_id = 2200025
+		AND a.default_value = #systemId#
+		AND b.status_cd != '1300'      
+		AND a.tenant_id=#tenantId#
+		AND b.tenant_id=#tenantId#
+ </select>
+ 
+  <select id="getSystemStatus" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+		SELECT d.state,d.UP_STATE,d.tenant_id
+		FROM component d
+		WHERE d.component_id = #systemId# 
+		AND d.org_id = #orgId#   
+		AND d.tenant_id=#tenantId#
+ </select>
+ 
+  <select id="getWorkflowNoticeTaskConfList" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	select TASK_ID taskId,EMAIL_ADDRESS emailAddress,EMAIL_TITLE emailTitle,EMAIL_CONTENT emailContent,SMS_ADDRESS smsAddress,SMS_CONTENT smsContent,CREATE_DATE createDate,tenant_id tenantId 
+	from WORKFLOW_NOTICE_TASK_CONF 
+	where TASK_ID=#taskId# and TENANT_ID=#tenantId#
+ </select>
+
+ <insert id="insertWorkflowNoticeTaskConf" parameterClass="java.util.HashMap">
+ 	insert into WORKFLOW_NOTICE_TASK_CONF
+ 	(create_date 
+	  <dynamic>
+	    <isNotNull prepend="," property="taskId">TASK_ID</isNotNull>
+	    <isNotNull prepend="," property="emailAddress">EMAIL_ADDRESS</isNotNull>
+	    <isNotNull prepend="," property="emailTitle">EMAIL_TITLE</isNotNull>
+	    <isNotNull prepend="," property="emailContent">EMAIL_CONTENT</isNotNull>
+	    <isNotNull prepend="," property="smsAddress">SMS_ADDRESS</isNotNull>
+	    <isNotNull prepend="," property="smsContent">SMS_CONTENT</isNotNull>
+	     <isNotNull prepend="," property="tenantId">TENANT_ID</isNotNull>
+	  </dynamic>
+	  )
+	  values(utc_timestamp() 
+	  <dynamic>
+	    <isNotNull prepend="," property="taskId">#taskId#</isNotNull>
+	    <isNotNull prepend="," property="emailAddress">#emailAddress#</isNotNull> 
+	    <isNotNull prepend="," property="emailTitle">#emailTitle#</isNotNull> 
+	    <isNotNull prepend="," property="emailContent">#emailContent#</isNotNull> 
+	    <isNotNull prepend="," property="smsAddress">#smsAddress#</isNotNull> 
+	    <isNotNull prepend="," property="smsContent">#smsContent#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>  
+	  </dynamic>
+	  )
+ </insert>
+ 
+ <update id="updateWorkflowNoticeTaskConf" parameterClass="java.util.HashMap">
+	  update WORKFLOW_NOTICE_TASK_CONF
+	  <dynamic prepend="set">
+		    <isNotNull prepend="," property="emailAddress"> EMAIL_ADDRESS=#emailAddress#</isNotNull>
+		    <isNotNull prepend="," property="emailTitle"> EMAIL_TITLE=#emailTitle#</isNotNull>
+		    <isNotNull prepend="," property="emailContent"> EMAIL_CONTENT=#emailContent#</isNotNull>
+		    <isNotNull prepend="," property="smsAddress"> SMS_ADDRESS=#smsAddress#</isNotNull>
+		    <isNotNull prepend="," property="smsContent"> SMS_CONTENT=#smsContent#</isNotNull>
+	  </dynamic>
+	  where TASK_ID=#taskId# and tenant_id=#tenantId#
+ </update>
+ 
+ <!--取组件对应的流程-->
+ <select id="getProcessKeyByComponentId" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+	SELECT PROCESS_KEY FROM COMPONENT_FLOW_MAP WHERE COMPONENT_ID = #componentId# and TENANT_ID=#tenantId#
+ </select>
+  
+</sqlMap>

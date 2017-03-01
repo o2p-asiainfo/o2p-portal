@@ -1,0 +1,794 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-componentPrice">
+
+<!-- 基础表 -->
+  <select id="queryComponentPrice" parameterClass="java.util.HashMap"  resultClass="com.ailk.eaap.op2.bo.ComponentPrice">
+      select b_.*  from (select rownum RECNO,a_.* from (
+      select  price_id priceId,
+              price_name priceName,
+      		  price_type priceType,
+      		  price_type priceType2Num,
+      		  pri_pricing_info_id priPricingInfoId,
+      		  description description,
+      		  price_desc priceDesc,
+      		  create_date createDate,
+      		  version version,
+      		  status_cd statusCd,
+      		  eff_date effDate,
+      		  exp_date expDate,
+      		  status_date statusDate 
+      from component_price  
+      where  status_cd!='11'
+      <dynamic>
+      	<isNotNull prepend="and" property="priceId"> price_id=#priceId# </isNotNull>
+      	<isNotNull prepend="and" property="priPricingInfoId"> pri_pricing_info_id=#priPricingInfoId# </isNotNull>
+      	<isNotNull prepend="and" property="priceName"> price_name like '%'||#priceName#||'%' </isNotNull>
+	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+      order by priceId desc 
+    ) a_ where <![CDATA[ ROWNUM <= (#pro_mysql# + #page_record# ) ]]> ORDER BY ROWNUM  ) b_ where RECNO BETWEEN (#pro_mysql#+1) AND (#pro_mysql# + #page_record# ) 
+      
+ 
+ </select>
+ 
+ <select id="countComponentPrice" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+ 	select count(1) 
+ 	from component_price 
+    where status_cd!='11' 
+    <dynamic>
+      	<isNotNull prepend="and" property="priceId"> price_id=#priceId# </isNotNull>
+      	<isNotNull prepend="and" property="priPricingInfoId"> pri_pricing_info_id=#priPricingInfoId# </isNotNull>
+      	<isNotNull prepend="and" property="priceName"> price_name like '%'||#priceName#||'%' </isNotNull>
+<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>  
+ </select>
+ 
+  <insert id="addComponentPrice" parameterClass="com.ailk.eaap.op2.bo.ComponentPrice">
+  	<selectKey resultClass="int" keyProperty="priceId">
+		  SELECT seq_component_price.nextval from dual
+    </selectKey>
+	 	insert into component_price 
+	 	(create_date,status_date, status_cd,version
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">price_id</isNotNull>
+	    <isNotNull prepend="," property="priceName">price_name</isNotNull>
+	    <isNotNull prepend="," property="priceType">price_type</isNotNull>
+	    <isNotNull prepend="," property="priPricingInfoId">pri_pricing_info_id</isNotNull>
+	    <isNotNull prepend="," property="description">description</isNotNull>
+	    <isNotNull prepend="," property="priceDesc">price_desc</isNotNull>
+	    <isNotNull prepend="," property="effDate">eff_date</isNotNull>
+	    <isNotNull prepend="," property="expDate">exp_date</isNotNull> 
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0 ,SYS_EXTRACT_UTC(current_timestamp)+0,'10',SYS_EXTRACT_UTC(current_timestamp)+0 
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">#priceId#</isNotNull>
+	    <isNotNull prepend="," property="priceName">#priceName#</isNotNull>
+	    <isNotNull prepend="," property="priceType">#priceType#</isNotNull>
+	    <isNotNull prepend="," property="priPricingInfoId">#priPricingInfoId#</isNotNull>
+	    <isNotNull prepend="," property="description">#description#</isNotNull>
+	    <isNotNull prepend="," property="priceDesc">#priceDesc#</isNotNull>
+	    <isNotNull prepend="," property="effDate">#effDate#</isNotNull> 
+	    <isNotNull prepend="," property="expDate">#expDate#</isNotNull> 
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+ 
+  <update id="updateComponentPrice" parameterClass="com.ailk.eaap.op2.bo.ComponentPrice" >
+  	update component_price   set version=SYS_EXTRACT_UTC(current_timestamp)+0,status_date=SYS_EXTRACT_UTC(current_timestamp)+0
+  	 <dynamic>
+	    <isNotNull prepend="," property="priceName">price_name=#priceName#</isNotNull>
+	    <isNotNull prepend="," property="priceType">price_type=#priceType#</isNotNull>
+	    <isNotNull prepend="," property="description">description=#description#</isNotNull>
+	    <isNotNull prepend="," property="priceDesc">price_desc=#priceDesc#</isNotNull>
+	    <isNotNull prepend="," property="effDate">eff_date=#effDate#</isNotNull> 
+	    <isNotNull prepend="," property="expDate">exp_date=#expDate#</isNotNull> 
+	    <isNotNull prepend="," property="statusCd">status_cd=#statusCd#</isNotNull> 
+	     <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+	  <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId"> price_id = #priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </update>
+  
+  <!--基本资费 -->
+  <select id="queryBasicTariff" parameterClass="com.ailk.eaap.op2.bo.BasicTariff"  resultClass="com.ailk.eaap.op2.bo.BasicTariff">
+      select a.price_id priceId,
+             a.price_name priceName,
+             a.tax_included taxIncluded,
+             a.base_item_type baseItemType,
+             a.rating_unit_val ratingUnitVal,
+             a.rating_unit_type ratingUnitType,
+             a.precision_round precisionRound,
+             a.currency_unit_type currencyUnitType,
+             a.rate_type rateType,
+             a.CREATE_DATE createDate,
+             a.version version,
+             a.base_qos_type baseQosType
+      from basic_tariff a 
+     <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId"> price_id = #priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ </select>
+
+ <update id="updateBasicTariff" parameterClass="com.ailk.eaap.op2.bo.BasicTariff" >
+  	update basic_tariff set version = SYS_EXTRACT_UTC(current_timestamp)+0 
+  	 <dynamic>
+	    <isNotNull prepend="," property="priceName">price_name=#priceName#</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">tax_included=#taxIncluded#</isNotNull>
+	    <isNotNull prepend="," property="baseItemType">base_item_type=#baseItemType#</isNotNull>
+	    <isNotNull prepend="," property="ratingUnitVal">rating_unit_val=#ratingUnitVal#</isNotNull>
+	    <isNotNull prepend="," property="ratingUnitType">rating_unit_type=#ratingUnitType#</isNotNull>
+	    <isNotNull prepend="," property="precisionRound">precision_round=#precisionRound#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">currency_unit_type=#currencyUnitType#</isNotNull>
+	    <isNotNull prepend="," property="rateType">rate_type=#rateType#</isNotNull>
+        <isNotNull prepend="," property="baseQosType">base_qos_type=#baseQosType#</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+	 <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId"> price_id = #priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </update>
+  
+  <insert id="addBasicTariff" parameterClass="com.ailk.eaap.op2.bo.BasicTariff">
+	 	insert into basic_tariff  
+	 	(CREATE_DATE, version 
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">price_id</isNotNull>
+	    <isNotNull prepend="," property="priceName">price_name</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">tax_included</isNotNull>
+	    <isNotNull prepend="," property="baseItemType">base_item_type</isNotNull>
+	    <isNotNull prepend="," property="ratingUnitVal">rating_unit_val</isNotNull>
+	    <isNotNull prepend="," property="ratingUnitType">rating_unit_type</isNotNull>
+	    <isNotNull prepend="," property="precisionRound">precision_round</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">currency_unit_type</isNotNull>
+	    <isNotNull prepend="," property="rateType">rate_type</isNotNull>
+		<isNotNull prepend="," property="baseQosType">base_qos_type</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0 , SYS_EXTRACT_UTC(current_timestamp)+0 
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">#priceId#</isNotNull>
+	    <isNotNull prepend="," property="priceName">#priceName#</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">#taxIncluded#</isNotNull>
+	    <isNotNull prepend="," property="baseItemType">#baseItemType#</isNotNull>
+	    <isNotNull prepend="," property="ratingUnitVal">#ratingUnitVal#</isNotNull>
+	    <isNotNull prepend="," property="ratingUnitType">#ratingUnitType#</isNotNull>
+	    <isNotNull prepend="," property="precisionRound">#precisionRound#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">#currencyUnitType#</isNotNull>
+	    <isNotNull prepend="," property="rateType">#rateType#</isNotNull>
+         <isNotNull prepend="," property="baseQosType">#baseQosType#</isNotNull>
+	     <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+  <!-- 科目关联表信息 -->
+  <insert id="addBaseTariffItemRel" parameterClass="com.ailk.eaap.op2.bo.BaseTariffItemRel">
+  	<selectKey resultClass="int" keyProperty="basicTariffItemRelId">
+		  SELECT seq_basic_tariff_item_rel.nextval from dual
+    </selectKey>
+  	insert into basic_tariff_item_rel 
+  	( basic_tariff_item_rel_id 
+  	<dynamic>
+  		 <isNotNull prepend="," property="priceId">price_id</isNotNull>
+  		 <isNotNull prepend="," property="itemId">item_id</isNotNull>
+  		 <isNotNull prepend="," property="itemType">item_type</isNotNull>
+  		 <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  	</dynamic>
+  	)
+  	values( #basicTariffItemRelId#
+  	<dynamic>
+  		 <isNotNull prepend="," property="priceId">#priceId#</isNotNull>
+  		 <isNotNull prepend="," property="itemId">#itemId#</isNotNull>
+  		 <isNotNull prepend="," property="itemType">#itemType#</isNotNull>
+  		 <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  	</dynamic>
+  	)
+  </insert>
+  <delete id="delBaseTariffItemRel" parameterClass="com.ailk.eaap.op2.bo.BaseTariffItemRel">
+  	delete from basic_tariff_item_rel 
+  	 <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId"> price_id = #priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </delete>
+  <select id="getBaseTariffItemRel" parameterClass="com.ailk.eaap.op2.bo.BaseTariffItemRel"  resultClass="com.ailk.eaap.op2.bo.BaseTariffItemRel">
+  select basic_tariff_item_rel_id basicTariffItemRelId,
+         price_id priceId,
+         item_id itemId,
+         item_type itemType 
+   from basic_tariff_item_rel 
+  <dynamic prepend=" where ">
+  		<isNotNull prepend="and" property="basicTariffItemRelId"> basic_tariff_item_rel_id=#basicTariffItemRelId#</isNotNull>
+  		 <isNotNull prepend="and" property="priceId"> price_id=#priceId#</isNotNull>
+  		 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  	</dynamic>
+  </select>
+  <!-- 固定费 -->
+  <insert id="addRecurringFee" parameterClass="com.ailk.eaap.op2.bo.PecurringFee">
+	 	insert into recurring_fee 
+	 	( CREATE_DATE,version 
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">price_id</isNotNull>
+	    <isNotNull prepend="," property="priceName">price_name</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">tax_included</isNotNull>
+	    <isNotNull prepend="," property="itemId">item_id</isNotNull>
+	    <isNotNull prepend="," property="billingPriority">billing_priority</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">currency_unit_type</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitVal">currency_unit_val</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">#priceId#</isNotNull>
+	    <isNotNull prepend="," property="priceName">#priceName#</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">#taxIncluded#</isNotNull>
+	    <isNotNull prepend="," property="itemId">#itemId#</isNotNull>
+	    <isNotNull prepend="," property="billingPriority">#billingPriority#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">#currencyUnitType#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitVal">#currencyUnitVal#</isNotNull>
+	     <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+  
+  <update id="updateRecurringFee" parameterClass="com.ailk.eaap.op2.bo.PecurringFee" >
+  	update recurring_fee set version = SYS_EXTRACT_UTC(current_timestamp)+0 
+  	 <dynamic>
+	    <isNotNull prepend="," property="priceName">price_name=#priceName#</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">tax_included=#taxIncluded#</isNotNull>
+	    <isNotNull prepend="," property="itemId">item_id=#itemId#</isNotNull>
+	    <isNotNull prepend="," property="billingPriority">billing_priority=#billingPriority#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">currency_unit_type=#currencyUnitType#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitVal">currency_unit_val=#currencyUnitVal#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+	<dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId"> price_id = #priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </update>
+  
+  <select id="queryRecurringFee" parameterClass="com.ailk.eaap.op2.bo.PecurringFee"  resultClass="com.ailk.eaap.op2.bo.PecurringFee">
+       select a.price_id priceId,
+      		 a.price_name priceName,
+      		 a.tax_included taxIncluded,
+      		 a.item_id itemId,
+      		 a.billing_priority billingPriority,
+      		 a.currency_unit_type currencyUnitType,
+      		 a.currency_unit_val currencyUnitVal,
+      		 a.version version,
+      		 a.create_date createDate 
+       from recurring_fee a 
+     <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId"> a.price_id = #priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> a.tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ </select>
+ 
+ <!-- 费率详情 -->
+ <select id="queryRatingCurveDetail" parameterClass="com.ailk.eaap.op2.bo.RatingCurverDetail"  resultClass="com.ailk.eaap.op2.bo.RatingCurverDetail">
+      select rating_curve_id ratingCurveId,
+      		 price_id priceId,
+      		 segment_id segMentId,
+      		 start_val startval,
+      		 end_val endVal,
+      		 rate_val rateVal,
+      		 base_val baseVal,
+      		 numerator numerator,
+      		 denominator denominator,
+      		 create_date createDate,
+      		 version version
+      from rating_curve_detail  
+      <dynamic prepend=" where ">
+      	 <isNotNull prepend="and" property="ratingCurveId"> rating_curve_id=#ratingCurveId# </isNotNull>
+	    <isNotNull prepend="and" property="priceId"> price_id=#priceId# </isNotNull>
+	    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ </select>
+ 
+ <insert id="addRatingCurveDetail" parameterClass="com.ailk.eaap.op2.bo.RatingCurverDetail">
+   <selectKey resultClass="Integer" keyProperty="ratingCurveId">
+			select seq_rating_curve_detail.nextval from dual
+		</selectKey>
+	 	insert into rating_curve_detail  
+	 	( create_date,version 
+	  <dynamic>
+	    <isNotNull prepend="," property="ratingCurveId">rating_curve_id</isNotNull>
+	    <isNotNull prepend="," property="priceId">price_id</isNotNull>
+	    <isNotNull prepend="," property="segMentId">segment_id</isNotNull>
+	    <isNotNull prepend="," property="startval">start_val</isNotNull>
+	    <isNotNull prepend="," property="endVal">end_val</isNotNull>
+	    <isNotNull prepend="," property="rateVal">rate_val</isNotNull>
+	    <isNotNull prepend="," property="baseVal">base_val</isNotNull>
+	    <isNotNull prepend="," property="numerator">numerator</isNotNull>
+	    <isNotNull prepend="," property="denominator">denominator</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0
+	  <dynamic>
+	    <isNotNull prepend="," property="ratingCurveId">#ratingCurveId#</isNotNull>
+	    <isNotNull prepend="," property="priceId">#priceId#</isNotNull>
+	    <isNotNull prepend="," property="segMentId">#segMentId#</isNotNull>
+	    <isNotNull prepend="," property="startval">#startval#</isNotNull>
+	    <isNotNull prepend="," property="endVal">#endVal#</isNotNull>
+	    <isNotNull prepend="," property="rateVal">#rateVal#</isNotNull>
+	    <isNotNull prepend="," property="baseVal">#baseVal#</isNotNull>
+	    <isNotNull prepend="," property="numerator">#numerator#</isNotNull>
+	    <isNotNull prepend="," property="denominator">#denominator#</isNotNull>
+	     <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+  
+  <update id="updateRatingCurveDetail" parameterClass="com.ailk.eaap.op2.bo.RatingCurverDetail" >
+  	update rating_curve_detail set version = SYS_EXTRACT_UTC(current_timestamp)+0 
+  	 <dynamic>
+	    <isNotNull prepend="," property="segMentId">segment_id=#segMentId#</isNotNull>
+	    <isNotNull prepend="," property="startval">start_val=#startval#</isNotNull>
+	    <isNotNull prepend="," property="endVal">end_val=#endVal#</isNotNull>
+	    <isNotNull prepend="," property="rateVal">rate_val=#rateVal#</isNotNull>
+	    <isNotNull prepend="," property="baseVal">base_val=#baseVal#</isNotNull>
+	    <isNotNull prepend="," property="numerator">numerator=#numerator#</isNotNull>
+	    <isNotNull prepend="," property="denominator">denominator=#denominator#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+	   
+	   <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="ratingCurveId">  rating_curve_id=#ratingCurveId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </update>
+  
+  <delete id="delRatingCurveDetail" parameterClass="com.ailk.eaap.op2.bo.RatingCurverDetail">
+  	delete from rating_curve_detail 
+  	 <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="ratingCurveId">  rating_curve_id=#ratingCurveId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </delete>
+ <!-- 一次性费用 -->
+  <insert id="addOneTimeCharge" parameterClass="com.ailk.eaap.op2.bo.OneTimeCharge">
+	 	insert into one_time_charge  
+	 	( CREATE_DATE,version 
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">price_id</isNotNull>
+	    <isNotNull prepend="," property="priceName">price_name</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">tax_included</isNotNull>
+	    <isNotNull prepend="," property="businessItem">business_item</isNotNull>
+	    <isNotNull prepend="," property="oneTimeItem">one_time_item</isNotNull>
+	    <isNotNull prepend="," property="billingPriority">billing_priority</isNotNull>
+	    <isNotNull prepend="," property="channelType">channel_type</isNotNull>
+	    <isNotNull prepend="," property="chargeType">charge_type</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">currency_unit_type</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitVal">currency_unit_val</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">#priceId#</isNotNull>
+	    <isNotNull prepend="," property="priceName">#priceName#</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">#taxIncluded#</isNotNull>
+	    <isNotNull prepend="," property="businessItem">#businessItem#</isNotNull>
+	    <isNotNull prepend="," property="oneTimeItem">#oneTimeItem#</isNotNull>
+	    <isNotNull prepend="," property="billingPriority">#billingPriority#</isNotNull>
+	    <isNotNull prepend="," property="channelType">#channelType#</isNotNull>
+	    <isNotNull prepend="," property="chargeType">#chargeType#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">#currencyUnitType#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitVal">#currencyUnitVal#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+  
+  <update id="updateOneTimeCharge" parameterClass="com.ailk.eaap.op2.bo.OneTimeCharge" >
+  	update one_time_charge set version = SYS_EXTRACT_UTC(current_timestamp)+0 
+  	 <dynamic>
+	    <isNotNull prepend="," property="priceName">price_name=#priceName#</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">tax_included=#taxIncluded#</isNotNull>
+	    <isNotNull prepend="," property="businessItem">business_item=#businessItem#</isNotNull>
+	    <isNotNull prepend="," property="oneTimeItem">one_time_item=#oneTimeItem#</isNotNull>
+	    <isNotNull prepend="," property="billingPriority">billing_priority=#billingPriority#</isNotNull>
+	    <isNotNull prepend="," property="channelType">channel_type=#channelType#</isNotNull>
+	    <isNotNull prepend="," property="chargeType">charge_type=#chargeType#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">currency_unit_type=#currencyUnitType#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitVal">currency_unit_val=#currencyUnitVal#</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+	 <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId"> price_id = #priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </update>
+  
+  <select id="queryOneTimeCharge" parameterClass="com.ailk.eaap.op2.bo.OneTimeCharge"  resultClass="com.ailk.eaap.op2.bo.OneTimeCharge">
+      select price_id priceId,
+      		 price_name priceName,
+      		 tax_included taxIncluded,
+      		 business_item businessItem,
+      		 one_time_item oneTimeItem,
+      		 billing_priority billingPriority,
+      		 channel_type channelType,
+      		 charge_type chargeType,
+      		 currency_unit_type currencyUnitType,
+      		 currency_unit_val currencyUnitVal,
+      		 version version,
+      		 create_date createDate
+      from one_time_charge  
+      <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId"> price_id = #priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ </select>
+ <!-- 账务优惠 -->
+  <insert id="addBillingDiscount" parameterClass="com.ailk.eaap.op2.bo.BillingDiscount">
+	 	insert into billing_discount  
+	 	( CREATE_DATE,version 
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">price_id</isNotNull>
+	    <isNotNull prepend="," property="priceName">price_name</isNotNull>
+	    <isNotNull prepend="," property="eligibleItem">eligible_item</isNotNull>
+	    <isNotNull prepend="," property="targetItem">target_item</isNotNull>
+	    <isNotNull prepend="," property="billingPriority">billing_priority</isNotNull>
+	    <isNotNull prepend="," property="promType">prom_type</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">currency_unit_type</isNotNull>
+	    <isNotNull prepend="," property="maxiMum">maxiMum</isNotNull>                               
+	    <isNotNull prepend="," property="calcType">calc_type</isNotNull>
+	    <isNotNull prepend="," property="precisionRound">precision_round</isNotNull>
+	    <isNotNull prepend="," property="description">description</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">tax_included</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">#priceId#</isNotNull>
+	    <isNotNull prepend="," property="priceName">#priceName#</isNotNull>
+	    <isNotNull prepend="," property="eligibleItem">#eligibleItem#</isNotNull>
+	    <isNotNull prepend="," property="targetItem">#targetItem#</isNotNull>
+	    <isNotNull prepend="," property="billingPriority">#billingPriority#</isNotNull>
+	    <isNotNull prepend="," property="promType">#promType#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">#currencyUnitType#</isNotNull>
+	    <isNotNull prepend="," property="maxiMum">#maxiMum#</isNotNull>
+	    <isNotNull prepend="," property="calcType">#calcType#</isNotNull>
+	    <isNotNull prepend="," property="precisionRound">#precisionRound#</isNotNull>
+	    <isNotNull prepend="," property="description">#description#</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">#taxIncluded#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+  
+  <update id="updateBillingDiscount" parameterClass="com.ailk.eaap.op2.bo.BillingDiscount" >
+  	update billing_discount set version = SYS_EXTRACT_UTC(current_timestamp)+0 
+  	 <dynamic>
+	    <isNotNull prepend="," property="priceName">price_name=#priceName#</isNotNull>
+	    <isNotNull prepend="," property="eligibleItem">eligible_item=#eligibleItem#</isNotNull>
+	    <isNotNull prepend="," property="targetItem">target_item=#targetItem#</isNotNull>
+	    <isNotNull prepend="," property="billingPriority">billing_priority=#billingPriority#</isNotNull>
+	    <isNotNull prepend="," property="promType">prom_type=#promType#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">currency_unit_type=#currencyUnitType#</isNotNull>
+	    <isNotNull prepend="," property="maxiMum">maxiMum=#maxiMum#</isNotNull>
+	    <isNotNull prepend="," property="calcType">calc_type=#calcType#</isNotNull>
+	    <isNotNull prepend="," property="precisionRound">precision_round=#precisionRound#</isNotNull>
+	    <isNotNull prepend="," property="description">description=#description#</isNotNull>
+	    <isNotNull prepend="," property="taxIncluded">tax_included=#taxIncluded#</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+	   </dynamic>
+	   <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId"> price_id = #priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </update>
+  
+  <select id="queryBillingDiscount" parameterClass="com.ailk.eaap.op2.bo.BillingDiscount"  resultClass="com.ailk.eaap.op2.bo.BillingDiscount">
+      select price_id priceId,
+      		 price_name priceName,
+      		 eligible_item eligibleItem,
+      		 target_item targetItem,
+      		 billing_priority billingPriority,
+      		 prom_type promType,
+      		 currency_unit_type currencyUnitType,
+      		 maxiMum maxiMum,
+      		 calc_type calcType,
+      		 precision_round precisionRound,
+      		 version version,
+      		 create_date createDate,
+      		 tax_included taxIncluded
+      from billing_discount  
+        <dynamic prepend=" where ">
+		  	<isNotNull prepend="and" property="priceId"> price_id = #priceId#</isNotNull>
+	        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ </select>
+ <!-- 资费折扣 -->
+ <insert id="addRatingDiscount" parameterClass="com.ailk.eaap.op2.bo.RatingDiscount">
+	 	insert into DISCOUNT_PRICE  
+	 	( CREATE_DATE,version 
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">price_id</isNotNull>
+	    <isNotNull prepend="," property="priceName">price_name</isNotNull>
+	    <isNotNull prepend="," property="discountStandard">DISCOUNT_STANDARD</isNotNull>
+	    <isNotNull prepend="," property="segId">SEG_ID</isNotNull>
+	    <isNotNull prepend="," property="discountType">DISCOUNT_TYPE</isNotNull>
+	    <isNotNull prepend="," property="baseItemType">BASE_ITEM_TYPE</isNotNull>
+	    <isNotNull prepend="," property="numberator">NUMERATOR</isNotNull>
+	    <isNotNull prepend="," property="demominator">DENOMINATOR</isNotNull>
+	    <isNotNull prepend="," property="maxiMum">maxiMum</isNotNull>                               
+	    <isNotNull prepend="," property="currencyUnitType">CURRENCY_UNIT_TYPE</isNotNull>
+	      <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">#priceId#</isNotNull>
+	    <isNotNull prepend="," property="priceName">#priceName#</isNotNull>
+	    <isNotNull prepend="," property="discountStandard">#discountStandard#</isNotNull>
+	    <isNotNull prepend="," property="segId">#segId#</isNotNull>
+	    <isNotNull prepend="," property="discountType">#discountType#</isNotNull>
+	    <isNotNull prepend="," property="baseItemType">#baseItemType#</isNotNull>
+	    <isNotNull prepend="," property="numberator">#numberator#</isNotNull>
+	    <isNotNull prepend="," property="demominator">#demominator#</isNotNull>
+	    <isNotNull prepend="," property="maxiMum">#maxiMum#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">#currencyUnitType#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+  
+  <update id="updateRatingDiscount" parameterClass="com.ailk.eaap.op2.bo.RatingDiscount" >
+  	update DISCOUNT_PRICE set version = SYS_EXTRACT_UTC(current_timestamp)+0 
+  	 <dynamic>
+	    <isNotNull prepend="," property="priceName">price_name=#priceName#</isNotNull>
+	    <isNotNull prepend="," property="discountStandard">DISCOUNT_STANDARD=#discountStandard#</isNotNull>
+	    <isNotNull prepend="," property="segId">SEG_ID=#segId#</isNotNull>
+	    <isNotNull prepend="," property="discountType">DISCOUNT_TYPE=#discountType#</isNotNull>
+	    <isNotNull prepend="," property="baseItemType">BASE_ITEM_TYPE=#baseItemType#</isNotNull>
+	    <isNotNull prepend="," property="numberator">NUMERATOR=#numberator#</isNotNull>
+	    <isNotNull prepend="," property="demominator">DENOMINATOR=#demominator#</isNotNull>
+	    <isNotNull prepend="," property="maxiMum">maxiMum=#maxiMum#</isNotNull>
+	    <isNotNull prepend="," property="currencyUnitType">CURRENCY_UNIT_TYPE=#currencyUnitType#</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+	   </dynamic>
+	 <dynamic prepend=" where ">
+		  	<isNotNull prepend="and" property="priceId"> price_id = #priceId#</isNotNull>
+	        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </update>
+  
+  <select id="queryRatingDiscount" parameterClass="com.ailk.eaap.op2.bo.RatingDiscount"  resultClass="com.ailk.eaap.op2.bo.RatingDiscount">
+      select a.price_id priceId,
+      		 a.price_name priceName,
+      		 a.DISCOUNT_STANDARD discountStandard,
+      		 a.SEG_ID segId,
+      		 a.DISCOUNT_TYPE discountType,
+      		 a.NUMERATOR numberator,
+      		 a.DENOMINATOR demominator,
+      		 a.maxiMum maxiMum,
+      		 a.CURRENCY_UNIT_TYPE currencyUnitType,
+      		 a.version version,
+      		 a.create_date createDate,
+      		 a.BASE_ITEM_TYPE baseItemType,
+      		 b.SEG_NAME  segName
+      from DISCOUNT_PRICE a,TIME_SEG_DEF b 
+      where price_id=#priceId# and a.SEG_ID = b.SEG_ID and  a.tenant_id=#tenantId# and b.tenant_id=#tenantId#
+      <dynamic>
+      	<isNotNull prepend=" and " property="operateCode"> b.OPERATE_CODE=#operateCode# </isNotNull>
+      </dynamic>
+ </select>
+
+
+
+  <!--免费资源 -->
+  <select id="queryFreeResource" parameterClass="com.ailk.eaap.op2.bo.FreeResource"  resultClass="com.ailk.eaap.op2.bo.FreeResource">
+      SELECT price_id priceId,
+		freeres_item freeresItem,
+		(SELECT name from up_asset_item where asset_item_id=freeres_item ) as freeresItemName,
+		title_role_id titleRoleId,
+		invalid_prod_use_flag invalidProdUseFlag,
+		cycle_ref_mode cycleRefMode,
+		cycle_unit cycleUnit,
+		cycle_type cycleType,
+		ref_member_num refMemberNum,
+		cycle_num_formula cycleNumFormula,
+		done_code doneCode,
+		op_id opId,
+		done_date doneDate,
+		org_id orgId,
+		forward_cycle forwardCycle,
+		user_state userState,
+		allowance_type allowanceType,
+		amount_type amountType,
+		tenant_id tenantId
+      FROM up_allo_freeres_details 
+     <dynamic prepend="where">
+	  	<isNotNull prepend="and" property="priceId"> price_id=#priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ </select>
+
+ <update id="updateFreeResource" parameterClass="com.ailk.eaap.op2.bo.FreeResource" >
+  	update up_allo_freeres_details
+  	<dynamic prepend="set">
+	    <isNotNull prepend="," property="freeresItem">freeres_item=#freeresItem#</isNotNull>
+	    <isNotNull prepend="," property="titleRoleId">title_role_id=#titleRoleId#</isNotNull>
+	    <isNotNull prepend="," property="invalidProdUseFlag">invalid_prod_use_flag=#invalidProdUseFlag#</isNotNull>
+	    <isNotNull prepend="," property="cycleRefMode">cycle_ref_mode=#cycleRefMode#</isNotNull>
+	    <isNotNull prepend="," property="cycleUnit">cycle_unit=#cycleUnit#</isNotNull>
+	    <isNotNull prepend="," property="cycleType">cycle_type=#cycleType#</isNotNull>
+	    <isNotNull prepend="," property="refMemberNum">ref_member_num=#refMemberNum#</isNotNull>
+	    <isNotNull prepend="," property="cycleNumFormula">cycle_num_formula=#cycleNumFormula#</isNotNull>
+	    <isNotNull prepend="," property="doneCode">done_code=#doneCode#</isNotNull>
+	    <isNotNull prepend="," property="opId">op_id=#opId#</isNotNull>
+	    <isNotNull prepend="," property="doneDate">done_date=#doneDate#</isNotNull>
+	    <isNotNull prepend="," property="orgId">org_id=#orgId#</isNotNull>
+	    <isNotNull prepend="," property="forwardCycle">forward_cycle=#forwardCycle#</isNotNull>
+	    <isNotNull prepend="," property="userState">user_state=#userState#</isNotNull>
+	    <isNotNull prepend="," property="allowanceType">allowance_type=#allowanceType#</isNotNull>
+	    <isNotNull prepend="," property="amountType">amount_type=#amountType#</isNotNull>
+	 </dynamic>
+	 <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId"> price_id = #priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </update>
+  
+  <insert id="addFreeResource" parameterClass="com.ailk.eaap.op2.bo.FreeResource">
+	 	insert into up_allo_freeres_details  
+	 	(create_date 
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">price_id</isNotNull>
+	    <isNotNull prepend="," property="freeresItem">freeres_item</isNotNull>
+	    <isNotNull prepend="," property="titleRoleId">title_role_id</isNotNull>
+	    <isNotNull prepend="," property="invalidProdUseFlag">invalid_prod_use_flag</isNotNull>
+	    <isNotNull prepend="," property="cycleRefMode">cycle_ref_mode</isNotNull>
+	    <isNotNull prepend="," property="cycleUnit">cycle_unit</isNotNull>
+	    <isNotNull prepend="," property="cycleType">cycle_type</isNotNull>
+	    <isNotNull prepend="," property="refMemberNum">ref_member_num</isNotNull>
+	    <isNotNull prepend="," property="cycleNumFormula">cycle_num_formula</isNotNull>
+	     <isNotNull prepend="," property="doneCode">done_code</isNotNull>
+	     <isNotNull prepend="," property="opId">op_id</isNotNull>
+	     <isNotNull prepend="," property="doneDate">done_date</isNotNull>
+	     <isNotNull prepend="," property="orgId">org_id</isNotNull>
+	     <isNotNull prepend="," property="forwardCycle">forward_cycle</isNotNull>
+	     <isNotNull prepend="," property="userState">user_state</isNotNull>
+	     <isNotNull prepend="," property="allowanceType">allowance_type</isNotNull>
+	     <isNotNull prepend="," property="amountType">amount_type</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )values(SYS_EXTRACT_UTC(current_timestamp)+0
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">#priceId#</isNotNull>
+	    <isNotNull prepend="," property="freeresItem">#freeresItem#</isNotNull>
+	    <isNotNull prepend="," property="titleRoleId">#titleRoleId#</isNotNull>
+	    <isNotNull prepend="," property="invalidProdUseFlag">#invalidProdUseFlag#</isNotNull>
+	    <isNotNull prepend="," property="cycleRefMode">#cycleRefMode#</isNotNull>
+	    <isNotNull prepend="," property="cycleUnit">#cycleUnit#</isNotNull>
+	    <isNotNull prepend="," property="cycleType">#cycleType#</isNotNull>
+	    <isNotNull prepend="," property="refMemberNum">#refMemberNum#</isNotNull>
+	    <isNotNull prepend="," property="cycleNumFormula">#cycleNumFormula#</isNotNull>
+	     <isNotNull prepend="," property="doneCode">#doneCode#</isNotNull> 
+	     <isNotNull prepend="," property="opId">#opId#</isNotNull> 
+	     <isNotNull prepend="," property="doneDate">#doneDate#</isNotNull> 
+	     <isNotNull prepend="," property="orgId">#orgId#</isNotNull> 
+	     <isNotNull prepend="," property="forwardCycle">#forwardCycle#</isNotNull> 
+	     <isNotNull prepend="," property="userState">#userState#</isNotNull> 
+	     <isNotNull prepend="," property="allowanceType">#allowanceType#</isNotNull> 
+	     <isNotNull prepend="," property="amountType">#amountType#</isNotNull> 
+	     <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+
+  <select id="queryFreeResourceItemList" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+        select b_.*  from (select rownum RECNO,a_.* from (
+		SELECT i.asset_item_id as ITEM_ID,i.name as ITEM_NAME,d.cep_name as UNIT
+		FROM up_asset_item i,UP_FREE_USAGE_PROPERTY p,main_data_type t,main_data d
+		WHERE p.asset_item_id=i.asset_item_id
+		AND p.measure_id=d.cep_code
+		AND d.mdt_cd = t.mdt_cd
+		AND t.mdt_sign='PricePlan_traffic_unit'
+	 <dynamic prepend=" where ">
+      	<isNotNull prepend="and" property="idOrName"> i.asset_item_id like concat('%',#idOrName#,'%')</isNotNull>
+      	<isNotNull prepend="and" property="idOrName"> i.name like concat('%',#idOrName#,'%')</isNotNull>
+      </dynamic>
+		ORDER BY i.asset_item_id desc
+    ) a_ where <![CDATA[ ROWNUM <= (#pro_mysql# + #page_record# ) ]]> ORDER BY ROWNUM  ) b_ where RECNO BETWEEN (#pro_mysql#+1) AND (#pro_mysql# + #page_record# ) 
+ </select>
+ 
+ <select id="queryFreeResourceItemListCount" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+ 		select count(1) 
+		FROM up_asset_item i,UP_FREE_USAGE_PROPERTY p,main_data_type t,main_data d
+		WHERE p.asset_item_id=i.asset_item_id
+		AND p.measure_id=d.cep_code
+		AND d.mdt_cd = t.mdt_cd
+		AND t.mdt_sign='PricePlan_traffic_unit'
+	 <dynamic prepend=" where ">
+      	<isNotNull prepend="and" property="idOrName"> i.asset_item_id like concat('%',#idOrName#,'%')</isNotNull>
+      	<isNotNull prepend="and" property="idOrName"> i.name like concat('%',#idOrName#,'%')</isNotNull>
+      </dynamic>
+ </select>
+	
+	
+
+ <!-- 费率详情 -->
+ <select id="queryFreeResourceSeg" parameterClass="com.ailk.eaap.op2.bo.FreeResourceSeg"  resultClass="com.ailk.eaap.op2.bo.FreeResourceSeg">
+      select price_Id priceId,
+      		 start_Value startValue,
+      		 end_Value endValue,
+      		 amount amount,
+      		 measure_Id measureId,
+      		 formula_Id formulaId,
+      		 limit_Amount limitAmount,
+      		 tenant_Id tenantId
+      from up_allo_freeres_seg  
+      <dynamic prepend=" where ">
+	    <isNotNull prepend="and" property="priceId"> price_id=#priceId# </isNotNull>
+	    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ </select>
+ 
+ <insert id="addFreeResourceSeg" parameterClass="com.ailk.eaap.op2.bo.FreeResourceSeg">
+	 	insert into up_allo_freeres_seg  
+	 	(CREATE_DATE,DONE_DATE,FORMULA_ID,LIMIT_AMOUNT
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">price_id</isNotNull>
+	    <isNotNull prepend="," property="startValue">start_Value</isNotNull>
+	    <isNotNull prepend="," property="endValue">end_Value</isNotNull>
+	    <isNotNull prepend="," property="amount">amount</isNotNull>
+	    <isNotNull prepend="," property="measureId">measure_Id</isNotNull>
+	    <isNotNull prepend="," property="formulaId">formula_Id</isNotNull>
+	    <isNotNull prepend="," property="limitAmount">limit_Amount</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0,0,0
+	  <dynamic>
+	    <isNotNull prepend="," property="priceId">#priceId#</isNotNull>
+	    <isNotNull prepend="," property="startValue">#startValue#</isNotNull>
+	    <isNotNull prepend="," property="endValue">#endValue#</isNotNull>
+	    <isNotNull prepend="," property="amount">#amount#</isNotNull>
+	    <isNotNull prepend="," property="measureId">#measureId#</isNotNull>
+	    <isNotNull prepend="," property="formulaId">#formulaId#</isNotNull>
+	    <isNotNull prepend="," property="limitAmount">#limitAmount#</isNotNull>
+	     <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+  </insert>
+  
+  <update id="updateFreeResourceSeg" parameterClass="com.ailk.eaap.op2.bo.FreeResourceSeg" >
+  	update up_allo_freeres_seg 
+  	 <dynamic>
+	    <isNotNull prepend="," property="startValue">start_Value=#startValue#</isNotNull>
+	    <isNotNull prepend="," property="endValue">end_Value=#endValue#</isNotNull>
+	    <isNotNull prepend="," property="amount">amount=#amount#</isNotNull>
+	    <isNotNull prepend="," property="measureId">measure_Id=#measureId#</isNotNull>
+	    <isNotNull prepend="," property="formulaId">formula_Id=#formulaId#</isNotNull>
+	    <isNotNull prepend="," property="limitAmount">limit_Amount=#limitAmount#</isNotNull>
+	  </dynamic>
+	   <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId">  price_Id=#priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </update>
+  
+  <delete id="delFreeResourceSeg" parameterClass="com.ailk.eaap.op2.bo.FreeResourceSeg">
+  	delete from up_allo_freeres_seg 
+  	 <dynamic prepend=" where ">
+	  	<isNotNull prepend="and" property="priceId">  price_Id=#priceId#</isNotNull>
+        <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </delete>
+	
+</sqlMap>

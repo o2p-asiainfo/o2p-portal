@@ -1,0 +1,706 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-settlement">
+	<select id="selectProduct" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+		select a.product_id productId,b.product_name productName from offer_prod_rel a,product b 
+        where a.product_id=b.product_id
+				and a.TENANT_ID=#tenantId#
+			and b.TENANT_ID=#tenantId#
+		  <dynamic>
+	      	<isNotNull prepend="and" property="prodOfferId"> a.prod_offer_id=#prodOfferId# </isNotNull>
+	      	<isNotNull prepend="and" property="statusCd">  b.status_cd=#statusCd# </isNotNull>
+	      </dynamic>
+	</select>
+	<select id="getBasicTree" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+		select b.*  from (select rownum RECNO,a.* from (
+		select s.SERV_CODE listKey,(p.prod_offer_name||'-'||s.BUSI_NAME) listValue ,s.BUSI_CODE busiCode  
+        from settle_sp_busi_def s,prod_offer p 
+        where s.BUSI_CODE=#busiCode# and s.STATUS_CD=#statusCd# and s.PARTNER_CODE=#partnerCode# AND p.prod_offer_id=s.SERV_CODE 
+		and s.TENANT_ID=#tenantId#
+		and p.TENANT_ID=#tenantId#
+        ) a where <![CDATA[ ROWNUM <= (#pro_mysql# + #page_record# ) ]]> ORDER BY ROWNUM  ) b where RECNO BETWEEN (#pro_mysql#+1) AND (#pro_mysql# + #page_record# )
+	</select>
+	<select id="getSettle" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+		select t.*,o.prod_offer_name oName from
+		(select settleSpBusiDefTemp.*,p.product_name pName 
+		from (select busi_id busiId, busi_code busiCode,serv_code servCode,busi_name busiName,(TO_CHAR(eff_date,'yyyy-mm-dd')||'~'||TO_CHAR(exp_date,'yyyy-mm-dd'))time  
+		from settle_sp_busi_def 
+		where PARTNER_CODE=#partnerCode# and serv_code=#servCode# and STATUS_CD=#statusCd# ) settleSpBusiDefTemp LEFT JOIN product p 
+		on settleSpBusiDefTemp.busiCode = p.product_id) t LEFT JOIN prod_offer o 
+		on t.servCode = o.prod_offer_id
+	</select>
+	<select id="allowUpdateCycleByRC" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+		select ACCUM_DATE_TYPE accumDtaeType from settle_rule_rc where RULE_ID in  
+		(select rule_id from settle_rule where PARTNER_CODE=#partnerCode# and BUSI_CODE=#busiCode# and SERV_CODE=#servCode# and STATUS_CD=#statusCd# )
+          	and TENANT_ID=#tenantId#
+	</select>
+	
+<!-- 账期定义表 -->
+	<resultMap id="SettleCycleDefInfo" class="com.ailk.eaap.op2.bo.SettleCycleDef" >
+		<result column="CYCLE_DEF_ID" property="cycleDefId" javaType="java.math.BigDecimal" />
+    	<result column="PARTNER_CODE" property="partnerCode" javaType="java.lang.String" />
+    	<result column="BUSI_CODE" property="busiCode" javaType="java.lang.String" />
+   	 	<result column="CYCLE_TYPE" property="cycleType" javaType="java.lang.Integer" />
+   	 	<result column="CYCLE_COUNT" property="cycleCount" javaType="java.lang.Integer" />
+   	 	<result column="ACCT_TYPE" property="acctType" javaType="java.lang.Integer" />
+   	 	<result column="RUN_HOUR" property="runHour" javaType="java.lang.Integer" />
+   	 	<result column="BILL_END_DATE" property="billEndDate" javaType="java.lang.String" />
+   	 	<result column="CYCLE_SEGMENT" property="cycleSeqment" javaType="java.lang.String" />
+   	 	<result column="PRIORITY" property="priority" javaType="java.lang.Integer" />
+   	 	<result column="DESCRIPTION" property="description" javaType="java.lang.String" />
+   	 	<result column="SYNC_FLAG" property="syncFlag" javaType="java.lang.Integer" />
+   	 	<result column="EFF_DATE" property="effDate" javaType="java.util.Date" />
+   	 	<result column="EXP_DATE" property="expDate" javaType="java.util.Date" />
+   	 	<result column="CREATE_DATE" property="createDate" javaType="java.util.Date" />
+   	 	<result column="VERSION" property="version" javaType="java.util.Date" />
+   	 	<result column="STATUS_CD" property="statusCd" javaType="java.lang.String" />
+   	 	<result column="STATUS_DATE" property="statusDate" javaType="java.util.Date" />
+	</resultMap>
+
+  <select id="querySettleCycleDef" parameterClass="com.ailk.eaap.op2.bo.SettleCycleDef"  resultMap="SettleCycleDefInfo">
+      select  *  from SETTLE_CYCLE_DEF 
+      <dynamic prepend=" where ">
+      	<isNotNull prepend="and" property="cycleDefId"> CYCLE_DEF_ID=#cycleDefId# </isNotNull>
+      	<isNotNull prepend="and" property="partnerCode"> PARTNER_CODE=#partnerCode# </isNotNull>
+      	<isNotNull prepend="and" property="busiCode"> BUSI_CODE = #busiCode# </isNotNull>
+      	<isNotNull prepend="and" property="statusCd"> STATUS_CD = #statusCd# </isNotNull>
+      </dynamic>
+      order by CYCLE_DEF_ID desc 
+ </select>
+ 
+  <insert id="addSettleCycleDef" parameterClass="com.ailk.eaap.op2.bo.SettleCycleDef">
+  	<selectKey resultClass="java.math.BigDecimal" keyProperty="cycleDefId">
+		  SELECT SEQ_SETTLE_CYCLE_DEF.NEXTVAL from dual
+    </selectKey>
+	 	insert into SETTLE_CYCLE_DEF 
+	 	(create_date,status_date, version 
+	  <dynamic>
+	    <isNotNull prepend="," property="cycleDefId">CYCLE_DEF_ID</isNotNull>
+	    <isNotNull prepend="," property="partnerCode">PARTNER_CODE</isNotNull>
+	    <isNotNull prepend="," property="busiCode">BUSI_CODE</isNotNull>
+	    <isNotNull prepend="," property="cycleType">CYCLE_TYPE</isNotNull>
+	    <isNotNull prepend="," property="cycleCount">CYCLE_COUNT</isNotNull>
+	    <isNotNull prepend="," property="acctType">ACCT_TYPE</isNotNull>
+	    <isNotNull prepend="," property="runHour">RUN_HOUR</isNotNull>
+	    <isNotNull prepend="," property="billEndDate">BILL_END_DATE</isNotNull>
+	    <isNotNull prepend="," property="cycleSeqment">CYCLE_SEGMENT</isNotNull>
+	    <isNotNull prepend="," property="priority">PRIORITY</isNotNull>
+	    <isNotNull prepend="," property="description">DESCRIPTION</isNotNull>
+	    <isNotNull prepend="," property="syncFlag">SYNC_FLAG</isNotNull>
+	    <isNotNull prepend="," property="effDate">EFF_DATE</isNotNull>
+	    <isNotNull prepend="," property="expDate">EXP_DATE</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+	    <isNotNull prepend="," property="tenantId">TENANT_ID</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0 ,SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0 
+	  <dynamic>
+	    <isNotNull prepend="," property="cycleDefId">#cycleDefId#</isNotNull>
+	    <isNotNull prepend="," property="partnerCode">#partnerCode#</isNotNull>
+	    <isNotNull prepend="," property="busiCode">#busiCode#</isNotNull>
+	    <isNotNull prepend="," property="cycleType">#cycleType#</isNotNull>
+	    <isNotNull prepend="," property="cycleCount">#cycleCount#</isNotNull>
+	    <isNotNull prepend="," property="acctType">#acctType#</isNotNull>
+	    <isNotNull prepend="," property="runHour">#runHour#</isNotNull> 
+	    <isNotNull prepend="," property="billEndDate">#billEndDate#</isNotNull>
+	    <isNotNull prepend="," property="cycleSeqment">#cycleSeqment#</isNotNull>
+	    <isNotNull prepend="," property="priority">#priority#</isNotNull>
+	    <isNotNull prepend="," property="description">#description#</isNotNull>
+	    <isNotNull prepend="," property="syncFlag">#syncFlag#</isNotNull>
+	    <isNotNull prepend="," property="effDate">#effDate#</isNotNull>
+	    <isNotNull prepend="," property="expDate">#expDate#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+
+  <update id="updateSettleCycleDef" parameterClass="com.ailk.eaap.op2.bo.SettleCycleDef" >
+  	update SETTLE_CYCLE_DEF set version=SYS_EXTRACT_UTC(current_timestamp)+0,status_date=SYS_EXTRACT_UTC(current_timestamp)+0
+  	 <dynamic>
+	    <isNotNull prepend="," property="partnerCode">PARTNER_CODE=#partnerCode#</isNotNull>
+	    <isNotNull prepend="," property="busiCode">BUSI_CODE=#busiCode#</isNotNull>
+	    <isNotNull prepend="," property="cycleType">CYCLE_TYPE=#cycleType#</isNotNull>
+	    <isNotNull prepend="," property="cycleCount">CYCLE_COUNT=#cycleCount#</isNotNull>
+	    <isNotNull prepend="," property="acctType">ACCT_TYPE=#acctType#</isNotNull>
+	    <isNotNull prepend="," property="runHour">RUN_HOUR=#runHour#</isNotNull>
+	    <isNotNull prepend="," property="billEndDate">BILL_END_DATE=#billEndDate#</isNotNull>
+	    <isNotNull prepend="," property="cycleSeqment">CYCLE_SEGMENT=#cycleSeqment#</isNotNull>
+	    <isNotNull prepend="," property="priority">PRIORITY=#priority#</isNotNull>
+	    <isNotNull prepend="," property="description">DESCRIPTION=#description#</isNotNull>
+	    <isNotNull prepend="," property="effDate">EFF_DATE=#effDate#</isNotNull>
+	    <isNotNull prepend="," property="expDate">EXP_DATE=#expDate#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">SYNC_FLAG=#statusCd#</isNotNull>
+	  </dynamic>
+	  where CYCLE_DEF_ID = #cycleDefId# and TENANT_ID=#tenantId#
+  </update>
+  
+  <!-- 结算对象信息表 -->
+	<resultMap id="SettleSPBusiDefInfo" class="com.ailk.eaap.op2.bo.SettleSpBusiDef" >
+		<result column="BUSI_ID" property="busiId" javaType="java.math.BigDecimal" />
+    	<result column="PARTNER_CODE" property="partnerCode" javaType="java.lang.String" />
+    	<result column="BUSI_CODE" property="busiCode" javaType="java.lang.String" />
+   	 	<result column="SERV_CODE" property="servCode" javaType="java.lang.String" />
+   	 	<result column="BUSI_NAME" property="busiName" javaType="java.lang.String" />
+   	 	<result column="BUSI_TYPE" property="busiType" javaType="java.lang.Integer" />
+   	 	<result column="FILTER_FLAG" property="filterFlag" javaType="java.lang.Integer" />
+   	 	<result column="PAL_TYPE" property="palType" javaType="java.lang.Integer" />
+   	 	<result column="ACC_AREA" property="accArea" javaType="java.lang.String" />
+   	 	<result column="SERV_RANGE" property="servRange" javaType="java.lang.Integer" />
+   	 	<result column="COMM_FREE_VALUE" property="commFreeValue" javaType="java.lang.Integer" />
+   	 	<result column="DESCRIPTION" property="description" javaType="java.lang.String" />
+   	 	<result column="SYNC_FLAG" property="syncFlag" javaType="java.lang.Integer" />
+   	 	<result column="EFF_DATE" property="effDate" javaType="java.util.Date" />
+   	 	<result column="EXP_DATE" property="expDate" javaType="java.util.Date" />
+   	 	<result column="CREATE_DATE" property="createDate" javaType="java.util.Date" />
+   	 	<result column="VERSION" property="version" javaType="java.util.Date" />
+   	 	<result column="STATUS_CD" property="statusCd" javaType="java.lang.String" />
+   	 	<result column="STATUS_DATE" property="statusDate" javaType="java.util.Date" />
+	</resultMap>
+
+  <select id="querySettleSPBusiDef" parameterClass="com.ailk.eaap.op2.bo.SettleSpBusiDef"  resultMap="SettleSPBusiDefInfo">
+      select  *  from SETTLE_SP_BUSI_DEF 
+      <dynamic prepend=" where ">
+      	<isNotNull prepend="and" property="busiId"> BUSI_ID=#busiId# </isNotNull>
+      	<isNotNull prepend="and" property="partnerCode"> PARTNER_CODE=#partnerCode# </isNotNull>
+      	<isNotNull prepend="and" property="busiCode"> BUSI_CODE = #busiCode# </isNotNull>
+      	<isNotNull prepend="and" property="servCode"> SERV_CODE = #servCode# </isNotNull>
+      	<isNotNull prepend="and" property="statusCd"> STATUS_CD = #statusCd# </isNotNull>
+      	<isNotNull prepend ="and" property="tenantId"> TENANT_ID=#tenantId#</isNotNull>
+      </dynamic>
+      order by BUSI_ID desc 
+ </select>
+ 
+  <insert id="addSettleSPBusiDef" parameterClass="com.ailk.eaap.op2.bo.SettleSpBusiDef">
+  	<selectKey resultClass="java.math.BigDecimal" keyProperty="busiId">
+		  SELECT SEQ_SETTLE_SP_BUSI_DEF.NEXTVAL from dual
+    </selectKey>
+	 	insert into SETTLE_SP_BUSI_DEF  
+	 	(create_date,status_date, version 
+	  <dynamic>
+	    <isNotNull prepend="," property="busiId">BUSI_ID</isNotNull>
+	    <isNotNull prepend="," property="partnerCode">PARTNER_CODE</isNotNull>
+	    <isNotNull prepend="," property="busiCode">BUSI_CODE</isNotNull>
+	    <isNotNull prepend="," property="servCode">SERV_CODE</isNotNull>
+	    <isNotNull prepend="," property="busiName">BUSI_NAME</isNotNull>
+	    <isNotNull prepend="," property="busiType">BUSI_TYPE</isNotNull>
+	    <isNotNull prepend="," property="filterFlag">FILTER_FLAG</isNotNull>
+	    <isNotNull prepend="," property="palType">PAL_TYPE</isNotNull>
+	    <isNotNull prepend="," property="accArea">ACC_AREA</isNotNull>
+	    <isNotNull prepend="," property="servRange">SERV_RANGE</isNotNull>
+	    <isNotNull prepend="," property="commFreeValue">COMM_FREE_VALUE</isNotNull>
+	    <isNotNull prepend="," property="description">DESCRIPTION</isNotNull>
+	    <isNotNull prepend="," property="syncFlag">SYNC_FLAG</isNotNull>
+	    <isNotNull prepend="," property="effDate">EFF_DATE</isNotNull>
+	    <isNotNull prepend="," property="expDate">EXP_DATE</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+	    <isNotNull prepend="," property="tenantId">TENANT_ID</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0 ,SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0 
+	  <dynamic>
+	    <isNotNull prepend="," property="busiId">#busiId#</isNotNull>
+	    <isNotNull prepend="," property="partnerCode">#partnerCode#</isNotNull>
+	    <isNotNull prepend="," property="busiCode">#busiCode#</isNotNull>
+	    <isNotNull prepend="," property="servCode">#servCode#</isNotNull>
+	    <isNotNull prepend="," property="busiName">#busiName#</isNotNull>
+	    <isNotNull prepend="," property="busiType">#busiType#</isNotNull>
+	    <isNotNull prepend="," property="filterFlag">#filterFlag#</isNotNull> 
+	    <isNotNull prepend="," property="palType">#palType#</isNotNull>
+	    <isNotNull prepend="," property="accArea">#accArea#</isNotNull>
+	    <isNotNull prepend="," property="servRange">#servRange#</isNotNull>
+	    <isNotNull prepend="," property="commFreeValue">#commFreeValue#</isNotNull>
+	    <isNotNull prepend="," property="description">#description#</isNotNull>
+	    <isNotNull prepend="," property="syncFlag">#syncFlag#</isNotNull>
+	    <isNotNull prepend="," property="effDate">#effDate#</isNotNull>
+	    <isNotNull prepend="," property="expDate">#expDate#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+
+  <update id="updateSettleSPBusiDef" parameterClass="com.ailk.eaap.op2.bo.SettleSpBusiDef" >
+  	update SETTLE_SP_BUSI_DEF set version=SYS_EXTRACT_UTC(current_timestamp)+0,status_date=SYS_EXTRACT_UTC(current_timestamp)+0
+  	 <dynamic>
+	    <isNotNull prepend="," property="partnerCode">PARTNER_CODE=#partnerCode#</isNotNull>
+	    <isNotNull prepend="," property="busiCode">BUSI_CODE=#busiCode#</isNotNull>
+	    <isNotNull prepend="," property="servCode">SERV_CODE=#servCode#</isNotNull>
+	    <isNotNull prepend="," property="busiName">BUSI_NAME=#busiName#</isNotNull>
+	    <isNotNull prepend="," property="busiType">BUSI_TYPE=#busiType#</isNotNull>
+	    <isNotNull prepend="," property="filterFlag">FILTER_FLAG=#filterFlag#</isNotNull>
+	    <isNotNull prepend="," property="palType">PAL_TYPE=#palType#</isNotNull>
+	    <isNotNull prepend="," property="description">DESCRIPTION=#description#</isNotNull>
+	    <isNotNull prepend="," property="effDate">EFF_DATE=#effDate#</isNotNull>
+	    <isNotNull prepend="," property="expDate">EXP_DATE=#expDate#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD=#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="syncFlag">SYNC_FLAG=#syncFlag#</isNotNull>
+	  </dynamic>
+	  where BUSI_ID = #busiId# and TENANT_ID=#tenantId#
+  </update>
+  
+  <!-- 结算对象规则表 -->
+	<resultMap id="SettleRuleInfo" class="com.ailk.eaap.op2.bo.SettleRule" >
+		<result column="RULE_ID" property="ruleId" javaType="java.math.BigDecimal" />
+    	<result column="PARTNER_CODE" property="partnerCode" javaType="java.lang.String" />
+    	<result column="BUSI_CODE" property="busiCode" javaType="java.lang.String" />
+   	 	<result column="SERV_CODE" property="servCode" javaType="java.lang.String" />
+   	 	<result column="RULE_NAME" property="ruleName" javaType="java.lang.String" />
+   	 	<result column="RULE_TYPE" property="ruleType" javaType="java.lang.Integer" />
+   	 	<result column="RULE_TYPE" property="ruleType2Num" javaType="java.lang.Integer" />
+   	 	<result column="CHARGE_DIR" property="chargeDir" javaType="java.lang.Integer" />
+   	 	<result column="MONEY_UNIT" property="moneyUnit" javaType="java.lang.Integer" />
+   	 	<result column="PRIORITY" property="priority" javaType="java.lang.Integer" />
+   	 	<result column="DESCRIPTION" property="description" javaType="java.lang.String" />
+   	 	<result column="SYNC_FLAG" property="syncFlag" javaType="java.lang.Integer" />
+   	 	<result column="EFF_DATE" property="effDate" javaType="java.util.Date" />
+   	 	<result column="EXP_DATE" property="expDate" javaType="java.util.Date" />
+   	 	<result column="CREATE_DATE" property="createDate" javaType="java.util.Date" />
+   	 	<result column="VERSION" property="version" javaType="java.util.Date" />
+   	 	<result column="STATUS_CD" property="statusCd" javaType="java.lang.String" />
+   	 	<result column="STATUS_DATE" property="statusDate" javaType="java.util.Date" />
+	</resultMap>
+
+  <select id="querySettleRule" parameterClass="com.ailk.eaap.op2.bo.SettleRule"  resultMap="SettleRuleInfo">
+      select  *  from SETTLE_RULE 
+      <dynamic prepend=" where ">
+      	<isNotNull prepend="and" property="ruleId"> RULE_ID=#ruleId# </isNotNull>
+      	<isNotNull prepend="and" property="partnerCode"> PARTNER_CODE=#partnerCode# </isNotNull>
+      	<isNotNull prepend="and" property="busiCode"> BUSI_CODE = #busiCode# </isNotNull>
+      	<isNotNull prepend="and" property="servCode"> SERV_CODE = #servCode# </isNotNull>
+      	<isNotNull prepend="and" property="statusCd"> STATUS_CD = #statusCd# </isNotNull>
+      	<isNotNull prepend="and" property="ruleType"> RULE_TYPE = #ruleType# </isNotNull>
+      	and RAISE_FLAG=0
+      	and TENANT_ID=#tenantId#
+      </dynamic>
+      order by RULE_ID asc 
+ </select>
+ 
+ <select id="querySettleRuleForGrid" parameterClass="java.util.HashMap"  resultMap="SettleRuleInfo">
+      select b.*  from (select rownum RECNO,a.* from (
+      select  *  from SETTLE_RULE 
+      <dynamic prepend=" where ">
+      	<isNotNull prepend="and" property="partnerCode"> PARTNER_CODE=#partnerCode# </isNotNull>
+      	<isNotNull prepend="and" property="busiCode"> BUSI_CODE = #busiCode# </isNotNull>
+      	<isNotNull prepend="and" property="servCode"> SERV_CODE = #servCode# </isNotNull>
+      	<isNotNull prepend="and" property="statusCd"> STATUS_CD = #statusCd# </isNotNull>
+      	<isNotNull prepend="and" property="settleType"> RULE_TYPE != #settleType# </isNotNull>
+      	<isNotNull prepend="and" property="settleRuleName"> RULE_TYPE like ('%'||#settleType#||'%') </isNotNull>
+      	<isNotNull prepend="and" property="raiseFlag"> RAISE_FLAG=#raiseFlag# </isNotNull>
+  	<isNotNull prepend ="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>)a 
+      where <![CDATA[ ROWNUM <= (#pro_mysql# + #page_record#) ]]> ORDER BY ROWNUM  ) b where RECNO BETWEEN (#pro_mysql#+1) AND (#pro_mysql# + #page_record# )
+ </select>
+ 
+  <select id="cotSettleRuleForGrid" parameterClass="java.util.HashMap"  resultClass="Integer">
+      select  count(*)  from SETTLE_RULE 
+      <dynamic prepend=" where ">
+      	<isNotNull prepend="and" property="partnerCode"> PARTNER_CODE=#partnerCode# </isNotNull>
+      	<isNotNull prepend="and" property="busiCode"> BUSI_CODE = #busiCode# </isNotNull>
+      	<isNotNull prepend="and" property="servCode"> SERV_CODE = #servCode# </isNotNull>
+      	<isNotNull prepend="and" property="statusCd"> STATUS_CD = #statusCd# </isNotNull>
+      	<isNotNull prepend="and" property="settleType"> RULE_TYPE != #settleType# </isNotNull>
+      	<isNotNull prepend="and" property="settleRuleName"> RULE_TYPE like ('%'||#settleType#||'%') </isNotNull>
+ 	<isNotNull prepend ="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ </select>
+ 
+ 
+  <insert id="addSettleRule" parameterClass="com.ailk.eaap.op2.bo.SettleRule">
+  	<selectKey resultClass="java.math.BigDecimal" keyProperty="ruleId">
+		  SELECT SEQ_SETTLE_RULE.NEXTVAL from dual
+    </selectKey>
+	 	insert into SETTLE_RULE   
+	 	(create_date,status_date, version 
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleId">RULE_ID</isNotNull>
+	    <isNotNull prepend="," property="partnerCode">PARTNER_CODE</isNotNull>
+	    <isNotNull prepend="," property="busiCode">BUSI_CODE</isNotNull>
+	    <isNotNull prepend="," property="servCode">SERV_CODE</isNotNull>
+	    <isNotNull prepend="," property="ruleName">RULE_NAME</isNotNull>
+	    <isNotNull prepend="," property="ruleType">RULE_TYPE</isNotNull>
+	    <isNotNull prepend="," property="chargeDir">CHARGE_DIR</isNotNull>
+	    <isNotNull prepend="," property="moneyUnit">MONEY_UNIT</isNotNull>
+	    <isNotNull prepend="," property="priority">PRIORITY</isNotNull>
+	    <isNotNull prepend="," property="description">DESCRIPTION</isNotNull>
+	    <isNotNull prepend="," property="syncFlag">SYNC_FLAG</isNotNull>
+	    <isNotNull prepend="," property="effDate">EFF_DATE</isNotNull>
+	    <isNotNull prepend="," property="expDate">EXP_DATE</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+	     <isNotNull prepend="," property="raiseFlag">RAISE_FLAG</isNotNull>
+	     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0 ,SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0 
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleId">#ruleId#</isNotNull>
+	    <isNotNull prepend="," property="partnerCode">#partnerCode#</isNotNull>
+	    <isNotNull prepend="," property="busiCode">#busiCode#</isNotNull>
+	    <isNotNull prepend="," property="servCode">#servCode#</isNotNull>
+	    <isNotNull prepend="," property="ruleName">#ruleName#</isNotNull>
+	    <isNotNull prepend="," property="ruleType">#ruleType#</isNotNull>
+	    <isNotNull prepend="," property="chargeDir">#chargeDir#</isNotNull> 
+	    <isNotNull prepend="," property="moneyUnit">#moneyUnit#</isNotNull>
+	    <isNotNull prepend="," property="priority">#priority#</isNotNull>
+	    <isNotNull prepend="," property="description">#description#</isNotNull>
+	    <isNotNull prepend="," property="syncFlag">#syncFlag#</isNotNull>
+	    <isNotNull prepend="," property="effDate">#effDate#</isNotNull>
+	    <isNotNull prepend="," property="expDate">#expDate#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+	     <isNotNull prepend="," property="raiseFlag">#raiseFlag#</isNotNull>
+	     <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+
+  <update id="updateSettleRule" parameterClass="com.ailk.eaap.op2.bo.SettleRule" >
+  	update SETTLE_RULE set version=SYS_EXTRACT_UTC(current_timestamp)+0,status_date=SYS_EXTRACT_UTC(current_timestamp)+0 
+  	 <dynamic>
+	    <isNotEmpty prepend="," property="partnerCode">PARTNER_CODE=#partnerCode#</isNotEmpty>
+	    <isNotEmpty prepend="," property="busiCode">BUSI_CODE=#busiCode#</isNotEmpty>
+	    <isNotEmpty prepend="," property="servCode">SERV_CODE=#servCode#</isNotEmpty>
+	    <isNotNull prepend="," property="ruleName">RULE_NAME=#ruleName#</isNotNull>
+	    <isNotNull prepend="," property="ruleType">RULE_TYPE=#ruleType#</isNotNull>
+	    <isNotNull prepend="," property="chargeDir">CHARGE_DIR=#chargeDir#</isNotNull>
+	    <isNotNull prepend="," property="moneyUnit">MONEY_UNIT=#moneyUnit#</isNotNull>
+	    <isNotNull prepend="," property="description">DESCRIPTION=#description#</isNotNull>
+	    <isNotNull prepend="," property="effDate">EFF_DATE=#effDate#</isNotNull>
+	    <isNotNull prepend="," property="expDate">EXP_DATE=#expDate#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD=#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="syncFlag">SYNC_FLAG=#syncFlag#</isNotNull>
+	    <isNotNull prepend="," property="priority">PRIORITY=#priority#</isNotNull>
+	     <isNotNull prepend="," property="raiseFlag">RAISE_FLAG=#raiseFlag#</isNotNull>
+	  </dynamic>
+	  where RULE_ID = #ruleId#  and TENANT_ID=#tenantId#
+  </update>
+  
+  <update id="delSettleRule" parameterClass="com.ailk.eaap.op2.bo.SettleRule" >
+  	update SETTLE_RULE set version=SYS_EXTRACT_UTC(current_timestamp)+0,status_date=SYS_EXTRACT_UTC(current_timestamp)+0 
+  	 <dynamic>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD=#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="syncFlag">SYNC_FLAG=#syncFlag#</isNotNull>
+	  </dynamic>
+ 		where PARTNER_CODE=#partnerCode#   and SERV_CODE=#servCode#   and TENANT_ID=#tenantId#
+	  <isNotNull prepend="and" property="busiCode"> BUSI_CODE=#busiCode# </isNotNull>
+      <isNotNull prepend="and" property="ruleId"> RULE_ID=#ruleId# </isNotNull>
+  </update>
+  
+   <!-- 结算对象规则明细-一次性费用 -->
+    <select id="querySettleRuleOTC" parameterClass="com.ailk.eaap.op2.bo.SettleRuleOTC"  resultClass="com.ailk.eaap.op2.bo.SettleRuleOTC">
+      select RULE_DETAIL_ID ruleDetailId,
+             RULE_ID ruleId,
+             BILL_STATUS billStatus,
+             SERVICE_STATUS serviceStatus,
+             USE_TIME userTime 
+      from SETTLE_RULE_OTC 
+      <dynamic prepend=" where ">
+      	<isNotNull prepend="and" property="ruleDetailId"> RULE_DETAIL_ID=#ruleDetailId# </isNotNull>
+      	<isNotNull prepend="and" property="ruleId"> RULE_ID=#ruleId# </isNotNull>
+      	<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+      order by RULE_DETAIL_ID desc 
+ </select>
+ 
+  <insert id="addSettleRuleOTC" parameterClass="com.ailk.eaap.op2.bo.SettleRuleOTC">
+  	<selectKey resultClass="java.math.BigDecimal" keyProperty="ruleDetailId">
+		  SELECT SEQ_SETTLE_RULE_DETAIL.NEXTVAL from dual
+    </selectKey>
+	 	insert into SETTLE_RULE_OTC    
+	 	(  RULE_DETAIL_ID
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleId">RULE_ID</isNotNull>
+	    <isNotNull prepend="," property="billStatus">BILL_STATUS</isNotNull>
+	    <isNotNull prepend="," property="serviceStatus">SERVICE_STATUS</isNotNull>
+	    <isNotNull prepend="," property="userTime">USE_TIME</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(#ruleDetailId#
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleId">#ruleId#</isNotNull>
+	    <isNotNull prepend="," property="billStatus">#billStatus#</isNotNull>
+	    <isNotNull prepend="," property="serviceStatus">#serviceStatus#</isNotNull>
+	    <isNotNull prepend="," property="userTime">#userTime#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+
+  <update id="updateSettleRuleOTC" parameterClass="com.ailk.eaap.op2.bo.SettleRuleOTC" >
+  	update SETTLE_RULE_OTC set USE_TIME=#userTime#
+  	 <dynamic>
+	    <isNotNull prepend="," property="billStatus">BILL_STATUS=#billStatus#</isNotNull>
+	    <isNotNull prepend="," property="serviceStatus">SERVICE_STATUS=#serviceStatus#</isNotNull>
+	  </dynamic>
+	  where RULE_ID = #ruleId# and TENANT_ID=#tenantId#
+  </update>
+  
+  <!-- 结算对象规则明细-周期性费用-->
+    <select id="querySettleRuleRC" parameterClass="com.ailk.eaap.op2.bo.SettleRuleRC"  resultClass="com.ailk.eaap.op2.bo.SettleRuleRC">
+      select RULE_DETAIL_ID ruleDetailId,
+             RULE_ID ruleId,
+             ACCUM_TYPE accumType,
+             ACCUM_DATE_TYPE accumDateType,
+             ACCUM_DATE_OFFSET accumDateOffset,
+             REDUCE_RES reduceRes,
+             START_USE_TIME startUserTime 
+      from SETTLE_RULE_RC 
+      <dynamic prepend=" where ">
+      	<isNotNull prepend="and" property="ruleDetailId"> RULE_DETAIL_ID=#ruleDetailId# </isNotNull>
+      	<isNotNull prepend="and" property="ruleId"> RULE_ID=#ruleId# </isNotNull>
+      	<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+      order by RULE_DETAIL_ID desc 
+ </select>
+ 
+  <insert id="addSettleRuleRC" parameterClass="com.ailk.eaap.op2.bo.SettleRuleRC">
+  	<selectKey resultClass="java.math.BigDecimal" keyProperty="ruleDetailId">
+		  SELECT SEQ_SETTLE_RULE_DETAIL.NEXTVAL from dual
+    </selectKey>
+	 	insert into SETTLE_RULE_RC    
+	 	( RULE_DETAIL_ID 
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleId">RULE_ID</isNotNull>
+	    <isNotNull prepend="," property="accumType">ACCUM_TYPE</isNotNull>
+	    <isNotNull prepend="," property="accumDateType">ACCUM_DATE_TYPE</isNotNull>
+	    <isNotNull prepend="," property="accumDateOffset">ACCUM_DATE_OFFSET</isNotNull>
+	    <isNotNull prepend="," property="reduceRes">REDUCE_RES</isNotNull>
+	    <isNotNull prepend="," property="startUserTime">START_USE_TIME</isNotNull>
+	    <isNotNull prepend="," property="tenantId">TENANT_ID</isNotNull>
+	  </dynamic>
+	  )
+	  values(#ruleDetailId#
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleId">#ruleId#</isNotNull>
+	    <isNotNull prepend="," property="accumType">#accumType#</isNotNull>
+	    <isNotNull prepend="," property="accumDateType">#accumDateType#</isNotNull>
+	    <isNotNull prepend="," property="accumDateOffset">#accumDateOffset#</isNotNull>
+	    <isNotNull prepend="," property="reduceRes">#reduceRes#</isNotNull>
+	     <isNotNull prepend="," property="startUserTime">#startUserTime#</isNotNull>
+	     <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+
+  <update id="updateSettleRuleRC" parameterClass="com.ailk.eaap.op2.bo.SettleRuleRC" >
+  	update SETTLE_RULE_RC set START_USE_TIME=#startUserTime#
+  	 <dynamic>
+	     <isNotNull prepend="," property="accumType">ACCUM_TYPE=#accumType#</isNotNull>
+	    <isNotNull prepend="," property="accumDateType">ACCUM_DATE_TYPE=#accumDateType#</isNotNull>
+	    <isNotNull prepend="," property="accumDateOffset">ACCUM_DATE_OFFSET=#accumDateOffset#</isNotNull>
+	    <isNotNull prepend="," property="reduceRes">REDUCE_RES=#reduceRes#</isNotNull>
+	  </dynamic>
+	  where RULE_ID=#ruleId# and TENANT_ID = #tenantId#
+  </update>
+  
+  <!-- 结算规则条件表-->
+    <select id="querySettleRuleCondition" parameterClass="com.ailk.eaap.op2.bo.SettleRuleCondition"  resultClass="com.ailk.eaap.op2.bo.SettleRuleCondition">
+      select RULE_CONDITION_ID ruleConditionId,
+             RULE_DETAIL_ID ruleDetailId,
+             UP_VALUE upValue,
+             DOWN_VALUE downValue,
+             BASE_VALUE baseValue,
+             RATIO_NUMERATOR ratioNumerator,
+             RATIO_DEMOMINATOR ratioDemominator,
+             ORDER_INDEX orderIndex ,
+             CREATE_DATE createDate,
+             VERSION version,
+             STATUS_CD statusCd,
+             STATUS_DATE statusDate 
+      from SETTLE_RULE_CONDITION  
+      <dynamic prepend=" where ">
+      	<isNotNull prepend="and" property="ruleDetailId"> RULE_DETAIL_ID=#ruleDetailId# </isNotNull>
+      	<isNotNull prepend="and" property="ruleConditionId"> RULE_CONDITION_ID=#ruleConditionId# </isNotNull>
+      	<isNotNull prepend="and" property="statusCd"> STATUS_CD=#statusCd# </isNotNull>
+        <isNotNull prepend="and" property="ruleId"> RULE_ID=#ruleId# </isNotNull>
+        <isNotNull prepend="and" property="tenantId"> TENANT_ID=#tenantId#</isNotNull>
+      </dynamic>
+      order by RULE_CONDITION_ID asc 
+ </select>
+ 
+  <insert id="addSettleRuleCondition" parameterClass="com.ailk.eaap.op2.bo.SettleRuleCondition">
+  	<selectKey resultClass="java.math.BigDecimal" keyProperty="ruleConditionId">
+		  SELECT SEQ_SETTLE_RULE_CONDITION.NEXTVAL from dual
+    </selectKey>
+	 	insert into SETTLE_RULE_CONDITION    
+	 	(create_date,status_date, version 
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleConditionId">RULE_CONDITION_ID</isNotNull>
+	    <isNotNull prepend="," property="ruleDetailId">RULE_DETAIL_ID</isNotNull>
+	    <isNotNull prepend="," property="upValue">UP_VALUE</isNotNull>
+	    <isNotNull prepend="," property="downValue">DOWN_VALUE</isNotNull>
+	    <isNotNull prepend="," property="baseValue">BASE_VALUE</isNotNull>
+	    <isNotNull prepend="," property="ratioNumerator">RATIO_NUMERATOR</isNotNull>
+	    <isNotNull prepend="," property="ratioDemominator">RATIO_DEMOMINATOR</isNotNull>
+	    <isNotNull prepend="," property="orderIndex">ORDER_INDEX</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+	    <isNotNull prepend="," property="ruleId">RULE_ID</isNotNull>
+	    <isNotNull prepend="," property="tenantId">TENANT_ID</isNotNull>
+	  </dynamic>
+	  )
+	  values(SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0,SYS_EXTRACT_UTC(current_timestamp)+0
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleConditionId">#ruleConditionId#</isNotNull>
+	    <isNotNull prepend="," property="ruleDetailId">#ruleDetailId#</isNotNull>
+	    <isNotNull prepend="," property="upValue">#upValue#</isNotNull>
+	    <isNotNull prepend="," property="downValue">#downValue#</isNotNull>
+	    <isNotNull prepend="," property="baseValue">#baseValue#</isNotNull>
+	    <isNotNull prepend="," property="ratioNumerator">#ratioNumerator#</isNotNull>
+	    <isNotNull prepend="," property="ratioDemominator">#ratioDemominator#</isNotNull>
+	    <isNotNull prepend="," property="orderIndex">#orderIndex#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+	    <isNotNull prepend="," property="ruleId">#ruleId#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+
+  <update id="updateSettleRuleCondition" parameterClass="com.ailk.eaap.op2.bo.SettleRuleCondition" >
+  	update SETTLE_RULE_CONDITION set status_date=SYS_EXTRACT_UTC(current_timestamp)+0
+  	 <dynamic>
+	     <isNotNull prepend="," property="upValue">UP_VALUE=#upValue#</isNotNull>
+	    <isNotNull prepend="," property="downValue">DOWN_VALUE=#downValue#</isNotNull>
+	    <isNotNull prepend="," property="baseValue">BASE_VALUE=#baseValue#</isNotNull>
+	    <isNotNull prepend="," property="ratioNumerator">RATIO_NUMERATOR=#ratioNumerator#</isNotNull>
+	    <isNotNull prepend="," property="ratioDemominator">RATIO_DEMOMINATOR=#ratioDemominator#</isNotNull>
+	    <isNotNull prepend="," property="orderIndex">ORDER_INDEX=#orderIndex#</isNotNull>
+	    <isNotNull prepend="," property="statusCd">STATUS_CD=#statusCd#</isNotNull>
+	  </dynamic>
+	  where RULE_CONDITION_ID = #ruleConditionId# and TENANT_ID = #tenantId#
+  </update>
+  
+  <!-- 结算规则条件表-->
+    <select id="querySettleRuleAggregation" parameterClass="com.ailk.eaap.op2.bo.SettleRuleAggregation"  resultClass="com.ailk.eaap.op2.bo.SettleRuleAggregation">
+      select RULE_DETAIL_ID ruleDetailId,
+             RULE_ID ruleId,
+             AGGREGATION_ITEM aggregationItem,
+             RULE_DETAIL_INFO ruleDetailInfo,
+             SUBJECT subject 
+      from SETTLE_RULE_AGGREGATION   
+      <dynamic prepend=" where ">
+      	<isNotNull prepend="and" property="ruleDetailId"> RULE_DETAIL_ID=#ruleDetailId# </isNotNull>
+      	<isNotNull prepend="and" property="ruleId"> RULE_ID=#ruleId# </isNotNull>
+      	<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+      order by RULE_DETAIL_ID desc 
+ </select>
+ 
+  <insert id="addSettleRuleAggregation" parameterClass="com.ailk.eaap.op2.bo.SettleRuleAggregation">
+  	<selectKey resultClass="java.math.BigDecimal" keyProperty="ruleDetailId">
+		  SELECT SEQ_SETTLE_RULE_DETAIL.NEXTVAL from dual
+    </selectKey>
+	 	insert into SETTLE_RULE_AGGREGATION     
+	 	( RULE_DETAIL_ID
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleId">RULE_ID</isNotNull>
+	    <isNotNull prepend="," property="aggregationItem">AGGREGATION_ITEM</isNotNull>
+	    <isNotNull prepend="," property="ruleDetailInfo">RULE_DETAIL_INFO</isNotNull>
+	    <isNotNull prepend="," property="subject">SUBJECT</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values(#ruleDetailId#
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleId">#ruleId#</isNotNull>
+	    <isNotNull prepend="," property="aggregationItem">#aggregationItem#</isNotNull>
+	    <isNotNull prepend="," property="ruleDetailInfo">#ruleDetailInfo#</isNotNull>
+	    <isNotNull prepend="," property="subject">#subject#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+
+  <update id="updateSettleRuleAggregation" parameterClass="com.ailk.eaap.op2.bo.SettleRuleAggregation" >
+  	update SETTLE_RULE_AGGREGATION set RULE_ID=#ruleId# 
+  	 <dynamic>
+	     <isNotNull prepend="," property="aggregationItem">AGGREGATION_ITEM=#aggregationItem#</isNotNull>
+	    <isNotNull prepend="," property="ruleDetailInfo">RULE_DETAIL_INFO=#ruleDetailInfo#</isNotNull>
+	    <isNotNull prepend="," property="subject">SUBJECT=#subject#</isNotNull>
+	  </dynamic>
+	  where RULE_ID=#ruleId#  and TENANT_ID = #tenantId#
+  </update>
+  <!-- API 结算周期 -->
+  <insert id="addSettleRuleCLC" parameterClass="com.ailk.eaap.op2.bo.SettleRuleCLC">
+  	<selectKey resultClass="java.math.BigDecimal" keyProperty="clcyeId">
+		  SELECT nextval('SEQ_SETTLE_RULE_DETAIL') from dual
+    </selectKey>
+	 insert into API_SETTLE_RULE_CYCLE    
+	 	(  CLCYE_ID
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleId">RULE_ID</isNotNull>
+	    <isNotNull prepend="," property="cycleType">CYCLE_TYPE</isNotNull>
+	    <isNotNull prepend="," property="cycleCount">CYCLE_COUNT</isNotNull>
+	    <isNotNull prepend="," property="tenantId">TENANT_ID</isNotNull>
+	  </dynamic>
+	  )
+	  values(#clcyeId#
+	  <dynamic>
+	    <isNotNull prepend="," property="ruleId">#ruleId#</isNotNull>
+	    <isNotNull prepend="," property="cycleType">#cycleType#</isNotNull>
+	    <isNotNull prepend="," property="cycleCount">#cycleCount#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+	  </dynamic>
+	  )
+  </insert>
+  
+  <select id="getSettleAPI" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+		SELECT
+		  a.RULE_NAME,
+		  a.RULE_ID,
+		  a.SERV_CODE,
+		  a.BUSI_CODE,
+		  a.RULE_TYPE,
+		  a.MONEY_UNIT,
+		  a.RULE_NAME,
+		  a.EFF_DATE,
+		  a.EXP_DATE,
+		  a.PARTNER_CODE,
+		  a.DESCRIPTION,
+		  a.VERSION,
+			CONCAT(
+				DATE_FORMAT(eff_date, "%Y-%m-%d"),
+				'~',
+				DATE_FORMAT(exp_date, '%Y-%m-%d')
+			) TIME
+		FROM
+			SETTLE_RULE a
+		WHERE
+			a.SERV_CODE = #servCode#
+		AND a.STATUS_CD = #statusCd#
+		and a.TENANT_ID = #tenantId#
+	</select>
+	
+	  <!-- API结算，结算周期 -->
+    <select id="querySettleRuleCLC" parameterClass="com.ailk.eaap.op2.bo.SettleRuleCLC"  resultClass="com.ailk.eaap.op2.bo.SettleRuleCLC">
+      select  CLCYE_ID clcyeId,
+	          CYCLE_TYPE cycleType,
+	          CYCLE_COUNT cycleCount,
+	          RULE_ID ruleId
+	      from API_SETTLE_RULE_CYCLE 
+	      <dynamic prepend=" where ">
+	      	<isNotNull prepend="and" property="clcyeId"> CLCYE_ID=#clcyeId# </isNotNull>
+	      	<isNotNull prepend="and" property="ruleId"> RULE_ID=#ruleId# </isNotNull>
+	      	<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+	      </dynamic>
+	      order by CLCYE_ID desc 
+ </select>
+  <update id="updateSettleRuleCLC" parameterClass="com.ailk.eaap.op2.bo.SettleRuleCLC" >
+  	update API_SETTLE_RULE_CYCLE set  RULE_ID=#ruleId#
+  	 <dynamic>
+	     <isNotNull prepend="," property="cycleType">CYCLE_TYPE=#cycleType#</isNotNull>
+	    <isNotNull prepend="," property="cycleCount">CYCLE_COUNT=#cycleCount#</isNotNull>
+	  </dynamic>
+	  where RULE_ID=#ruleId# and TENANT_ID = #tenantId#
+	  <isNotNull prepend="and" property="clcyeId"> CLCYE_ID=#clcyeId# </isNotNull>
+  </update>
+  
+  
+  <delete id="deleteSettleRuleCondition" parameterClass="com.ailk.eaap.op2.bo.SettleRuleCondition">
+	  delete from settle_rule_condition
+	  <dynamic prepend="where">
+	    <isNotNull prepend="and" property="ruleConditionId"> RULE_CONDITION_ID=#ruleConditionId# </isNotNull>
+	    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+</delete>
+</sqlMap>

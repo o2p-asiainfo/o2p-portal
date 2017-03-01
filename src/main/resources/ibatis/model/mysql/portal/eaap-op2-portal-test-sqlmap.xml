@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-test">
+	<!--查询 selectTabName 修改updateTabName 插入insertTabName 删除deleteTabName  -->
+	<select id="selectSysdate" resultClass="java.lang.String">
+		select to_char(sysdate,'yyyy-mm-dd') from dual
+	</select>
+	 
+	<select id="selectMenuInfoCount" parameterClass="java.util.Map" resultClass="java.lang.Integer">
+		select count(*)
+		from tab 
+		<dynamic	prepend="where">
+			<isNotEmpty prepend="and" property="TABTYPE"> TABTYPE=#TABTYPE#</isNotEmpty>
+			<isNotEmpty prepend="and" property="TNAME"> TNAME like concat('%',#TNAME#,'%')</isNotEmpty>
+            <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		</dynamic>
+	</select>
+	
+	<select id="selectMenuInfo" parameterClass="java.util.Map" resultClass="java.util.LinkedHashMap">
+		<![CDATA[
+		select * from (select a.*,rownum rn from tab a where 1=1 
+		]]>
+		<dynamic>
+			<isNotEmpty prepend="and" property="TABTYPE"> TABTYPE=#TABTYPE#</isNotEmpty>
+			<isNotEmpty prepend="and" property="TNAME"> TNAME like concat('%',#TNAME#,'%')</isNotEmpty>
+			<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		</dynamic>
+		<![CDATA[
+		and rownum<=#pageEnd# ) where rn>=#pageStart#
+		]]>
+		
+	</select>
+	
+</sqlMap>

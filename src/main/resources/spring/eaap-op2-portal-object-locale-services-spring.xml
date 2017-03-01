@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+						http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+       					http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
+	
+	<!--<bean id="eaap-op2-conf-object-locale-objectLocaleService" class="com.asiainfo.integration.o2p.international.bmo.ObjectLocaleServiceImpl" init-method="initialize" lazy-init="false">
+		 <property name="baseDaoImpl" ref="baseDaoImpl"/>
+		 <property name="memcachedClient" ref="xMemcachedClientFactoryBean"/>
+    </bean> -->
+    <!-- 多语言国际化DAO -->
+	<bean id="baseDaoImpl"  class="com.asiainfo.integration.o2p.international.dao.impl.BaseDaoImpl">
+		<property name="sqlMapClientTemplate"><ref bean="sqlMapClientTemplate"/></property>
+	</bean>
+	<bean id="sqlMapClientTemplate" class="org.springframework.orm.ibatis.SqlMapClientTemplate">
+		<property name="sqlMapClient" ref="sqlMapClient" />
+	</bean>
+	<!-- 缓存相关配置 -->
+    <!-- memcached相关的配置 -->
+	<bean  id="xMemcachedClientFactoryBean"   name="o2pCommons.runtimeMemcachedClient" class="com.ailk.eaap.o2p.common.cache.XmemcacheFactoryBeanExtend" destroy-method="shutdown">
+		<property name="servers">
+			<value>${memcache.runtimeserver}</value>
+		</property>
+
+		<!-- nio connection pool size -->
+		<property name="connectionPoolSize"><value>${memcache.runtimeconnectionPoolSize}</value></property>
+
+		<!-- Distributed strategy -->
+		<property name="sessionLocator">
+			<bean class="net.rubyeye.xmemcached.impl.KetamaMemcachedSessionLocator"></bean>
+		</property>
+	
+		<!-- ByteBuffer allocator -->
+		<property name="bufferAllocator">
+			<bean class="net.rubyeye.xmemcached.buffer.SimpleBufferAllocator"></bean>
+		</property>
+		<!-- Failure mode -->
+		<property name="failureMode"><value>${memcache.runtimefailureMode}</value></property>
+		<property name="opTimeout"><value>${memcache.runtimeOpTimeout}</value></property>
+		<!-- enable heartBeat -->
+		<property name="enableHeartBeat"><value>${memcache.enableHeartBeat}</value></property>
+		<!--connection idle time  detect if enableHeartBeat -->
+		<property name="sessionIdleTimeout"><value>${memcache.sessionIdleTimeout}</value></property>
+		<property name="cacheMode"><value>${cacheMode}</value></property>
+		
+	</bean>
+</beans>

@@ -1,0 +1,1958 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="eaap-op2-portal-prov">
+	<!--查询 selectTabName 修改updateTabName 插入insertTabName 删除deleteTabName  -->	
+	
+	<!-- 查询员工个人信息 -->
+	<select id="showUser" parameterClass="java.util.Map" resultClass="java.util.HashMap">	
+    	SELECT A.ORG_ID ORGID,A.NAME NAME,A.ORG_USERNAME ORGUSERNAME,B.CERT_TYPE_NAME CERTTYPENAME,A.CERT_NUMBER CERTNUMBER,C.MAIND_ID MAINDID,C.CEP_NAME CEPNAME,
+      	A.STATE STATE,A.TELEPHONE TELEPHONE, A.EMAIL EMAIL,A.DESCRIPTOR  DESCRIPTOR,A.S_FILE_ID SFILEID,A.FIL_S_FILE_ID FILSFILEID,D.ZONE_NAME AREA 
+      	,A.ORG_TYPE_CODE ORGTYPECODE,A.tenant_id
+      	FROM org A,cert_type B,main_data C,area D WHERE C.MDT_CD='103' AND C.CEP_CODE=A.STATE AND A.CERT_TYPE_CODE = B.CERT_TYPE_CODE 
+      	AND A.AREA_ID = D.AREA_ID AND A.ORG_ID=#value#  
+      AND A.tenant_id=#tenantId#  
+      AND B.tenant_id=#tenantId#  
+      AND C.tenant_id=#tenantId# 
+      AND D.tenant_id=#tenantId# 
+	</select>
+	<!-- 临时加的 -->
+	<select id="queryUser" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+  	  SELECT A.ORG_ID ORGID,A.NAME NAME,A.ORG_USERNAME ORGUSERNAME,A.CERT_NUMBER CERTNUMBER, C.CEP_NAME CEPNAME,A.STATE STATE,
+      A.TELEPHONE TELEPHONE, A.EMAIL EMAIL,A.ADDRESS ADDRESS,A.DESCRIPTOR  DESCRIPTOR,B.CERT_TYPE_NAME CERTTYPENAME, A.tenant_id
+      FROM org A,cert_type B,main_data C WHERE A.CERT_TYPE_CODE = B.CERT_TYPE_CODE AND C.MDT_CD='103' AND C.CEP_CODE=A.STATE AND A.ORG_ID=#editValue# 
+      AND A.tenant_id=#tenantId#  
+      AND B.tenant_id=#tenantId#  
+      AND C.tenant_id=#tenantId# 
+	</select>
+	
+	<!-- 查询应用系统信息(后面要添加使用能力数，对应的表是服务表和服务调用表) -->
+	<!-- <select id="showApply" parameterClass="java.lang.String" resultClass="java.util.HashMap">	 	   
+		 SELECT X.ORGID,
+		        X.COMPONENTID,
+				X.NANE,
+				X.STATE,
+				X.DESCRIPTOR,
+				X.CEPNAME,
+				X.SFILEID,
+				ifnull(Y.NUM,0) NUM,
+				'0' CALLNUM  
+		   FROM (SELECT A.ORG_ID ORGID,
+						B.COMPONENT_ID COMPONENTID,
+						B.NAME NANE,
+						B.STATE STATE,
+						B.DESCRIPTOR DESCRIPTOR,
+						C.CEP_NAME CEPNAME,
+						B.S_FILE_ID SFILEID   
+		           FROM org A ,component B,main_data C 
+		          WHERE A.ORG_ID = B.ORG_ID 
+		            AND B.STATE != 'X'
+		            AND C.MDT_CD='102' 
+		            AND C.CEP_CODE=B.STATE
+		            AND A.ORG_ID=#value# ) X
+		left join (SELECT H.COMPONENT_ID COMPONENTID,
+						  COUNT(*) NUM 
+					 FROM tech_imp_att A,service B,dir_ser_list C,directory D,ser_tech_impl E,tech_impl F,component H,service_att G 
+					WHERE B.SERVICE_ID=C.SERVICE_ID 
+					  AND C.DIR_ID=D.DIR_ID 
+					  AND E.SERVICE_ID = B.SERVICE_ID 
+					  AND A.TECH_IMPL_ID = E.TECH_IMPL_ID 
+					  AND F.TECH_IMPL_ID = E.TECH_IMPL_ID 
+					  AND H.COMPONENT_ID = F.COMPONENT_ID 
+					  AND E.STATE NOT IN('X','G') 
+					  AND G.SERVICE_ID = B.SERVICE_ID 
+					  AND G.ATTR_SPEC_ID='19' 
+				 GROUP BY H.COMPONENT_ID) Y
+		       on Y.COMPONENTID = X.COMPONENTID
+	</select>
+	 -->
+		<!-- 查询应用系统信息(后面要添加使用能力数，对应的表是服务表和服务调用表) -->
+	<select id="showApply" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+	   SELECT X.ORGID,
+		        X.COMPONENTID,
+				X.NANE,
+				X.STATE,
+				X.DESCRIPTOR,
+				X.MAINDID,
+				X.CEPNAME,
+				X.SFILEID,
+				ifnull(Y.NUM,0) NUM,
+				'0' CALLNUM ,
+				x.state_time 
+		   FROM (SELECT A.ORG_ID ORGID,
+						B.COMPONENT_ID COMPONENTID,
+						B.NAME NANE,
+						B.STATE STATE,
+						B.DESCRIPTOR DESCRIPTOR,
+						C.MAIND_ID MAINDID,
+						C.CEP_NAME CEPNAME,
+						B.S_FILE_ID SFILEID,
+						b.state_time,
+						A.tenant_id tenant_id
+		           FROM org A ,component B,main_data C 
+		          WHERE A.ORG_ID = B.ORG_ID 
+		            AND B.STATE != 'X'
+		            AND C.MDT_CD='102' 
+		            AND C.CEP_CODE=B.STATE
+		            AND A.ORG_ID=#userId# 
+		            AND B.COMPONENT_TYPE_ID=1
+		           AND A.tenant_id=#tenantId#  
+			        AND B.tenant_id=#tenantId#  
+				    AND C.tenant_id=#tenantId#  
+		            <isNotNull prepend="and" property="componentName"> B.NAME LIKE concat('%',#componentName#,'%')</isNotNull>
+		              <isNotNull prepend="and" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		            ) X
+		left join (SELECT H.COMPONENT_ID COMPONENTID,
+		                  A.tenant_id  tenant_id,
+						  COUNT(*) NUM 
+					 FROM tech_imp_att A,service B,dir_ser_list C,directory D,ser_tech_impl E,tech_impl F,component H,service_att G 
+					WHERE B.SERVICE_ID=C.SERVICE_ID 
+					  AND C.DIR_ID=D.DIR_ID 
+					  AND E.SERVICE_ID = B.SERVICE_ID 
+					  AND A.TECH_IMPL_ID = E.TECH_IMPL_ID 
+					  AND F.TECH_IMPL_ID = E.TECH_IMPL_ID 
+					  AND H.COMPONENT_ID = F.COMPONENT_ID 
+					  AND E.STATE NOT IN('X','G') 
+					  AND G.SERVICE_ID = B.SERVICE_ID 
+					  AND G.ATTR_SPEC_ID='19' 
+					  AND A.ATTR_SPEC_ID='1'
+					 AND A.tenant_id=#tenantId#  
+			        AND B.tenant_id=#tenantId#  
+			        AND C.tenant_id=#tenantId#  
+			        AND D.tenant_id=#tenantId#  
+				    AND E.tenant_id=#tenantId#  
+				    AND F.tenant_id=#tenantId#  
+				    AND H.tenant_id=#tenantId#  	
+				    AND G.tenant_id=#tenantId#  	
+				 GROUP BY H.COMPONENT_ID) Y
+		       on Y.COMPONENTID = X.COMPONENTID 
+		       order BY STATE_TIME DESC
+	</select>
+	
+	<select id="showApplySum" parameterClass="java.util.Map" resultClass="java.lang.Integer">	 	   
+	    SELECT COUNT(*)  
+		   FROM (SELECT A.ORG_ID ORGID,
+						B.COMPONENT_ID COMPONENTID,
+						B.NAME NANE,
+						B.STATE STATE,
+						B.DESCRIPTOR DESCRIPTOR,
+						C.CEP_NAME CEPNAME,
+						B.S_FILE_ID SFILEID   
+		           FROM org A ,component B,main_data C 
+		          WHERE A.ORG_ID = B.ORG_ID 
+		            AND B.STATE != 'X'
+		            AND C.MDT_CD='102' 
+		            AND C.CEP_CODE=B.STATE
+		            AND A.ORG_ID=#userId# 
+		            AND A.tenant_id=#tenantId#  
+			        AND B.tenant_id=#tenantId#  
+				    AND C.tenant_id=#tenantId#  
+		            <isNotNull prepend="and" property="componentName"> B.NAME LIKE concat('%',#componentName#,'%')</isNotNull>
+		              <isNotNull prepend="and" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		            ) X
+		left join (SELECT H.COMPONENT_ID COMPONENTID,
+						  COUNT(*) NUM 
+					 FROM tech_imp_att A,service B,dir_ser_list C,directory D,ser_tech_impl E,tech_impl F,component H,service_att G 
+					WHERE B.SERVICE_ID=C.SERVICE_ID 
+					  AND C.DIR_ID=D.DIR_ID 
+					  AND E.SERVICE_ID = B.SERVICE_ID 
+					  AND A.TECH_IMPL_ID = E.TECH_IMPL_ID 
+					  AND F.TECH_IMPL_ID = E.TECH_IMPL_ID 
+					  AND H.COMPONENT_ID = F.COMPONENT_ID 
+					  AND E.STATE NOT IN('X','G') 
+					  AND G.SERVICE_ID = B.SERVICE_ID 
+					  AND G.ATTR_SPEC_ID='19' 
+					  AND A.ATTR_SPEC_ID='1' 
+					 AND A.tenant_id=#tenantId#  
+			        AND B.tenant_id=#tenantId#  
+			        AND C.tenant_id=#tenantId#  
+			        AND D.tenant_id=#tenantId#  
+				    AND E.tenant_id=#tenantId#  
+				    AND F.tenant_id=#tenantId#  
+				    AND H.tenant_id=#tenantId#  	
+				    AND G.tenant_id=#tenantId#  	
+				 GROUP BY H.COMPONENT_ID) Y
+		       on Y.COMPONENTID = X.COMPONENTID  
+				
+	</select>
+	
+	
+	
+	
+	<!-- 返回组件信息 -->
+	<select id="showComponent" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  		SELECT A.COMPONENT_ID COMPONENTID,A.ORG_ID ORGID, A.NAME NAME,A.CODE CODE, A.STATE STATE,A.DESCRIPTOR DESCRIPTOR,C.MAIND_ID MAINDID,C.CEP_NAME CEPNAME,  
+  		A.REG_TIME REGTIME,A.S_FILE_ID SFILEID,A.up_state FROM component A,main_data C WHERE  C.MDT_CD = '102' AND C.CEP_CODE=A.STATE AND A.COMPONENT_ID=#componentId#  
+  		    AND A.tenant_id=#tenantId# AND C.tenant_id=#tenantId#
+	</select>
+	<!-- 查询组件信息（技术实现） -->
+	<select id="showTechimpl" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  		SELECT COMPONENT_ID COMPONENTID,ORG_ID ORGID, NAME NAME,CODE CODE,STATE_TIME STATETIME,STATE STATE,DESCRIPTOR DESCRIPTOR,tenant_id 
+  		FROM component WHERE COMPONENT_ID=#value# AND tenant_id=#tenantId#
+	</select>
+	<!-- 服务能力选项(通用定义属性) -->
+	<select id="serviceList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT distinct tt.SERVICE_ID NEWSERVICEID,
+		       tt.SERVICEID OLDSERVICEID,
+               tt.ATTRSPECVALUE,
+               tt.TECHIMPATTID,
+		       tt.SERVICE_CN_NAME CNNAME,
+		       tt.SERVICE_DESC SERVICEDESC,
+		       G.SER_SPEC_VA SERSPECVA,
+tt.tenant_id
+		  FROM (select A.SERVICEID,A.ATTRSPECVALUE,A.TECHIMPATTID,B.* from(SELECT E.SERVICE_ID SERVICEID,
+		               F.COMPONENT_ID  COMPONENTID,
+             TI.ATTR_SPEC_VALUE ATTRSPECVALUE,
+             TI.TECH_IMP_ATT_ID TECHIMPATTID,
+             F.tenant_id tenant_id
+		          FROM ser_tech_impl E,tech_impl F , tech_imp_att TI
+		         WHERE E.TECH_IMPL_ID = F.TECH_IMPL_ID 
+                           and TI.TECH_IMPL_ID = F.TECH_IMPL_ID 
+		           AND E.STATE NOT IN('X','G') 
+		           AND F.COMPONENT_ID=#componentId#
+		           AND E.tenant_id=#tenantId#
+			        AND F.tenant_id=#tenantId#
+				    AND TI.tenant_id=#tenantId#
+		           ) A       
+	right join service B  on B.SERVICE_ID = A.SERVICEID where B.tenant_id=#tenantId#) tt
+	inner join service_att G on G.SERVICE_ID = tt.SERVICE_ID and G.tenant_id=#tenantId#
+	inner join service_att H on H.SERVICE_ID = tt.SERVICE_ID and H.tenant_id=#tenantId#
+	INNER JOIN dir_ser_list k ON k.service_id = tt.SERVICE_ID and k.tenant_id=#tenantId#
+    INNER JOIN directory d ON d.dir_id = k.dir_id    and  d.tenant_id=#tenantId#
+        
+	WHERE G.SER_SPEC_VA = 'N'          
+	  AND G.ATTR_SPEC_ID='19'   
+	  and  H.SER_SPEC_VA = 'Y' 
+	  AND H.ATTR_SPEC_ID='880100000'   
+      and  FIND_IN_SET(d.dir_id,getDirChildLst(401))
+ 	limit #startPage_mysql#,#endPage_mysql#
+	</select>
+	<select id="countProvAbility" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+	    SELECT
+	count(*)
+FROM
+	(
+		SELECT DISTINCT
+			tt.SERVICE_ID NEWSERVICEID,
+			tt.SERVICEID OLDSERVICEID,
+			tt.ATTRSPECVALUE,
+			tt.TECHIMPATTID,
+			tt.SERVICE_CN_NAME CNNAME,
+			tt.SERVICE_DESC SERVICEDESC,
+			G.SER_SPEC_VA SERSPECVA,
+			tt.tenant_id
+		FROM
+			(
+				SELECT
+					A.SERVICEID,
+					A.ATTRSPECVALUE,
+					A.TECHIMPATTID,
+					B.*
+				FROM
+					(
+						SELECT
+							E.SERVICE_ID SERVICEID,
+							F.COMPONENT_ID COMPONENTID,
+							TI.ATTR_SPEC_VALUE ATTRSPECVALUE,
+							TI.TECH_IMP_ATT_ID TECHIMPATTID,
+							F.tenant_id tenant_id
+						FROM
+							ser_tech_impl E,
+							tech_impl F,
+							tech_imp_att TI
+						WHERE
+							E.TECH_IMPL_ID = F.TECH_IMPL_ID
+						AND TI.TECH_IMPL_ID = F.TECH_IMPL_ID
+						AND E.STATE NOT IN ('X', 'G')
+						AND F.COMPONENT_ID = 100000440
+						AND E.tenant_id = #tenantId#
+						AND F.tenant_id =#tenantId#
+						AND TI.tenant_id = #tenantId#
+					) A
+				RIGHT JOIN service B ON B.SERVICE_ID = A.SERVICEID
+				WHERE
+					B.tenant_id = #tenantId#
+			) tt
+		INNER JOIN service_att G ON G.SERVICE_ID = tt.SERVICE_ID
+		AND G.tenant_id =#tenantId#
+		INNER JOIN service_att H ON H.SERVICE_ID = tt.SERVICE_ID
+		AND H.tenant_id =#tenantId#
+		INNER JOIN dir_ser_list k ON k.service_id = tt.SERVICE_ID
+		AND k.tenant_id =#tenantId#
+		INNER JOIN DIRECTORY d ON d.dir_id = k.dir_id
+		AND d.tenant_id =#tenantId#
+		WHERE
+			G.SER_SPEC_VA = 'N'
+		AND G.ATTR_SPEC_ID = '19'
+		AND H.SER_SPEC_VA = 'Y'
+		AND H.ATTR_SPEC_ID = '880100000'
+		AND FIND_IN_SET(
+			d.dir_id,
+			getDirChildLst (401)
+		)
+	) aa
+	</select>
+	<!-- 在应用页面展现服务能力 -->
+	<select id="showService" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT distinct G.SER_SPEC_VA SERSPECVA,A.TECH_IMP_ATT_ID TECHIMPATTID, E.STATE STATE,E.SERVICE_ID SERVICEID,B.SERVICE_CN_NAME CNNAME,A.ATTR_SPEC_VALUE ATTRSPECVALUE, F.COMPONENT_ID  COMPONENTID,
+		H.state comState,H.UP_STATE upState
+		FROM tech_imp_att A,service B,ser_tech_impl E,tech_impl F,component H,service_att G WHERE 
+		E.SERVICE_ID = B.SERVICE_ID AND A.TECH_IMPL_ID = E.TECH_IMPL_ID 
+		AND F.TECH_IMPL_ID = E.TECH_IMPL_ID AND H.COMPONENT_ID = F.COMPONENT_ID AND E.STATE NOT IN('X','G') AND F.COMPONENT_ID=#componentId# 
+		AND G.SERVICE_ID = B.SERVICE_ID AND G.ATTR_SPEC_ID='19' AND A.ATTR_SPEC_ID='1'
+        AND A.tenant_id=#tenantId#  
+        AND B.tenant_id=#tenantId#  
+	    AND E.tenant_id=#tenantId#  
+	    AND F.tenant_id=#tenantId#  
+	    AND H.tenant_id=#tenantId#  	
+	    AND G.tenant_id=#tenantId#  		
+	</select>
+	<select id="countShowAbility" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+	   SELECT count(*) 
+		FROM tech_imp_att A,service B,dir_ser_list C,directory D,ser_tech_impl E,tech_impl F,component H,service_att G WHERE 
+		B.SERVICE_ID=C.SERVICE_ID AND C.DIR_ID=D.DIR_ID AND E.SERVICE_ID = B.SERVICE_ID AND A.TECH_IMPL_ID = E.TECH_IMPL_ID 
+		AND F.TECH_IMPL_ID = E.TECH_IMPL_ID AND H.COMPONENT_ID = F.COMPONENT_ID AND E.STATE NOT IN('X','G') AND F.COMPONENT_ID=#componentId# 
+		AND G.SERVICE_ID = B.SERVICE_ID AND G.ATTR_SPEC_ID='19' AND A.ATTR_SPEC_ID='1'
+		AND A.tenant_id=#tenantId#  
+        AND B.tenant_id=#tenantId#  
+        AND C.tenant_id=#tenantId#  
+        AND D.tenant_id=#tenantId#  
+	    AND E.tenant_id=#tenantId#  
+	    AND F.tenant_id=#tenantId#  
+	    AND H.tenant_id=#tenantId#  	
+	    AND G.tenant_id=#tenantId#  	
+	</select>
+	<!-- 通过服务能力查询能力接口名称 -->
+	<select id="queryServiceName" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		SELECT  B.SERVICE_CN_NAME CNNAME FROM tech_imp_att A,service B, dir_ser_list C,directory D,ser_tech_impl E,tech_impl F,component H 
+		WHERE B.SERVICE_ID = C.SERVICE_ID AND C.DIR_ID = D.DIR_ID AND E.SERVICE_ID = B.SERVICE_ID AND A.TECH_IMPL_ID = E.TECH_IMPL_ID 
+		AND F.TECH_IMPL_ID = E.TECH_IMPL_ID AND H.COMPONENT_ID = F.COMPONENT_ID AND E.STATE NOT IN('X','G') AND A.TECH_IMP_ATT_ID=#value#
+		AND A.tenant_id=#tenantId#  
+        AND B.tenant_id=#tenantId#  
+        AND C.tenant_id=#tenantId#  
+        AND D.tenant_id=#tenantId#  
+	    AND E.tenant_id=#tenantId#  
+	    AND F.tenant_id=#tenantId#  
+	    AND H.tenant_id=#tenantId#  	
+	</select>
+	
+	<!-- 在应用页面查询服务能力 -->
+	<select id="queryService" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT B.SERVICE_ID SERVICEID,B.SERVICE_CN_NAME CNNAME,D.DIR_NAME DIRNAME,B.SERVICE_DESC SERVICEDESC,B.SERVICE_VERSION SERVICEVERSION
+		 FROM 
+		service B,dir_ser_list C,directory D  WHERE B.SERVICE_ID=C.SERVICE_ID AND C.DIR_ID=D.DIR_ID AND B.SERVICE_ID IN 
+		<iterate property="service" conjunction="," close=")" open="(">
+            #service[]#
+	 	</iterate>
+	 	AND B.tenant_id=#tenantId#
+	 	AND C.tenant_id=#tenantId#
+	    AND D.tenant_id=#tenantId#
+	</select>
+	
+	<!-- 通过技术实现属性ID获取技术实现ID -->
+	<select id="getTechimplId" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		 SELECT A.TECH_IMPL_ID FROM tech_imp_att A,tech_impl B,component C WHERE A.TECH_IMPL_ID=B.TECH_IMPL_ID 
+    	 AND C.COMPONENT_ID=B.COMPONENT_ID AND A.TECH_IMP_ATT_ID=#techimpAttId#
+    	 AND A.tenant_id=#tenantId#  
+        AND B.tenant_id=#tenantId#  
+	    AND C.tenant_id=#tenantId#  
+	</select>
+	
+	<!-- 通过技术实现属性\技术实现\组件获取服务技术实现属性ID -->
+	<select id="getSevTechimplId"  parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		 SELECT C.SER_TECH_IMPL_ID  FROM tech_imp_att A,tech_impl B,ser_tech_impl C,component D  
+    	 WHERE A.TECH_IMPL_ID=B.TECH_IMPL_ID AND C.TECH_IMPL_ID=B.TECH_IMPL_ID 
+    	 AND D.COMPONENT_ID=B.COMPONENT_ID AND A.TECH_IMP_ATT_ID=#techimpAttId#
+    	AND A.tenant_id=#tenantId#  
+        AND B.tenant_id=#tenantId#  
+	    AND C.tenant_id=#tenantId#  
+	    AND D.tenant_id=#tenantId#  
+	</select>
+	
+	<select id="selectSeq" resultClass="java.lang.String">
+   		SELECT nextval('SEQ_COMPONENT');
+	</select>
+	
+	<select id="countComponet" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT SUBSTR(A.DATE_TRAN_ID,1,8) DATETRANID,
+	           A.DST_CODE DSTCODE,
+	           SUM(A.TOTAL_SYS_ERR) TOTALSYSERR,
+	           SUM(A.TOTAL_BIZ_ERR) TOTALBIZERR, 
+	           SUM(A.TOTAL_TRANS) TOTALTRANS,
+	           ROUND(AVG(A.AVG_USING_DST),2) AVGUSINGDST,
+	           SUM(A.TOTAL_TRANS-A.TOTAL_SYS_ERR-A.TOTAL_BIZ_ERR) SUCCESS 
+	      FROM reg_stat_recent A 
+	    <dynamic prepend="where">
+	     <isNotNull prepend="and" property="appId">
+	     	 DST_CODE IN 
+	     	 <iterate property="appId" conjunction="," close=")" open="(">
+		            #appId[]#
+			 </iterate>
+		 </isNotNull>
+	     <isNotNull prepend="and" property="dataType"> DATE_TYPE=#dataType#</isNotNull>
+	     <isNotNull prepend="and" property="startDate"> <![CDATA[ SUBSTR(A.DATE_TRAN_ID,1,8) >= #startDate# ]]></isNotNull>
+	     <isNotNull prepend="and" property="endDate"> <![CDATA[ SUBSTR(A.DATE_TRAN_ID,1,8) <= #endDate# ]]></isNotNull>  
+	     <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+	   </dynamic>
+	    GROUP BY SUBSTR(A.DATE_TRAN_ID,1,8),A.DST_CODE ORDER BY DSTCODE 
+	    LIMIT #pro_mysql#,#page_record#
+	</select>	
+	<select id="countComponetSum" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		SELECT COUNT(*) FROM
+		(SELECT SUBSTR(A.DATE_TRAN_ID,1,8) DATETRANID,A.DST_CODE DSTCODE,SUM(A.TOTAL_SYS_ERR) TOTALSYSERR,SUM(A.TOTAL_BIZ_ERR) TOTALBIZERR, 
+		SUM(A.TOTAL_TRANS) TOTALTRANS,AVG(A.AVG_USING_DST) AVGUSINGDST,SUM(A.TOTAL_TRANS-A.TOTAL_SYS_ERR-A.TOTAL_BIZ_ERR) SUCCESS FROM reg_stat_recent A 
+	   <dynamic prepend="where">
+	    <isNotNull prepend="and" property="appId"> 
+	     	 DST_CODE IN 
+	     	 <iterate property="appId" conjunction="," close=")" open="(">
+		            #appId[]#
+			 </iterate>
+		 </isNotNull>
+	    <isNotNull prepend="and" property="dataType"> DATE_TYPE=#dataType#</isNotNull>
+	    <isNotNull prepend="and" property="startDate"> <![CDATA[ SUBSTR(A.DATE_TRAN_ID,1,8) >= #startDate# ]]></isNotNull>
+	    <isNotNull prepend="and" property="endDate"> <![CDATA[ SUBSTR(A.DATE_TRAN_ID,1,8) <= #endDate# ]]></isNotNull>  
+	    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+	  GROUP BY SUBSTR(A.DATE_TRAN_ID,1,8),A.DST_CODE ORDER BY DSTCODE) temp
+	</select>
+	
+	<select id="countComponetMon" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+		SELECT SUBSTR(A.DATE_TRAN_ID,1,6) DATETRANID,
+	           A.DST_CODE DSTCODE,SUM(A.TOTAL_SYS_ERR) TOTALSYSERR,
+	           SUM(A.TOTAL_BIZ_ERR) TOTALBIZERR,
+	  		     SUM(A.TOTAL_TRANS) TOTALTRANS,
+	           ROUND(AVG(A.AVG_USING_DST),2) AVGUSINGDST,
+	           SUM(A.TOTAL_TRANS-A.TOTAL_SYS_ERR-A.TOTAL_BIZ_ERR) SUCCESS 
+	      FROM reg_stat_recent A 
+		   <dynamic prepend="where">
+		    <isNotNull prepend="and" property="appId"> 
+		     	 DST_CODE IN 
+		     	 <iterate property="appId" conjunction="," close=")" open="(">
+			            #appId[]#
+				 </iterate>
+			 </isNotNull>
+		    <isNotNull prepend="and" property="dataType"> DATE_TYPE=#dataType#</isNotNull>
+		    <isNotNull prepend="and" property="startDate"> <![CDATA[ substr(DATE_TRAN_ID,1,6) >= #startDate# ]]></isNotNull>
+		    <isNotNull prepend="and" property="endDate"> <![CDATA[ substr(DATE_TRAN_ID,1,6) <= #endDate# ]]></isNotNull>  
+		    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		  </dynamic>
+      GROUP BY SUBSTR(A.DATE_TRAN_ID,1,6),A.DST_CODE ORDER BY DSTCODE
+	     LIMIT #pro_mysql#,#page_record#
+	</select>
+	<select id="countComponetMonSum" parameterClass="java.util.Map" resultClass="java.lang.Integer">
+		SELECT COUNT(*) FROM
+		(SELECT SUBSTR(A.DATE_TRAN_ID,1,6) DATETRANID,A.DST_CODE DSTCODE,SUM(A.TOTAL_SYS_ERR) TOTALSYSERR, SUM(A.TOTAL_BIZ_ERR) TOTALBIZERR,
+  		SUM(A.TOTAL_TRANS) TOTALTRANS,AVG(A.AVG_USING_DST) AVGUSINGDST,SUM(A.TOTAL_TRANS-A.TOTAL_SYS_ERR-A.TOTAL_BIZ_ERR) SUCCESS FROM reg_stat_recent A 
+	   <dynamic prepend="where">
+	    <isNotNull prepend="and" property="appId"> 
+	     	 DST_CODE IN 
+	     	 <iterate property="appId" conjunction="," close=")" open="(">
+		            #appId[]#
+			 </iterate>
+		 </isNotNull>
+	    <isNotNull prepend="and" property="dataType"> DATE_TYPE=#dataType#</isNotNull>
+	    <isNotNull prepend="and" property="startDate"> <![CDATA[ substr(DATE_TRAN_ID,1,6) >= #startDate# ]]></isNotNull>
+	    <isNotNull prepend="and" property="endDate"> <![CDATA[ substr(DATE_TRAN_ID,1,6) <= #endDate# ]]></isNotNull>  
+	    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+	   GROUP BY SUBSTR(A.DATE_TRAN_ID,1,6),A.DST_CODE ORDER BY DSTCODE) temp
+	</select>
+	
+	<!-- 统计能力访问数时用上的API查询条件 -->
+	<select id="showApiService" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+		SELECT A.API_ID APIID,A.API_NAME APINAME,B.SERVICE_ID SERVICEID,F.COMPONENT_ID  COMPONENTID 
+		FROM api A,service B,ser_tech_impl E,tech_impl F,component H WHERE 
+		A.SERVICE_ID = B.SERVICE_ID AND E.SERVICE_ID = B.SERVICE_ID  AND F.TECH_IMPL_ID = E.TECH_IMPL_ID 
+    	AND H.COMPONENT_ID = F.COMPONENT_ID AND E.STATE NOT IN('X','G') AND F.COMPONENT_ID=#value# 
+    	AND A.tenant_id=#tenantId#  
+        AND B.tenant_id=#tenantId#  
+	    AND E.tenant_id=#tenantId#  
+	    AND F.tenant_id=#tenantId#  
+	    AND H.tenant_id=#tenantId#  
+	</select>
+	<!--  通过API内容查询统计API的日度信息 -->
+	<select id="countAbility" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+		SELECT SUBSTR(A.DATE_TRAN_ID,1,8) DATETRANID,
+			   A.DST_CODE DSTCODE,
+			   A.INTF_CODE INTFCODE,
+			   SUM(A.TOTAL_SYS_ERR) TOTALSYSERR,
+			   SUM(A.TOTAL_BIZ_ERR) TOTALBIZERR, 
+			   SUM(A.TOTAL_TRANS) TOTALTRANS,
+			   ROUND(AVG(A.AVG_USING_DST),2) AVGUSINGDST,
+			   SUM(A.TOTAL_TRANS-A.TOTAL_SYS_ERR-A.TOTAL_BIZ_ERR) SUCCESS  
+	      FROM reg_stat_recent A 
+		 <dynamic prepend="where">
+			<isNotNull prepend="and" property="appId"> DST_CODE=#appId#</isNotNull>
+			<isNotNull prepend="and" property="intfCode"> INTF_CODE=#intfCode#</isNotNull>
+			<isNotNull prepend="and" property="dataType"> DATE_TYPE=#dataType#</isNotNull>
+			<isNotNull prepend="and" property="startDate"> <![CDATA[ SUBSTR(A.DATE_TRAN_ID,1,8) >= #startDate# ]]></isNotNull>
+			<isNotNull prepend="and" property="endDate"> <![CDATA[ SUBSTR(A.DATE_TRAN_ID,1,8) <= #endDate# ]]></isNotNull>  
+			<isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull> 
+		</dynamic>
+	  GROUP BY SUBSTR(A.DATE_TRAN_ID,1,8),A.DST_CODE,A.INTF_CODE ORDER BY DSTCODE
+         LIMIT #pro_mysql#,#page_record#
+	</select>
+	<select id="countAbilitySum" parameterClass="java.util.Map" resultClass="java.lang.Integer">
+		SELECT COUNT(*) FROM (
+		SELECT SUBSTR(A.DATE_TRAN_ID,1,8) DATETRANID,A.DST_CODE DSTCODE,A.INTF_CODE INTFCODE,SUM(A.TOTAL_SYS_ERR) TOTALSYSERR,SUM(A.TOTAL_BIZ_ERR) TOTALBIZERR, 
+		SUM(A.TOTAL_TRANS) TOTALTRANS,AVG(A.AVG_USING_DST) AVGUSINGDST,SUM(A.TOTAL_TRANS-A.TOTAL_SYS_ERR-A.TOTAL_BIZ_ERR) SUCCESS  FROM reg_stat_recent A 
+	   <dynamic prepend="where">
+	    <isNotNull prepend="and" property="appId"> DST_CODE=#appId#</isNotNull>
+	    <isNotNull prepend="and" property="intfCode"> INTF_CODE=#intfCode#</isNotNull>
+	    <isNotNull prepend="and" property="dataType"> DATE_TYPE=#dataType#</isNotNull>
+	    <isNotNull prepend="and" property="startDate"> <![CDATA[ SUBSTR(A.DATE_TRAN_ID,1,8) >= #startDate# ]]></isNotNull>
+	    <isNotNull prepend="and" property="endDate"> <![CDATA[ SUBSTR(A.DATE_TRAN_ID,1,8) <= #endDate# ]]></isNotNull>  
+	    <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull> 
+	  </dynamic>
+	   GROUP BY SUBSTR(A.DATE_TRAN_ID,1,8),A.DST_CODE,A.INTF_CODE ORDER BY DSTCODE) temp
+	</select>
+	<!--  通过API内容查询统计API的月度信息 -->
+	<select id="countAbilityMon" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+	SELECT SUBSTR(A.DATE_TRAN_ID,1,6) DATETRANID,
+           A.DST_CODE DSTCODE,
+           A.INTF_CODE INTFCODE,
+           SUM(A.TOTAL_SYS_ERR) TOTALSYSERR,
+           SUM(A.TOTAL_BIZ_ERR) TOTALBIZERR,
+  		   SUM(A.TOTAL_TRANS) TOTALTRANS,
+           ROUND(AVG(A.AVG_USING_DST),2) AVGUSINGDST,
+           SUM(A.TOTAL_TRANS-A.TOTAL_SYS_ERR-A.TOTAL_BIZ_ERR) SUCCESS 
+      FROM reg_stat_recent A 
+	   <dynamic prepend="where">
+	   	<isNotNull prepend="and" property="appId"> DST_CODE=#appId#</isNotNull>
+	    <isNotNull prepend="and" property="intfCode"> INTF_CODE=#intfCode#</isNotNull>
+	    <isNotNull prepend="and" property="dataType"> DATE_TYPE=#dataType#</isNotNull>
+	    <isNotNull prepend="and" property="startDate"> <![CDATA[ substr(DATE_TRAN_ID,1,6) >= #startDate# ]]></isNotNull>
+	    <isNotNull prepend="and" property="endDate"> <![CDATA[ substr(DATE_TRAN_ID,1,6) <= #endDate# ]]></isNotNull> 
+	    <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+	   GROUP BY SUBSTR(A.DATE_TRAN_ID,1,6),A.DST_CODE,A.INTF_CODE ORDER BY DSTCODE
+     LIMIT #pro_mysql#,#page_record#
+	</select>
+	<select id="countAbilityMonSum" parameterClass="java.util.Map" resultClass="java.lang.Integer">
+	SELECT COUNT(*) FROM (
+		SELECT SUBSTR(A.DATE_TRAN_ID,1,6) DATETRANID,A.DST_CODE DSTCODE,A.INTF_CODE INTFCODE,SUM(A.TOTAL_SYS_ERR) TOTALSYSERR, SUM(A.TOTAL_BIZ_ERR) TOTALBIZERR,
+  		SUM(A.TOTAL_TRANS) TOTALTRANS,AVG(A.AVG_USING_DST) AVGUSINGDST,SUM(A.TOTAL_TRANS-A.TOTAL_SYS_ERR-A.TOTAL_BIZ_ERR) SUCCESS FROM reg_stat_recent A 
+	   <dynamic prepend="where">
+	   	<isNotNull prepend="and" property="appId"> DST_CODE=#appId#</isNotNull>
+	    <isNotNull prepend="and" property="intfCode"> INTF_CODE=#intfCode#</isNotNull>
+	    <isNotNull prepend="and" property="dataType"> DATE_TYPE=#dataType#</isNotNull>
+	    <isNotNull prepend="and" property="startDate"> <![CDATA[ substr(DATE_TRAN_ID,1,6) >= #startDate# ]]></isNotNull>
+	    <isNotNull prepend="and" property="endDate"> <![CDATA[ substr(DATE_TRAN_ID,1,6) <= #endDate# ]]></isNotNull> 
+	     <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+	   GROUP BY SUBSTR(A.DATE_TRAN_ID,1,6),A.DST_CODE,A.INTF_CODE ORDER BY DSTCODE) temp
+	</select>
+	
+	<!--  通过组件ID查询组件的名称NAME -->
+	<select id="showSysName" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+  		SELECT COMPONENT_ID COMPONENTID,NAME COMPONENTNAME  FROM component  
+  		<dynamic prepend="where">
+	   	<isNotNull prepend="and" property="sysId"> 
+	   		 COMPONENT_ID in
+	        <iterate property="sysId" conjunction="," close=")" open="(">
+	            #sysId[]#
+	        </iterate>
+       	</isNotNull>
+       	<isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+	</select>
+	<!--  通过API查询服务对应的中文名称 -->
+	<select id="showServiceName" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+  		 SELECT A.API_ID APIID,A.API_NAME APINAME,B.SERVICE_ID SERVICEID,B.SERVICE_CODE SERVICECODE 
+         FROM api A,service B WHERE A.SERVICE_ID = B.SERVICE_ID  AND A.tenant_id=B.tenant_id
+         <dynamic >
+            <isNotNull prepend="AND" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+	</select>
+	<!--  通过机构名称查询对应的组件信息 -->
+	<select id="componentName" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT A.COMPONENT_ID COMPONENTID,A.NAME NAEM,A.ORG_ID ORGID FROM component A WHERE A.ORG_ID=#value# AND A.STATE != 'X'  AND A.tenant_id=#tenantId#  
+	</select>
+	<!--  统计API的过程中，需要把API_ID转换成对应的SERVICECODE做为查询的条件 -->
+	<select id="serviceCode" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		SELECT A.SERVICE_CODE SERVICECODE FROM service A,api B WHERE A.SERVICE_ID=B.SERVICE_ID AND B.API_ID =#value# 
+		  AND A.tenant_id=#tenantId#  
+        AND B.tenant_id=#tenantId#  
+	</select>
+	<!--  调用数统计 -->
+	<select id="callSystem" resultClass="java.util.HashMap">
+		SELECT A.DST_CODE DSTCODE,SUM(A.TOTAL_TRANS) TOTALTRANS,ROUND(AVG(A.AVG_USING_DST), 2) AVGUSINGDST 
+		FROM reg_stat_recent A GROUP BY A.DST_CODE
+	</select>
+	<!--  文件信息 -->
+	<select id="selectFileShare" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	   SELECT  A.S_FILE_ID SFILEID,A.S_FILE_CONTENT SFILECONTENT,A.S_FILE_NAME SFILENAME FROM file_share A WHERE A.S_FILE_ID=#requestValue# and tenant_id=#tenantId# 
+	 </select>
+	 <!--  目录信息 -->
+	 <select id="selectDirectory" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	   SELECT DIR_ID DIRID,DIR_NAME DIRNAME FROM directory A WHERE A.DIR_STATE = 'A' AND A.FA_DIR_ID=#faDirId# and tenant_id=#tenantId# 
+	 </select>
+	 <!--  协议请求格式 -->
+	 <select id="selectConType" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	   SELECT B.MAIND_ID MAINDID,B.CEP_NAME CEPNAME,B.CEP_VALUES CEPVALUES FROM main_data B WHERE MDT_CD=#mainDataConType# and tenant_id=#tenantId# 
+	 </select>
+	 <!--  通讯协议 -->
+	 <select id="selectCommProtocal" resultClass="java.util.HashMap">
+	   SELECT C.COMM_PRO_CD COMMPROCD,C.COMM_PRO_NAME COMMPRONAME FROM comm_protocal C
+	   where C.COMM_PRO_CD in(1,11,2,3,6)
+	 </select>
+	 <!-- 自定义属性 -->
+	<select id="serviceListOut" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT A.TECH_IMP_ATT_ID TECHIMPATTID, E.STATE STATE,E.SERVICE_ID SERVICEID,B.SERVICE_CN_NAME CNNAME,  
+		D.DIR_NAME DIRNAME,A.ATTR_SPEC_VALUE ATTRSPECVALUE, F.COMPONENT_ID  COMPONENTID, B.SERVICE_DESC  SERVICEDESC 
+		FROM tech_imp_att A,service B,dir_ser_list C,directory D,ser_tech_impl E,tech_impl F,component H,service_att G WHERE 
+		B.SERVICE_ID=C.SERVICE_ID AND C.DIR_ID=D.DIR_ID AND E.SERVICE_ID = B.SERVICE_ID AND A.TECH_IMPL_ID = E.TECH_IMPL_ID 
+		AND F.TECH_IMPL_ID = E.TECH_IMPL_ID AND H.COMPONENT_ID = F.COMPONENT_ID AND E.STATE NOT IN('X','G') AND F.COMPONENT_ID=#componentId#
+		AND G.SERVICE_ID = B.SERVICE_ID AND G.SER_SPEC_VA = 'Y' AND G.ATTR_SPEC_ID='19' AND A.ATTR_SPEC_ID='1'
+	    AND A.tenant_id=#tenantId#  
+        AND B.tenant_id=#tenantId#  
+	    AND C.tenant_id=#tenantId# 
+	    AND D.tenant_id=#tenantId# 
+	    AND E.tenant_id=#tenantId#  
+	    AND F.tenant_id=#tenantId#  
+	    AND H.tenant_id=#tenantId#  
+	    AND G.tenant_id=#tenantId#  
+	</select>
+	 <!-- 查询NodeDesc -->
+	<select id="selectNodeDesc" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  		SELECT NODE_DESC_ID NODEDESCID,TCP_CTR_F_ID TCPCTRFID, NODE_NAME NODENAME,NODE_CODE NODECODE, NODE_PATH NODEPATH, NODE_LENGTH_CONS NODELENGTHCONS,
+  		NODE_TYPE_CONS NODETYPECONS, NODE_TYPE NODETYPE, NODE_NUMBER_CONS NODENUMBERCONS, NEVL_CONS_TYPE NEVLCONSTYPE, NEVL_CONS_VALUE NEVLCONSVALUE,NEVL_CONS_DESC NEVLCONSDESC,
+  		IS_NEED_CHECK ISNEEDCHECK, STATE STATE, DESCRIPTION DESCRIPTION,JAVA_FIELD JAVAFIELD,tenant_id   tenantId from node_desc 
+  	  <dynamic prepend="where">
+	     <isNotNull prepend="and" property="tcpCtrFId"> TCP_CTR_F_ID=#tcpCtrFId#</isNotNull>
+    	 <isNotNull prepend="and" property="nodeName"> NODE_NAME=#nodeName#</isNotNull>
+    	 <isNotNull prepend="and" property="nodePath"> NODE_PATH=#nodePath#</isNotNull>  
+    	 <isNotNull prepend="and" property="state"> STATE=#state#</isNotNull>	 
+    	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+	  </dynamic>
+	</select>
+		
+	<select id="selectUserDefine" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT A.CONTRACT_ID CONTRACTID, A.NAME NAME, A.CODE CODE, B.VERSION VERSION,F.COMM_PRO_CD COMMPROCD,A.DESCRIPTOR DESCRIPTOR,F.Component_Id COMMPONENTID,F.TECH_IMPL_ID  TECHIMPLID,
+		H.ATTR_SPEC_VALUE SPECVALUE,H.TECH_IMP_ATT_ID TECHIMPATTID, C.SERVICE_ID  SERVICEID, B.CONTRACT_VERSION_ID CONTRACTVERSIONID 
+		FROM contract A,contract_version B,service C, ser_tech_impl E,tech_impl F,tech_imp_att H  
+   	 	WHERE A.CONTRACT_ID = B.CONTRACT_ID AND C.CONTRACT_VERSION_ID = B.CONTRACT_VERSION_ID AND H.TECH_IMPL_ID = F.TECH_IMPL_ID 
+    	AND E.SERVICE_ID = C.SERVICE_ID AND F.TECH_IMPL_ID = E.TECH_IMPL_ID  
+     	AND H.TECH_IMP_ATT_ID=#techimpAttId#  
+     	AND A.tenant_id=#tenantId#  
+        AND B.tenant_id=#tenantId#  
+	    AND C.tenant_id=#tenantId# 
+	    AND E.tenant_id=#tenantId#  
+	    AND F.tenant_id=#tenantId#  
+	    AND H.tenant_id=#tenantId#  
+	</select>
+	
+	<select id="selectDirSerList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT dir_ser_list_id DIRSERLISTID,service_id SERVICEID,dir_id DIRID FROM dir_ser_list WHERE service_id = #editValue#  AND tenant_id=#tenantId#  
+	</select>
+
+		<!-- 通过TECH_IMP_ATT_ID获取协议版本ID -->
+	<select id="selectConVersion" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		SELECT B.CONTRACT_VERSION_ID FROM contract_version B,service C,ser_tech_impl E,tech_imp_att H
+ 		WHERE C.CONTRACT_VERSION_ID = B.CONTRACT_VERSION_ID AND H.TECH_IMPL_ID = E.TECH_IMPL_ID AND E.SERVICE_ID = C.SERVICE_ID
+			 		 AND H.TECH_IMP_ATT_ID=#techimpAttId#
+			 		 AND B.tenant_id=#tenantId#  
+				     AND C.tenant_id=#tenantId#
+				     AND E.tenant_id=#tenantId#  
+				     AND H.tenant_id=#tenantId#
+and E.SERVICE_ID not in
+	(SELECT distinct B.SERVICE_ID NEWSERVICEID 
+		  FROM (SELECT E.SERVICE_ID SERVICEID,
+		               F.COMPONENT_ID  COMPONENTID,
+             TI.ATTR_SPEC_VALUE ATTRSPECVALUE,
+             TI.TECH_IMP_ATT_ID TECHIMPATTID,
+             E.tenant_id tenant_id
+		          FROM ser_tech_impl E,tech_impl F , tech_imp_att TI
+		         WHERE E.TECH_IMPL_ID =#techimpAttId#
+                            AND TI.TECH_IMPL_ID =#techimpAttId# 
+                            AND  F.TECH_IMPL_ID =#techimpAttId#
+				           AND E.STATE NOT IN('X','G') 
+				           AND F.COMPONENT_ID=#componentId#
+				           AND E.tenant_id=#tenantId#
+					       AND F.tenant_id=#tenantId#
+						   AND TI.tenant_id=#tenantId#
+		           ) A       
+	right join service B  on B.SERVICE_ID = A.SERVICEID AND B.tenant_id=#tenantId#
+	inner join service_att G on G.SERVICE_ID = B.SERVICE_ID AND G.tenant_id=#tenantId#
+	inner join service_att H on H.SERVICE_ID = B.SERVICE_ID AND H.tenant_id=#tenantId#
+	INNER JOIN dir_ser_list k ON k.service_id = B.SERVICE_ID AND k.tenant_id=#tenantId#
+    INNER JOIN directory d ON d.dir_id = k.dir_id    AND  d.tenant_id=#tenantId#
+	WHERE G.SER_SPEC_VA = 'N'          
+				  AND G.ATTR_SPEC_ID='19'   
+				  AND  H.SER_SPEC_VA = 'Y' 
+				  AND H.ATTR_SPEC_ID='880100000'   
+			      AND  FIND_IN_SET(d.dir_id,getDirChildLst(401)))  
+	</select>
+	<select id="getNodeDescId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT NODE_DESC_ID NODEDESCID,TCP_CTR_F_ID TCPCTRFID  FROM node_desc A WHERE A.STATE='A' AND A.TCP_CTR_F_ID=#tcpCtrFid# and tenant_id=#tenantId#  
+	</select>
+   
+   <resultMap class="java.util.HashMap" id="Model_htmlMap_1">  
+         <result property="VERSION" column="VERSION" javaType="String"/>  
+         <result property="REQRSP" column="REQRSP" javaType="String"/> 
+         <result property="TCPCTRFID" column="TCPCTRFID" javaType="String"/>  
+         <result property="CONTYPE" column="CONTYPE" javaType="String"/>
+         <result property="DESCRIPTOR" column="DESCRIPTOR" javaType="String"/>  
+         <result property="XSDHEADERFOR" column="XSDHEADERFOR" nullValue="" javaType="java.lang.String" jdbcType="CLOB"/> 
+         <result property="XSDFORMAT" column="XSDFORMAT" nullValue="" javaType="java.lang.String" jdbcType="CLOB"/>
+         <result property="XSDDEMO" column="XSDDEMO" nullValue="" javaType="java.lang.String" jdbcType="CLOB"/>
+        <result  column="tenantId"  property="tenantId" javaType="java.lang.Integer" />
+   </resultMap>  	
+   	<!-- 通过TECH_IMP_ATT_ID查询协议格式表内容 -->
+	<select id="contractFormatList" parameterClass="java.util.HashMap" resultMap="Model_htmlMap_1">
+		SELECT B.VERSION  VERSION, G.REQ_RSP REQRSP, G.TCP_CTR_F_ID TCPCTRFID, G.CON_TYPE CONTYPE, G.XSD_HEADER_FOR XSDHEADERFOR, G.XSD_FORMAT XSDFORMAT, G.XSD_DEMO XSDDEMO, G.DESCRIPTOR DESCRIPTOR,B.tenant_id tenantId 
+		FROM contract_version B, service C, ser_tech_impl E, contract_format G, tech_imp_att H  WHERE C.CONTRACT_VERSION_ID = B.CONTRACT_VERSION_ID AND G.STATE = 'A' 
+		AND G.CONTRACT_VERSION_ID = C.CONTRACT_VERSION_ID AND H.TECH_IMPL_ID = E.TECH_IMPL_ID AND E.SERVICE_ID = C.SERVICE_ID AND H.TECH_IMP_ATT_ID=#techImpAttId#
+	    AND B.tenant_id=#tenantId#  
+	    AND C.tenant_id=#tenantId# 
+	    AND E.tenant_id=#tenantId#   
+	    AND H.tenant_id=#tenantId#  
+	    AND G.tenant_id=#tenantId#  
+	</select>
+   
+   <!-- 获取tcpCtrFId信息 -->
+	<select id="findTcpCtrFId" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		SELECT TCP_CTR_F_ID TCPCTRFID FROM node_desc A WHERE A.NODE_DESC_ID = #value# and tenant_id=#tenantId#
+	</select>
+	
+	<!-- 判断CODE是否存在 -->
+	<select id="countContractCode" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		select count(1) from contract where  code=#code# and tenant_id=#tenantId#
+	</select>
+	<!-- 判断sysCODE是否存在 -->
+	<select id="countComponentCode" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		select count(1) from component where code =#code# and tenant_id=#tenantId#
+	</select>
+	<!-- 判断version是否存在-->
+	<select id="countContractVersion" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		select count(1) from contract_version where version=#pageProVersionCode# and tenant_id=#tenantId#
+	</select>
+	
+	<!-- 查询package下的销售品-->
+	<select id="selectPackageList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT DISTINCT
+			a.prod_offer_id,
+			a.prod_offer_name PACKAGENAME,
+			(
+				SELECT
+					group_concat(b.product_name)
+				FROM
+					product b,
+					OFFER_PROD_REL c
+				WHERE
+					c.prod_offer_id = a.prod_offer_id AND b.tenant_id=#tenantId# AND c.tenant_id=#tenantId#
+				AND b.product_id = c.product_id 
+			) PRODUCTS,
+	     ( SELECT group_concat(AA.PRICING_NAME) PRICING_NAMES 
+	         FROM PRICING_PLAN AA,PROD_OFFER_PRICING BB 
+	        WHERE AA.STATUS_CD!='11'
+	          AND BB.PROD_OFFER_ID = A.PROD_OFFER_ID
+	          AND AA.PRICING_INFO_ID = BB.PRICING_INFO_ID  
+	          AND AA.tenant_id=#tenantId# AND BB.tenant_id=#tenantId#
+	      )PRICING_NAMES
+		FROM
+			prod_offer a
+		WHERE
+			a.prod_offer_publisher = #componentId#
+		AND a.status_cd != '1300' AND a.tenant_id=#tenantId#
+	</select>
+	
+	  <select id="getPricingPlan" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+      SELECT  A.PRICING_INFO_ID PRICINGINFOID,
+              A.PRICING_NAME PRICINGNAME,
+      		  A.PRICING_TYPE PRICINGTYPE,
+      		  A.PRICING_DESC PRICINGDESC,
+      		  A.PRICE_SIGN PRICESIGN,
+      		  A.PRICE_CHA PRICECHA,
+      		  A.EFF_DATE EFFDATE,
+      		  A.EXP_DATE EXPDATE,
+      		  A.BILLING_PRIORITY BILLINGPRIORITY,
+      		  A.LICENSE_NBR LICENSENBR,
+      		  A.APPLIC_TYPE APPLICTYPE,
+      		  A.CYCLE_TYPE CYCLETYPE,
+      		  A.CREATE_DATE CREATEDATE,
+      		  A.STATUS_DATE STATUSDATE,
+      		  A.STATUS_CD STATUSCD,
+      		  B.PRICING_TARGET_ID PRICINGTARGETID 
+      FROM PRICING_PLAN A,PROD_OFFER_PRICING B 
+      WHERE   A.STATUS_CD!='11' AND B.PROD_OFFER_ID = #prodOfferId# 
+      AND A.PRICING_INFO_ID = B.PRICING_INFO_ID  
+     AND A.tenant_id=#tenantId#
+	 AND B.tenant_id=#tenantId#  
+      ORDER BY A.BILLING_PRIORITY DESC
+ </select>
+ 
+ <!-- 在应用页面展现服务能力 by Capability Name-->
+	<select id="showServiceByCapName" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT distinct G.SER_SPEC_VA SERSPECVA,A.TECH_IMP_ATT_ID TECHIMPATTID, E.STATE STATE,E.SERVICE_ID SERVICEID,B.SERVICE_CN_NAME CNNAME, D.DIR_NAME DIRNAME,A.ATTR_SPEC_VALUE ATTRSPECVALUE, F.COMPONENT_ID  COMPONENTID 
+		FROM tech_imp_att A,service B,dir_ser_list C,directory D,ser_tech_impl E,tech_impl F,component H,service_att G WHERE 
+		B.SERVICE_ID=C.SERVICE_ID AND C.DIR_ID=D.DIR_ID AND E.SERVICE_ID = B.SERVICE_ID AND A.TECH_IMPL_ID = E.TECH_IMPL_ID 
+		AND F.TECH_IMPL_ID = E.TECH_IMPL_ID AND H.COMPONENT_ID = F.COMPONENT_ID AND E.STATE NOT IN('X','G') AND F.COMPONENT_ID=#componentId# 
+		AND G.SERVICE_ID = B.SERVICE_ID AND G.ATTR_SPEC_ID='19' AND A.ATTR_SPEC_ID='1'
+	    AND A.tenant_id=#tenantId#
+	    AND B.tenant_id=#tenantId#  
+	    AND C.tenant_id=#tenantId# 
+	    AND D.tenant_id=#tenantId#  
+	    AND E.tenant_id=#tenantId#   
+	    AND F.tenant_id=#tenantId# 
+	    AND H.tenant_id=#tenantId#  
+	    AND G.tenant_id=#tenantId#  
+		<dynamic>
+		   <isNotNull prepend="AND" property="applyabilityName"> B.SERVICE_CN_NAME like concat('%',#applyabilityName#,'%')</isNotNull>
+		</dynamic>
+	</select>
+	<!-- 查询能力是否已经是产品 -->
+	<select id="getProductbyCap" parameterClass="java.util.HashMap" resultClass="java.math.BigDecimal">
+	    SELECT PRODUCT_ID FROM SERVICE_PRODUCT_REAL WHERE SERVICE_ID = #SERVICEID#
+	    <dynamic>
+	     <isNotNull prepend="AND" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+	     </dynamic>
+	</select> 
+	
+   	<insert id="insertServiceProRel" parameterClass="java.util.HashMap">
+   	<selectKey resultClass="int" keyProperty="serviceProRelId">
+			SELECT  nextval('SEQ_SERVICE_PRODUCT_REAL');
+		</selectKey>
+	   INSERT INTO 
+		SERVICE_PRODUCT_REAL
+		(
+		SERVICE_PRODUCT_REAL_ID,
+		PRODUCT_ID,
+		SERVICE_ID,
+		tenant_id
+		)
+		VALUES(
+		#serviceProRelId#,
+		#PRODUCT_ID#,
+		#SERVICEID#,
+		#tenantId#
+		)
+   </insert>
+   
+   
+   <insert id="insertApi" parameterClass="com.ailk.eaap.op2.bo.Api">
+   	<selectKey resultClass="int" keyProperty="apiId">
+			SELECT  nextval('SEQ_API');
+	</selectKey>
+  insert into API
+  <dynamic open="(" close=")">
+  <isNotNull prepend="" property="apiId">API_ID</isNotNull>
+    <isNotNull prepend="," property="serviceId">SERVICE_ID</isNotNull>
+    <isNotNull prepend="," property="apiName">API_NAME</isNotNull>
+    <isNotNull prepend="," property="apiVersion">API_VERSION</isNotNull>
+    <isNotNull prepend="," property="orgId">ORG_ID</isNotNull>
+    <isNotNull prepend="," property="apiState">API_STATE</isNotNull>
+    <isNotNull prepend="," property="apiRegTime">API_REG_TIME</isNotNull>
+    <isNotNull prepend="," property="apiEnableTime">API_ENABLE_TIME</isNotNull>
+    <isNotNull prepend="," property="apiDisableTime">API_DISABLE_TIME</isNotNull>
+    <isNotNull prepend="," property="apiDesc">API_DESC</isNotNull>
+    <isNotNull prepend="," property="apiMethod">API_METHOD</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  values
+  <dynamic open="(" close=")">
+    <isNotNull prepend=" " property="apiId">#apiId#</isNotNull>
+    <isNotNull prepend="," property="serviceId">#serviceId#</isNotNull>
+    <isNotNull prepend="," property="apiName">#apiName#</isNotNull>
+    <isNotNull prepend="," property="apiVersion">#apiVersion#</isNotNull>
+    <isNotNull prepend="," property="orgId">#orgId#</isNotNull>
+    <isNotNull prepend="," property="apiState">#apiState#</isNotNull>
+    <isNotNull prepend="," property="apiRegTime">#apiRegTime#</isNotNull>
+    <isNotNull prepend="," property="apiEnableTime">#apiEnableTime#</isNotNull>
+    <isNotNull prepend="," property="apiDisableTime">#apiDisableTime#</isNotNull>
+    <isNotNull prepend="," property="apiDesc">#apiDesc#</isNotNull>
+    <isNotNull prepend="," property="apiMethod">#apiMethod#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+</insert>
+
+	<select id="queryAPICharges" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+     SELECT  ID,
+			BATCH_NUMBER,
+			( SELECT B.NAME
+				FROM ORG B
+				WHERE B.ORG_ID = A.ORG_ID AND B.tenant_id=#tenantId#
+			) ORG_NAME,
+			( SELECT C.APP_NAME
+				FROM APP C
+				WHERE C.APP_ID = A.APP_ID  AND C.tenant_id=#tenantId#
+			) APP_NAME,
+			PROD_OFFER_ID,
+			API_ID,
+			DATE_FORMAT(CALLTIME,'%y-%m-%d %h:%i:%s') CALLTIME,
+			if(CHARGESTATUS='0', 'NOT CHARGE',if(CHARGESTATUS='1','HAS CHARGED',''))CHARGESTATUS ,
+			CHARGE_AMOUNT,
+			DATE_FORMAT(CHARGETIME,'%y-%m-%d %h:%i:%s') CHARGETIME,
+			(SELECT B.API_NAME FROM API B WHERE B.API_ID= A.API_ID AND B.tenant_id=#tenantId#)API_NAME,
+			BALANCE,
+			(
+			SELECT
+				count(1)
+			FROM
+				api_batch_times_cdr_$mon$ b
+			WHERE
+				b.BATCH_NUMBER = a.BATCH_NUMBER
+			GROUP BY
+				b.BATCH_NUMBER) CALL_TIMES,
+		    (SELECT D.NAME FROM PROD_OFFER C,COMPONENT D 
+		      WHERE C.PROD_OFFER_PUBLISHER = D.COMPONENT_ID  
+		       AND C.PROD_OFFER_ID = A.PROD_OFFER_ID
+		       AND C.tenant_id=#tenantId#
+		       AND D.tenant_id=#tenantId#) COMPONENT_NAME
+	
+		FROM
+			API_CHARGE_TIMES_CDR_$mon$ A
+		WHERE 1=1 
+	    <dynamic>
+	    <isNotNull prepend="and" property="APP_IDS"> 
+	   		A.APP_ID in
+	        <iterate property="APP_IDS" conjunction="," close=")" open="(">
+	            #APP_IDS[]#
+	        </iterate>
+	   	</isNotNull>
+		 <isNotNull prepend="AND" property="APP_ID">
+          A.APP_ID = #APP_ID#
+         </isNotNull>
+         <isNotNull prepend="AND" property="API_ID">
+          A.API_ID = #API_ID#
+         </isNotNull>
+         <isNotNull prepend="AND" property="BATCH_NUMBER">
+          A.BATCH_NUMBER = #BATCH_NUMBER#
+         </isNotNull>
+         <isNotNull prepend="AND" property="COMPONENT_ID">
+          A.PROD_OFFER_ID IN 
+		   (  SELECT C.PROD_OFFER_ID
+				FROM
+					PROD_OFFER C,
+					COMPONENT D
+				WHERE
+					C.PROD_OFFER_PUBLISHER = D.COMPONENT_ID
+		         AND D.COMPONENT_ID = #COMPONENT_ID#
+		         AND C.tenant_id=#tenantId#
+		         AND D.tenant_id=#tenantId#)
+		 </isNotNull>  
+		  <isNotNull prepend="AND" property="startDate">
+		  DATE_FORMAT(CHARGETIME,'%y-%m-%d' ) = DATE_FORMAT(#startDate#,'%y-%m-%d')
+		 </isNotNull>  
+		 <isNotNull prepend="and" property="tenantId"> A.tenant_id=#tenantId#</isNotNull>
+		</dynamic>
+		LIMIT #pro_mysql#,#page_record#
+	</select>
+		<select id="queryAPIChargesCou" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		SELECT
+			 COUNT(1) COU
+	
+		FROM
+			API_CHARGE_TIMES_CDR_$mon$ A
+		WHERE 1=1 
+	    <dynamic>
+	    <isNotNull prepend="and" property="APP_IDS"> 
+	   		A.APP_ID in
+	        <iterate property="APP_IDS" conjunction="," close=")" open="(">
+	            #APP_IDS[]#
+	        </iterate>
+	   	</isNotNull>
+		 <isNotNull prepend="AND" property="APP_ID">
+          A.APP_ID = #APP_ID#
+         </isNotNull>
+         <isNotNull prepend="AND" property="API_ID">
+          A.API_ID = #API_ID#
+         </isNotNull>
+         <isNotNull prepend="AND" property="BATCH_NUMBER">
+          A.BATCH_NUMBER = #BATCH_NUMBER#
+         </isNotNull>
+         <isNotNull prepend="AND" property="COMPONENT_ID">
+          A.PROD_OFFER_ID IN 
+		   (  SELECT C.PROD_OFFER_ID
+				FROM
+					PROD_OFFER C,
+					COMPONENT D
+				WHERE
+					C.PROD_OFFER_PUBLISHER = D.COMPONENT_ID
+		         AND D.COMPONENT_ID = #COMPONENT_ID#
+		         AND C.tenant_id=#tenantId#
+		         AND D.tenant_id=#tenantId#)
+		  </isNotNull>
+          <isNotNull prepend="AND" property="startDate">
+		  DATE_FORMAT(CHARGETIME,'%y-%m-%d' ) = DATE_FORMAT(#startDate#,'%y-%m-%d')
+		  </isNotNull> 
+		  <isNotNull prepend="AND" property="tenantId">
+             A.tenant_id = #tenantId#
+         </isNotNull>
+		</dynamic>
+	</select>
+	
+	<select id="getAPPList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT A.APP_ID,A.APP_NAME FROM APP A WHERE A.APP_DEVE = #ORG_ID# AND A.APP_STATE = 'D' AND A.tenant_id=#tenantId#
+	</select>
+	
+	<select id="getComponentList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+			SELECT A.COMPONENT_ID,A.NAME COMPONENT_NAME FROM COMPONENT A WHERE A.ORG_ID = #ORG_ID# AND A.STATE = 'D' AND A.tenant_id=#tenantId#
+	</select>
+	
+	<select id="getAPIList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT DISTINCT B.API_ID,B.API_NAME 
+		  FROM APP_API_LIST A,API B 
+		 WHERE A.API_ID = B.API_ID  
+		 AND A.tenant_id=#tenantId#
+		 AND B.tenant_id=#tenantId#
+		 <isNotNull prepend="AND" property="APP_IDS">
+		 A.APP_ID in
+		   <iterate property="APP_IDS" conjunction="," close=")" open="(">
+	            #APP_IDS[]#
+	        </iterate>
+		 </isNotNull>  
+		 <isNotNull prepend="AND" property="APP_ID">
+		   A.APP_ID = #APP_ID#
+		 </isNotNull> 
+	</select>
+	<select id="getCompAPIList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		  SELECT DISTINCT A.API_ID APIID,A.API_NAME APINAME,B.SERVICE_ID SERVICEID,F.COMPONENT_ID  COMPONENTID 
+			FROM api A,service B,ser_tech_impl E,tech_impl F,component H WHERE 
+			A.SERVICE_ID = B.SERVICE_ID AND E.SERVICE_ID = B.SERVICE_ID  AND F.TECH_IMPL_ID = E.TECH_IMPL_ID 
+	    	AND H.COMPONENT_ID = F.COMPONENT_ID   AND E.STATE  IN('D')  
+	    	AND A.tenant_id=#tenantId# 
+	    	AND B.tenant_id=#tenantId#   
+	    	AND E.tenant_id=#tenantId# 
+	    	AND F.tenant_id=#tenantId#  
+	    	AND H.tenant_id=#tenantId# 
+	        <isNotNull prepend="AND" property="COMPONENT_ID">
+	          F.COMPONENT_ID=#COMPONENT_ID#
+	        </isNotNull>
+	        <isNotNull prepend="AND" property="ORG_ID"> 
+	          H.ORG_ID =#ORG_ID#
+	        </isNotNull>
+	</select>
+	
+	
+   	<select id="detailAPICharges" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+			SELECT b.BATCH_NUMBER,
+				a.TRANS_ID,
+				a.API_ID,
+				a.APP_ID,
+			 (SELECT B.NAME
+							FROM ORG B
+							WHERE B.ORG_ID = A.ORG_ID AND B.tenant_id =#tenantId#
+						) ORG_NAME,
+						( SELECT C.APP_NAME
+							FROM APP C
+							WHERE C.APP_ID = A.APP_ID AND C.tenant_id = #tenantId#
+						) APP_NAME,
+			  DATE_FORMAT(
+					CALLTIME,
+					'%y-%m-%d %h:%i:%s'
+				) CALLTIME,
+			(SELECT B.API_NAME FROM API B WHERE B.API_ID= A.API_ID AND B.tenant_id =#tenantId#)API_NAME,
+				a.ORG_ID,
+				a.PROD_OFFER_ID,
+			(SELECT d.NAME
+			   FROM prod_offer c,component d
+			  WHERE c.prod_offer_publisher = d.component_id  AND c.tenant_id =#tenantId# AND d.tenant_id=#tenantId#
+				AND c.prod_offer_id = a.PROD_OFFER_ID) COMPONENT_NAME
+			FROM
+				api_call_cdr_$mon$ a,
+				api_batch_times_cdr_$mon$ b
+		WHERE b.TRANS_ID = a.TRANS_ID AND b.tenant_id =#tenantId# and  a.tenant_id=#tenantId#
+         <dynamic>
+	    <isNotNull prepend="AND" property="BATCH_NUMBER">
+          b.BATCH_NUMBER = #BATCH_NUMBER#
+         </isNotNull>
+		 <isNotNull prepend="AND" property="APP_ID">
+          A.APP_ID = #APP_ID#
+         </isNotNull>
+         <isNotNull prepend="AND" property="API_ID">
+          A.API_ID = #API_ID#
+         </isNotNull> 
+		</dynamic>
+		LIMIT #pro_mysql#,#page_record#
+	</select>
+	
+	<select id="detailAPIChargesCou" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+	     SELECT COUNT(1) COU	 
+		   FROM api_call_cdr_$mon$ a,
+				api_batch_times_cdr_$mon$ b
+		WHERE b.TRANS_ID = a.TRANS_ID and a.tenant_id=#tenantId# and   b.tenant_id=#tenantId#
+         <dynamic>
+	    <isNotNull prepend="AND" property="BATCH_NUMBER">
+          b.BATCH_NUMBER = #BATCH_NUMBER#
+         </isNotNull>
+		 <isNotNull prepend="AND" property="APP_ID">
+          A.APP_ID = #APP_ID#
+         </isNotNull>
+         <isNotNull prepend="AND" property="API_ID">
+          A.API_ID = #API_ID#
+         </isNotNull> 
+		</dynamic>
+	</select>
+<insert id="insertFileShare" parameterClass="com.ailk.eaap.op2.bo.FileShare">
+  <selectKey resultClass="int" keyProperty="sFileId">
+	SELECT nextval('SEQ_FILE_SHARE');
+  </selectKey>
+  insert into file_share
+  (STATE,CREATE_TIME,FILE_SHARE_CODE
+  <dynamic>
+    <isNotNull prepend=","  property="sFileId">S_FILE_ID</isNotNull>
+    <isNotNull prepend="," property="sFileName">S_FILE_NAME</isNotNull>
+    <isNotNull prepend="," property="sFileContent">S_FILE_CONTENT</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+  values
+  ('A' ,utc_timestamp(),uuid()
+   <dynamic >
+    <isNotNull prepend="," property="sFileId">#sFileId#</isNotNull>
+    <isNotNull prepend="," property="sFileName">#sFileName#</isNotNull>
+    <isNotNull prepend="," property="sFileContent">#sFileContent#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+    </dynamic>
+  )
+</insert> 
+<select id="getComponentSeq" resultClass="java.lang.String">
+     SELECT nextval('SEQ_COMPONENT');
+</select>
+<!-- 插入组件信息 -->
+ <insert id="insertComponent" 
+ 	parameterClass="com.ailk.o2p.portal.bo.Component">
+ 	<selectKey resultClass="String" keyProperty="componentId">
+			SELECT nextval('SEQ_COMPONENT');
+	 </selectKey>
+    insert into component
+	  (REG_TIME,STATE_TIME  
+	  <dynamic >
+	    <isNotNull prepend="," property="componentId">COMPONENT_ID</isNotNull>
+        <isNotNull prepend="," property="orgId">ORG_ID</isNotNull>
+        <isNotNull prepend="," property="code">CODE</isNotNull>
+	    <isNotNull prepend="," property="name">NAME</isNotNull>
+	    <isNotNull prepend="," property="componentTypeId">COMPONENT_TYPE_ID</isNotNull>
+	    <isNotNull prepend="," property="sfileId">S_FILE_ID</isNotNull>
+	    <isNotNull prepend="," property="descriptor">DESCRIPTOR</isNotNull>
+	    <isNotNull prepend="," property="state">STATE</isNotNull>
+	    <isNotNull prepend="," property="password">PASSWORD</isNotNull>
+	    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	  )
+	  values
+	  (utc_timestamp(), utc_timestamp() 
+	   <dynamic >
+	    <isNotNull prepend="," property="componentId">#componentId#</isNotNull>
+        <isNotNull prepend="," property="orgId">#orgId#</isNotNull>
+        <isNotNull prepend="," property="code">#code#</isNotNull>
+	    <isNotNull prepend="," property="name">#name#</isNotNull>
+	    <isNotNull prepend="," property="componentTypeId">#componentTypeId#</isNotNull>
+	    <isNotNull prepend="," property="sfileId">#sfileId#</isNotNull>
+	    <isNotNull prepend="," property="descriptor">#descriptor#</isNotNull>
+	    <isNotNull prepend="," property="state">#state#</isNotNull>
+	    <isNotNull prepend="," property="password">#password#</isNotNull>
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	   </dynamic>
+	     )
+</insert>
+<update id="updateComponent" parameterClass="com.ailk.o2p.portal.bo.Component">
+  update component
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="orgId">ORG_ID=#orgId#</isNotNull>
+    <isNotNull prepend="," property="code">CODE=#code#</isNotNull>
+    <isNotNull prepend="," property="name">NAME=#name#</isNotNull>
+    <isNotNull prepend="," property="componentTypeId">COMPONENT_TYPE_ID=#componentTypeId#</isNotNull>
+    <isNotNull prepend="," property="regTime">REG_TIME=#regTime#</isNotNull>
+    <isNotNull prepend="," property="state">STATE=#state#</isNotNull>
+    <isNotNull prepend="," property="stateTime">STATE_TIME=#stateTime#</isNotNull>
+    <isNotNull prepend="," property="password">PASSWORD=#password#</isNotNull>
+    <isNotNull prepend="," property="sfileId">S_FILE_ID=#sfileId#</isNotNull>
+    <isNotNull prepend="," property="descriptor">DESCRIPTOR=#descriptor#</isNotNull>
+    <isNotNull prepend="," property="auditFlowId">AUDIT_FLOW_ID=#auditFlowId#</isNotNull>
+    <isNotNull prepend="," property="upState">UP_STATE=#upState#</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="componentId"> COMPONENT_ID=#componentId#</isNotNull>
+     <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+<select id="selectComponent" parameterClass="com.ailk.o2p.portal.bo.Component" resultClass="com.ailk.o2p.portal.bo.Component">
+  select COMPONENT_ID componentId,ORG_ID orgId,CODE code,NAME name,COMPONENT_TYPE_ID componentTypeId,STATE state,
+  STATE_TIME stateTime, PASSWORD password,REG_TIME regTime, S_FILE_ID sfileId, DESCRIPTOR descriptor,AUDIT_FLOW_ID auditFlowId,UP_STATE upState,tenant_id  tenantId
+  from COMPONENT
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="componentId"> COMPONENT_ID=#componentId#</isNotNull>
+    <isNotNull prepend="and" property="orgId"> ORG_ID=#orgId#</isNotNull>
+    <isNotNull prepend="and" property="code"> CODE=#code#</isNotNull>
+    <isNotNull prepend="and" property="name"> NAME=#name#</isNotNull>
+    <isNotNull prepend="and" property="componentTypeId"> COMPONENT_TYPE_ID=#componentTypeId#</isNotNull>
+    <isNotNull prepend="and" property="state"> STATE=#state#</isNotNull>
+    <isNotNull prepend="and" property="stateTime"> STATE_TIME=#stateTime#</isNotNull>
+    <isNotNull prepend="and" property="password"> PASSWORD=#password#</isNotNull>
+    <isNotNull prepend="and" property="regTime"> REG_TIME=#regTime#</isNotNull>
+    <isNotNull prepend="and" property="sfileId"> S_FILE_ID=#sfileId#</isNotNull>
+    <isNotNull prepend="and" property="descriptor"> DESCRIPTOR=#descriptor#</isNotNull>
+     <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+<insert id="insertTechImpl" parameterClass="com.ailk.eaap.op2.bo.TechImpl">
+<selectKey resultClass="int" keyProperty="techImplId">
+	SELECT nextval('SEQ_TECH_IMPL');
+  </selectKey>
+   insert into tech_impl (REG_TIME,LAEST_TIME,TECH_IMPL_CODE
+  <dynamic >
+    <isNotNull prepend="," property="techImplId">TECH_IMPL_ID</isNotNull>
+    <isNotNull prepend="," property="techImplName">TECH_IMPL_NAME</isNotNull>
+    <isNotNull prepend="," property="techImpConPoId">TECH_IMP_CON_PO_ID</isNotNull>
+    <isNotNull prepend="," property="componentId">COMPONENT_ID</isNotNull>
+    <isNotNull prepend="," property="commProCd">COMM_PRO_CD</isNotNull>
+     <isNotNull prepend="," property="usealbeState">USEALBE_STATE</isNotNull>
+     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+  values
+  (utc_timestamp(),utc_timestamp(),uuid()
+  <dynamic >
+    <isNotNull prepend="," property="techImplId">#techImplId#</isNotNull>
+    <isNotNull prepend="," property="techImplName">#techImplName#</isNotNull>
+    <isNotNull prepend="," property="techImpConPoId">#techImpConPoId#</isNotNull>
+    <isNotNull prepend="," property="componentId">#componentId#</isNotNull>
+    <isNotNull prepend="," property="commProCd">case when #commProCd# = '' then null else #commProCd# end</isNotNull>
+    <isNotNull prepend="," property="usealbeState">#usealbeState#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+<insert id="insertTechImpAtt" parameterClass="com.ailk.eaap.op2.bo.TechImpAtt">
+	 <selectKey resultClass="int" keyProperty="techImpAttId">
+	        SELECT nextval('SEQ_TECH_IMP_ATT');
+	 </selectKey>
+    insert into tech_imp_att (CREATE_TIME,LASTEST_TIME 
+  <dynamic >
+    <isNotNull prepend="," property="techImpAttId">TECH_IMP_ATT_ID</isNotNull>
+    <isNotNull prepend="," property="attrSpecId">ATTR_SPEC_ID</isNotNull>
+    <isNotNull prepend="," property="techImplId">TECH_IMPL_ID</isNotNull>
+    <isNotNull prepend="," property="attrSpecValue">ATTR_SPEC_VALUE</isNotNull>
+    <isNotNull prepend="," property="state">STATE</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+  values (utc_timestamp(),utc_timestamp()
+  <dynamic >
+    <isNotNull prepend="," property="techImpAttId">#techImpAttId#</isNotNull>
+    <isNotNull prepend="," property="attrSpecId">#attrSpecId#</isNotNull>
+    <isNotNull prepend="," property="techImplId">#techImplId#</isNotNull>
+    <isNotNull prepend="," property="attrSpecValue">#attrSpecValue#</isNotNull>
+    <isNotNull prepend="," property="state">#state#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+<insert id="insertSerTechImpl" parameterClass="com.ailk.eaap.op2.bo.SerTechImpl">
+  <selectKey resultClass="int" keyProperty="serTechImplId">
+	SELECT nextval('SEQ_SER_TECH_IMPL');
+  </selectKey>
+    insert into ser_tech_impl (CREATE_TIME,LASTEST_TIME
+  <dynamic >
+  	<isNotNull prepend="," property="serTechImplId">SER_TECH_IMPL_ID</isNotNull>
+    <isNotNull prepend="," property="serviceId">SERVICE_ID</isNotNull>
+    <isNotNull prepend="," property="techImplId">TECH_IMPL_ID</isNotNull>
+    <isNotNull prepend="," property="state">STATE</isNotNull>
+     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )values (utc_timestamp(),utc_timestamp()
+  <dynamic >
+  	<isNotNull prepend="," property="serTechImplId">#serTechImplId#</isNotNull>
+    <isNotNull prepend="," property="serviceId">#serviceId#</isNotNull>
+    <isNotNull prepend="," property="techImplId">#techImplId#</isNotNull>
+    <isNotNull prepend="," property="state">#state#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+<!-- 保存端点规格属性值-->
+	<insert id="saveEndpointAttrValue" parameterClass="java.util.HashMap" >
+		insert into endpoint_attr_value
+		  (endpoint_attr_value_id,endpoint_id,endpoint_spec_attr_id,attr_value,long_attr_value,tenant_id)
+		values
+		  (nextval('SEQ_ENDPOINT_ATTR_VAL'),#endpoint_Id#,#endpoint_Spec_Attr_Id#,#attr_Value#,#long_Attr_Value#,#tenantId#)
+	</insert>	
+<!-- 保存消息流 -->
+	<insert id="saveMessageFlow" parameterClass="java.util.HashMap">
+		insert into
+		message_flow
+		(message_flow_id, message_flow_name, first_endpoint_id,
+		create_time, state,
+		lastest_time, descriptor,MESSAGE_FLOW_CODE,tenant_id)
+		values
+		(#message_Flow_Id#,
+		#message_Flow_Name#,
+		IF(#first_Endpoint_Id#='',NULL,#first_Endpoint_Id#), now(), #state#,
+		IF(#lastest_Time#='',NULL,STR_TO_DATE(REPLACE(#lastest_Time#,'/','-'),'%Y-%m-%d
+		%H:%i:%s')), #descriptor#,uuid(),#tenantId#)
+	</insert>
+<!--服务的默认消息流更新为新创建的透传消息流 -->
+	<update  id="updateServiceDefaultMsgFlow" parameterClass="java.util.HashMap">
+	  update SERVICE set DEFAULT_MSG_FLOW = #messageFlowId# where SERVICE_ID in (select i.SERVICE_ID from SER_TECH_IMPL i where i.SER_TECH_IMPL_ID=#serTechImplId#  and  i.tenant_id=#tenantId#)
+	 <dynamic >
+            <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+	 </update>
+<!-- 保存端点-->
+	<insert id="saveEndpoint" parameterClass="java.util.HashMap" >
+		insert into endpoint
+		  (endpoint_id,endpoint_spec_id,in_data_type_id,out_data_type_id,endpoint_name,
+		   endpoint_code,enable_in_trace,enable_out_trace,enable_in_log,enable_out_log,
+		   create_date,state,lastest_date,endpoint_desc,map_code,tenant_id)
+		values
+		  (#endpoint_Id#,#endpoint_Spec_Id#,#in_Data_Type_Id#,#out_Data_Type_Id#,#endpoint_Name#,
+		   #endpoint_Code#,#enable_In_Trace#,#enable_Out_Trace#,#enable_In_Log#,#enable_Out_Log#,
+		   now(),#state#,str_to_date(#lastest_Date#,'%Y-%m-%d %H:%i:%s'),#endpoint_Desc#,#map_Code#,#tenant_id#)
+	</insert>
+<!-- 新增路由规则 -->
+	<insert id="addRoutePolicy" parameterClass="java.util.HashMap" >
+		insert into route_policy
+			(route_policy_id, rule_strategy_id, route_cond_id,tenant_id)
+		values
+			(#route_Policy_Id#, #rule_Strategy_Id#, IF(#route_Cond_Id#='',NULL,#route_Cond_Id#),#tenant_id#)		
+	</insert>
+<!-- 保存消息流路径-->
+	<insert id="saveService_Route_Config" parameterClass="java.util.HashMap" >
+		insert into service_route_config
+		  (route_id, route_policy_id, from_endpoint_id, to_endpoint_id, message_flow_id, 
+		   syn_asyn, state, create_date, lastest_date, map_Code,SERVICE_ROUTE_CONFIG_CODE,tenant_id)
+		values
+		  (#route_Id#, #route_Policy_Id#, #from_Endpoint_Id#, #to_Endpoint_Id#, #message_Flow_Id#,
+		   #syn_Asyn#, #state#, now(), now(), #map_Code#,uuid(),#tenant_id#)		
+	</insert>	
+<!--获取主键ID -->
+	<select id="getSeq" parameterClass="java.util.Map" resultClass="java.lang.Integer" remapResults="true" >
+		select nextval('$sequenceName$') from dual;
+	</select>	
+<insert id="insertContract" parameterClass="com.ailk.eaap.op2.bo.Contract" >
+  <selectKey resultClass="int" keyProperty="contractId">
+	SELECT nextval('SEQ_CONTRACT');
+  </selectKey>
+    insert into contract (CREATE_TIME,LASTEST_TIME
+  <dynamic >
+    <isNotNull prepend="," property="contractId">CONTRACT_ID</isNotNull>
+  	<isNotNull prepend="," property="baseContractId">BASE_CONTRACT_ID</isNotNull>
+  	<isNotNull prepend="," property="name">NAME</isNotNull>
+    <isNotNull prepend="," property="code">CODE</isNotNull>
+    <isNotNull prepend="," property="state">STATE</isNotNull>
+    <isNotNull prepend="," property="descriptor">DESCRIPTOR</isNotNull>
+    <isNotNull prepend="," property="isBase">IS_BASE</isNotNull>
+     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )values (utc_timestamp(),utc_timestamp()
+  <dynamic >
+    <isNotNull prepend="," property="contractId">#contractId#</isNotNull>
+  	<isNotNull prepend="," property="baseContractId">#baseContractId#</isNotNull>
+  	<isNotNull prepend="," property="name">#name#</isNotNull>
+    <isNotNull prepend="," property="code">#code#</isNotNull>
+    <isNotNull prepend="," property="state">#state#</isNotNull>
+    <isNotNull prepend="," property="descriptor">#descriptor#</isNotNull>   
+    <isNotNull prepend="," property="isBase">#isBase#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+<select id="selectContract" parameterClass="com.ailk.eaap.op2.bo.Contract" resultClass="com.ailk.eaap.op2.bo.Contract">
+  SELECT CONTRACT_ID CONTRACTID, BASE_CONTRACT_ID BASECONTRACTID, NAME NAME, CODE CODE,CREATE_TIME CREATETIME,STATE STATE, LASTEST_TIME LASTESTTIME, DESCRIPTOR DESCRIPTOR, IS_BASE ISBASE,tenant_id  tenantId 
+    from contract
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="contractId"> CONTRACT_ID=#contractId#</isNotNull>
+    <isNotNull prepend="and" property="baseContractId"> BASE_CONTRACT_ID=#baseContractId#</isNotNull>
+    <isNotNull prepend="and" property="name"> NAME=#name#</isNotNull>
+    <isNotNull prepend="and" property="code"> CODE=#code#</isNotNull>
+    <isNotNull prepend="and" property="createTime"> CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="and" property="state"> STATE=#state#</isNotNull>
+    <isNotNull prepend="and" property="lastestTime"> LASTEST_TIME=#lastestTime#</isNotNull>
+    <isNotNull prepend="and" property="descriptor"> DESCRIPTOR=#descriptor#</isNotNull>
+    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+<insert id="insertContractVersion" parameterClass="com.ailk.eaap.op2.bo.ContractVersion">
+  <selectKey resultClass="int" keyProperty="contractVersionId">
+	SELECT nextval('SEQ_CONTRACT_VERSION');
+  </selectKey>
+    insert into contract_version (CREATE_TIME,LASTEST_TIME,EFF_DATE,EXP_DATE
+  <dynamic >
+  	<isNotNull prepend="," property="contractVersionId">CONTRACT_VERSION_ID</isNotNull>
+    <isNotNull prepend="," property="contractId">CONTRACT_ID</isNotNull>
+    <isNotNull prepend="," property="version">VERSION</isNotNull>
+    <isNotNull prepend="," property="state">STATE</isNotNull>
+    <isNotNull prepend="," property="descriptor">DESCRIPTOR</isNotNull>
+    <isNotNull prepend="," property="isNeedCheck">IS_NEED_CHECK</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+ 	)values (utc_timestamp(),utc_timestamp(),utc_timestamp(),STR_TO_DATE('3000-1-1','%Y-%m-%d')
+  <dynamic >
+  	<isNotNull prepend="," property="contractVersionId">#contractVersionId#</isNotNull>
+    <isNotNull prepend="," property="contractId">#contractId#</isNotNull>
+    <isNotNull prepend="," property="version">#version#</isNotNull>
+    <isNotNull prepend="," property="state">#state#</isNotNull>
+    <isNotNull prepend="," property="descriptor">#descriptor#</isNotNull>
+    <isNotNull prepend="," property="isNeedCheck">#isNeedCheck#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+<select id="selectContractVersion" parameterClass="com.ailk.eaap.op2.bo.ContractVersion" resultClass="com.ailk.eaap.op2.bo.ContractVersion">
+  select CONTRACT_VERSION_ID CONTRACTVERSIONID,CONTRACT_ID CONTRACTID,VERSION VERSION, CREATE_TIME CREATETIME,STATE STATE,LASTEST_TIME LASTESTTIME,
+  EFF_DATE EFFDATE,EXP_DATE EXPDATE,DESCRIPTOR DESCRIPTOR,IS_NEED_CHECK ISNEEDCHECK,tenant_id  tenantId from contract_version
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="contractVersionId"> CONTRACT_VERSION_ID=#contractVersionId#</isNotNull>
+    <isNotNull prepend="and" property="contractId"> CONTRACT_ID=#contractId#</isNotNull>
+    <isNotNull prepend="and" property="version"> VERSION=#version#</isNotNull>
+    <isNotNull prepend="and" property="createTime"> CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="and" property="state"> STATE=#state#</isNotNull>
+    <isNotNull prepend="and" property="lastestTime"> LASTEST_TIME=#lastestTime#</isNotNull>
+    <isNotNull prepend="and" property="effDate"> EFF_DATE=#effDate#</isNotNull>
+    <isNotNull prepend="and" property="expDate"> EXP_DATE=#expDate#</isNotNull>
+    <isNotNull prepend="and" property="descriptor"> DESCRIPTOR=#descriptor#</isNotNull>
+    <isNotNull prepend="and" property="isNeedCheck"> IS_NEED_CHECK=#isNeedCheck#</isNotNull>
+     <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+<insert id="insertService" parameterClass="com.ailk.o2p.portal.bo.ServiceOwner">
+  <selectKey resultClass="int" keyProperty="serviceId">
+    SELECT nextval('SEQ_SERVICE');
+  </selectKey>
+    insert into service (CREATE_DATE,LASTEST_DATE
+  <dynamic >
+    <isNotNull prepend="," property="serviceId">SERVICE_ID</isNotNull>
+    <isNotNull prepend="," property="contractVersionId">CONTRACT_VERSION_ID</isNotNull>
+    <isNotNull prepend="," property="serviceCnName">SERVICE_CN_NAME</isNotNull>
+    <isNotNull prepend="," property="serviceEnName">SERVICE_EN_NAME</isNotNull>
+    <isNotNull prepend="," property="serviceCode">SERVICE_CODE</isNotNull>
+    <isNotNull prepend="," property="serviceType">SERVICE_TYPE</isNotNull>
+    <isNotNull prepend="," property="serviceVersion">SERVICE_VERSION</isNotNull>
+    <isNotNull prepend="," property="state">STATE</isNotNull>
+    <isNotNull prepend="," property="serviceDesc">SERVICE_DESC</isNotNull>
+    <isNotNull prepend="," property="isPublished">IS_PUBLISHED</isNotNull>
+    <isNotNull prepend="," property="servicePriority">SERVICE_PRIORITY</isNotNull>
+    <isNotNull prepend="," property="serviceTimeout">SERVICE_TIMEOUT</isNotNull>
+     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	</dynamic>
+  	)values (utc_timestamp(),utc_timestamp()
+  	<dynamic>
+  	<isNotNull prepend="," property="serviceId">#serviceId#</isNotNull>
+    <isNotNull prepend="," property="contractVersionId">#contractVersionId#</isNotNull>
+    <isNotNull prepend="," property="serviceCnName">#serviceCnName#</isNotNull>
+    <isNotNull prepend="," property="serviceEnName">#serviceEnName#</isNotNull>
+    <isNotNull prepend="," property="serviceCode">#serviceCode#</isNotNull>
+    <isNotNull prepend="," property="serviceType">#serviceType#</isNotNull>
+    <isNotNull prepend="," property="serviceVersion">#serviceVersion#</isNotNull>
+    <isNotNull prepend="," property="state">#state#</isNotNull>
+    <isNotNull prepend="," property="serviceDesc">#serviceDesc#</isNotNull>
+    <isNotNull prepend="," property="isPublished">#isPublished#</isNotNull>
+    <isNotNull prepend="," property="servicePriority">#servicePriority#</isNotNull>
+    <isNotNull prepend="," property="serviceTimeout">#serviceTimeout#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+<select id="selectService" parameterClass="com.ailk.o2p.portal.bo.ServiceOwner" resultClass="com.ailk.o2p.portal.bo.ServiceOwner">
+  select SERVICE_ID SERVICEID, CONTRACT_VERSION_ID CONTRACTVERSIONID, SERVICE_CN_NAME SERVICECNNAME, SERVICE_EN_NAME SERVICEENNAME,
+  SERVICE_CODE SERVICECODE,SERVICE_TYPE SERVICETYPE,SERVICE_VERSION SERVICEVERSION,CREATE_DATE CREATEDATE,STATE STATE,LASTEST_DATE LASTESTDATE,
+  SERVICE_DESC SERVICEDESC,IS_PUBLISHED ISPUBLISHED,SERVICE_PRIORITY SERVICEPRIORITY,SERVICE_TIMEOUT SERVICETIMEOUT,tenant_id  tenantId from service
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="serviceId"> SERVICE_ID=#serviceId#</isNotNull>
+    <isNotNull prepend="and" property="contractVersionId"> CONTRACT_VERSION_ID=#contractVersionId#</isNotNull>
+    <isNotNull prepend="and" property="serviceCnName"> SERVICE_CN_NAME=#serviceCnName#</isNotNull>
+    <isNotNull prepend="and" property="serviceEnName"> SERVICE_EN_NAME=#serviceEnName#</isNotNull>
+    <isNotNull prepend="and" property="serviceCode"> SERVICE_CODE=#serviceCode#</isNotNull>
+    <isNotNull prepend="and" property="serviceType"> SERVICE_TYPE=#serviceType#</isNotNull>
+    <isNotNull prepend="and" property="serviceVersion"> SERVICE_VERSION=#serviceVersion#</isNotNull>
+    <isNotNull prepend="and" property="createDate"> CREATE_DATE=#createDate#</isNotNull>
+    <isNotNull prepend="and" property="state"> STATE=#state#</isNotNull>
+    <isNotNull prepend="and" property="lastestDate"> LASTEST_DATE=#lastestDate#</isNotNull>
+    <isNotNull prepend="and" property="serviceDesc"> SERVICE_DESC=#serviceDesc#</isNotNull>
+    <isNotNull prepend="and" property="isPublished"> IS_PUBLISHED=#isPublished#</isNotNull>
+    <isNotNull prepend="and" property="servicePriority"> SERVICE_PRIORITY=#servicePriority#</isNotNull>
+    <isNotNull prepend="and" property="serviceTimeout"> SERVICE_TIMEOUT=#serviceTimeout#</isNotNull>
+    <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+
+
+
+<select id="queryServiceForDel" parameterClass="com.ailk.o2p.portal.bo.ServiceOwner" resultClass="com.ailk.o2p.portal.bo.ServiceOwner">
+  select SERVICE_ID SERVICEID, CONTRACT_VERSION_ID CONTRACTVERSIONID, SERVICE_CN_NAME SERVICECNNAME, SERVICE_EN_NAME SERVICEENNAME,
+  SERVICE_CODE SERVICECODE,SERVICE_TYPE SERVICETYPE,SERVICE_VERSION SERVICEVERSION,CREATE_DATE CREATEDATE,STATE STATE,LASTEST_DATE LASTESTDATE,
+  SERVICE_DESC SERVICEDESC,IS_PUBLISHED ISPUBLISHED,SERVICE_PRIORITY SERVICEPRIORITY,SERVICE_TIMEOUT SERVICETIMEOUT,tenant_id  tenantId from service
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="contractVersionId"> CONTRACT_VERSION_ID=#contractVersionId#</isNotNull>
+    <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+
+<insert id="insertDirSerList" parameterClass="com.ailk.eaap.op2.bo.DirSerList">
+ <selectKey resultClass="int" keyProperty="dirSerListId">
+	SELECT nextval('SEQ_DIR_SER_LIST');
+  </selectKey>
+    insert into dir_ser_list (CREATE_TIME,LASTEST_TIME
+  <dynamic >
+    <isNotNull prepend="," property="dirSerListId">DIR_SER_LIST_ID</isNotNull>
+    <isNotNull prepend="," property="serviceId">SERVICE_ID</isNotNull>
+    <isNotNull prepend="," property="dirId">DIR_ID</isNotNull>
+    <isNotNull prepend="," property="state">STATE</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )values(utc_timestamp(),utc_timestamp()
+  <dynamic>
+    <isNotNull prepend="," property="dirSerListId">#dirSerListId#</isNotNull>
+    <isNotNull prepend="," property="serviceId">#serviceId#</isNotNull>
+    <isNotNull prepend="," property="dirId">#dirId#</isNotNull>
+    <isNotNull prepend="," property="state">#state#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+<insert id="insertServiceAtt" parameterClass="com.ailk.eaap.op2.bo.ServiceAtt">
+  <selectKey resultClass="int" keyProperty="serviceAttId">
+	SELECT nextval('SEQ_SERVICE_ATT');
+  </selectKey>
+    insert into service_att (CREATE_TIME,LASTEST_TIME
+  <dynamic >
+    <isNotNull prepend="," property="serviceAttId">SERVICE_ATT_ID</isNotNull>
+    <isNotNull prepend="," property="serviceId">SERVICE_ID</isNotNull>
+    <isNotNull prepend="," property="attrSpecId">ATTR_SPEC_ID</isNotNull>
+    <isNotNull prepend="," property="serSpecVa">SER_SPEC_VA</isNotNull>
+    <isNotNull prepend="," property="state">STATE</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )values(utc_timestamp(),utc_timestamp()
+  <dynamic >
+    <isNotNull prepend="," property="serviceAttId">#serviceAttId#</isNotNull>
+    <isNotNull prepend="," property="serviceId">#serviceId#</isNotNull>
+    <isNotNull prepend="," property="attrSpecId">#attrSpecId#</isNotNull>
+    <isNotNull prepend="," property="serSpecVa">#serSpecVa#</isNotNull>
+    <isNotNull prepend="," property="state">#state#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+<update id="updateContract" parameterClass="com.ailk.eaap.op2.bo.Contract">
+  update contract
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="baseContractId">BASE_CONTRACT_ID=#baseContractId#</isNotNull>
+    <isNull prepend="," property="baseContractId">BASE_CONTRACT_ID=null</isNull>
+    <isNotNull prepend="," property="name">NAME=#name#</isNotNull>
+    <isNotNull prepend="," property="code">CODE=#code#</isNotNull>
+    <isNotNull prepend="," property="createTime">CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="," property="state">STATE=#state#</isNotNull>
+    <isNotNull prepend="," property="lastestTime">LASTEST_TIME=#lastestTime#</isNotNull>
+    <isNotNull prepend="," property="descriptor">DESCRIPTOR=#descriptor#</isNotNull>  
+    <isNotNull prepend="," property="isBase">IS_BASE=#isBase#</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="contractId"> CONTRACT_ID=#contractId#</isNotNull>
+    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+
+<delete id="deleteContract" parameterClass="com.ailk.eaap.op2.bo.Contract">
+   delete from contract where CONTRACT_ID=#contractId# and tenant_id=#tenantId#
+</delete>
+
+<delete id="deleteContractVersion" parameterClass="com.ailk.eaap.op2.bo.ContractVersion">
+   delete from contract_version where contract_version_id=#contractVersionId# and tenant_id=#tenantId#
+</delete>
+
+
+<delete id="deleteService" parameterClass="com.ailk.o2p.portal.bo.ServiceOwner">
+   delete from service  where service_id=#serviceId# and tenant_id=#tenantId#
+</delete>
+
+
+
+<select id="selectWorkTaskConf" parameterClass="java.util.HashMap"  resultClass="com.ailk.eaap.op2.bo.WorkTaskConf">
+         select ID id,
+		        MODEL_ID modelId,
+		        BUSINESS_KEY businessId,
+		        TACHE_ID tacheId,
+		        TACHE_NAME tacheName,
+		        FROM_TACHE_ID fromTacheId,
+		        TASK_TYPE taskType,
+		        INVOKE_API invokeApi,
+		        API_PARAM_MODE apiParamMode,
+		        DESCRIPTION description,
+		        CREATE_DATE createTime,
+		        API_PARAM_IN_ID apiParamInId,
+		        API_PARAM_OUT_ID apiParamOutId,
+		        MESSAGE_FLOW_ID messageFlowId,
+		        SER_INVOKE_INS_ID serInvokeInsId,
+		        IS_SCHEDULE isSchedule,
+		        SCHEDULE_COUNT scheduleCount,
+		        tenant_id tenantId
+		 from WORK_TASK_CONF ww 
+		 where ww.BUSINESS_KEY = #componentId#
+		 	 and ww.INVOKE_API = #serviceId#
+             and  ww.tenant_id=#tenantId#
+ </select>	
+ 
+ <select id="selectServiceProductRela" parameterClass="java.util.HashMap"  resultClass="com.ailk.eaap.op2.bo.ServiceProductRela">
+        SELECT
+					SERVICE_PRODUCT_REAL_ID serviceProductId,
+					PRODUCT_ID productId,
+					SERVICE_ID serviceId,
+					tenant_id tenantId
+			FROM
+				service_product_real spr
+			WHERE
+				spr.SERVICE_ID = #serviceId#
+			AND spr.product_id in (
+				SELECT
+					product_id
+				FROM
+					offer_prod_rel
+				WHERE
+					prod_offer_id in (
+						SELECT
+							prod_offer_id
+						FROM
+							prod_offer
+						WHERE
+							prod_offer_publisher =#componentId#
+					)
+			)
+			AND spr.tenant_id = #tenantId#
+ </select>	
+ 
+ 
+<delete id="deleteDirSerList" parameterClass="java.util.HashMap">
+   delete from dir_ser_list where service_id=#service_id#  and tenant_id=#tenantId#
+</delete>
+<update id="updateDirSerList" parameterClass="com.ailk.eaap.op2.bo.DirSerList">
+  update dir_ser_list
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="serviceId">SERVICE_ID=#serviceId#</isNotNull>
+    <isNotNull prepend="," property="dirId">DIR_ID=#dirId#</isNotNull>
+    <isNotNull prepend="," property="state">STATE=#state#</isNotNull>
+    <isNotNull prepend="," property="createTime">CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="," property="lastestTime">LASTEST_TIME=#lastestTime#</isNotNull>
+     <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="dirSerListId"> DIR_SER_LIST_ID=#dirSerListId#</isNotNull>
+    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+<update id="updateService" parameterClass="com.ailk.o2p.portal.bo.ServiceOwner">
+  update service
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="contractVersionId">CONTRACT_VERSION_ID=#contractVersionId#</isNotNull>
+    <isNotNull prepend="," property="serviceCnName">SERVICE_CN_NAME=#serviceCnName#</isNotNull>
+    <isNotNull prepend="," property="serviceEnName">SERVICE_EN_NAME=#serviceEnName#</isNotNull>
+    <isNotNull prepend="," property="serviceCode">SERVICE_CODE=#serviceCode#</isNotNull>
+    <isNotNull prepend="," property="serviceType">SERVICE_TYPE=#serviceType#</isNotNull>
+    <isNotNull prepend="," property="serviceVersion">SERVICE_VERSION=#serviceVersion#</isNotNull>
+    <isNotNull prepend="," property="createDate">CREATE_DATE=#createDate#</isNotNull>
+    <isNotNull prepend="," property="state">STATE=#state#</isNotNull>
+    <isNotNull prepend="," property="lastestDate">LASTEST_DATE=#lastestDate#</isNotNull>
+    <isNotNull prepend="," property="serviceDesc">SERVICE_DESC=#serviceDesc#</isNotNull>
+    <isNotNull prepend="," property="isPublished">IS_PUBLISHED=#isPublished#</isNotNull>
+    <isNotNull prepend="," property="servicePriority">SERVICE_PRIORITY=#servicePriority#</isNotNull>
+    <isNotNull prepend="," property="serviceTimeout">SERVICE_TIMEOUT=#serviceTimeout#</isNotNull>
+     <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="serviceId"> SERVICE_ID=#serviceId#</isNotNull>
+     <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+<update id="updateTechImpl" parameterClass="com.ailk.eaap.op2.bo.TechImpl">
+  update tech_impl
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="techImplName">TECH_IMPL_NAME=#techImplName#</isNotNull>
+    <isNotNull prepend="," property="techImpConPoId">TECH_IMP_CON_PO_ID=#techImpConPoId#</isNotNull>
+    <isNotNull prepend="," property="componentId">COMPONENT_ID=#componentId#</isNotNull>
+    <isNotNull prepend="," property="commProCd">COMM_PRO_CD=#commProCd#</isNotNull>
+    <isNotNull prepend="," property="regTime">REG_TIME=#regTime#</isNotNull>
+    <isNotNull prepend="," property="usealbeState">USEALBE_STATE=#usealbeState#</isNotNull>
+    <isNotNull prepend="," property="laestTime">LAEST_TIME=#laestTime#</isNotNull>
+     <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="techImplId"> TECH_IMPL_ID=#techImplId#</isNotNull>
+    <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+<update id="updateTechImpAtt" parameterClass="com.ailk.eaap.op2.bo.TechImpAtt">
+  update tech_imp_att
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="attrSpecId">ATTR_SPEC_ID=#attrSpecId#</isNotNull>
+    <isNotNull prepend="," property="techImplId">TECH_IMPL_ID=#techImplId#</isNotNull>
+    <isNotNull prepend="," property="attrSpecValue">ATTR_SPEC_VALUE=#attrSpecValue#</isNotNull>
+    <isNotNull prepend="," property="createTime">CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="," property="lastestTime">LASTEST_TIME=#lastestTime#</isNotNull>
+    <isNotNull prepend="," property="state">STATE=#state#</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="techImpAttId"> TECH_IMP_ATT_ID=#techImpAttId#</isNotNull>
+    <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+<insert id="insertContractFormat" parameterClass="com.ailk.eaap.op2.bo.ContractFormat">
+<selectKey resultClass="int" keyProperty="tcpCtrFId">
+	SELECT nextval('SEQ_CONTRACT_FORMAT');
+  </selectKey>
+    insert into contract_format (CREATE_TIME,LASTEST_TIME,CONTRACT_FORMAT_CODE
+  <dynamic >
+  	<isNotNull prepend="," property="tcpCtrFId">TCP_CTR_F_ID</isNotNull>
+    <isNotNull prepend="," property="contractVersionId">CONTRACT_VERSION_ID</isNotNull>
+    <isNotNull prepend="," property="reqRsp">REQ_RSP</isNotNull>
+    <isNotNull prepend="," property="conType">CON_TYPE</isNotNull>
+    <isNotNull prepend="," property="xsdHeaderFor">XSD_HEADER_FOR</isNotNull>
+    <isNotNull prepend="," property="xsdFormat">XSD_FORMAT</isNotNull>
+    <isNotNull prepend="," property="xsdDemo">XSD_DEMO</isNotNull>
+    <isNotNull prepend="," property="state">STATE</isNotNull>
+    <isNotNull prepend="," property="descriptor">DESCRIPTOR</isNotNull>
+     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )values (utc_timestamp(),utc_timestamp(),uuid()
+  <dynamic>
+  	<isNotNull prepend="," property="tcpCtrFId">#tcpCtrFId#</isNotNull>
+    <isNotNull prepend="," property="contractVersionId">#contractVersionId#</isNotNull>
+    <isNotNull prepend="," property="reqRsp">#reqRsp#</isNotNull>
+    <isNotNull prepend="," property="conType">#conType#</isNotNull>
+    <isNotNull prepend="," property="xsdHeaderFor">#xsdHeaderFor#</isNotNull>
+    <isNotNull prepend="," property="xsdFormat">#xsdFormat#</isNotNull>
+    <isNotNull prepend="," property="xsdDemo">#xsdDemo#</isNotNull>
+    <isNotNull prepend="," property="state">#state#</isNotNull>
+    <isNotNull prepend="," property="descriptor">#descriptor#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+<select id="getNodeIdByPath" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		select node_desc_id from node_desc where node_path = #path# and tcp_ctr_f_id=#tcpCtrFId#
+		and state = 'A' and tenant_id=#tenantId#
+</select>
+<insert id="insertNodeDesc" parameterClass="com.ailk.eaap.op2.bo.NodeDesc">
+	<selectKey resultClass="int" keyProperty="nodeDescId">
+		SELECT nextval('SEQ_NODE_DESC');
+  	</selectKey>
+    insert into node_desc (CREATE_TIME,LASTEST_TIME,NODE_DESC_CODE
+  <dynamic >
+    <isNotNull prepend="," property="nodeDescId">NODE_DESC_ID</isNotNull>
+    <isNotNull prepend="," property="tcpCtrFId">TCP_CTR_F_ID</isNotNull>
+    <isNotNull prepend="," property="nodeName">NODE_NAME</isNotNull>
+    <isNotNull prepend="," property="nodeCode">NODE_CODE</isNotNull>
+    <isNotNull prepend="," property="parentNodeId">PARENT_NODE_ID</isNotNull>
+    <isNotNull prepend="," property="nodePath">NODE_PATH</isNotNull>
+    <isNotNull prepend="," property="nodeType">NODE_TYPE</isNotNull>
+    <isNotNull prepend="," property="nodeLengthCons">NODE_LENGTH_CONS</isNotNull>
+    <isNotNull prepend="," property="nodeTypeCons">NODE_TYPE_CONS</isNotNull>
+    <isNotNull prepend="," property="nodeNumberCons">NODE_NUMBER_CONS</isNotNull>
+    <isNotNull prepend="," property="nevlConsType">NEVL_CONS_TYPE</isNotNull>
+    <isNotNull prepend="," property="nevlConsValue">NEVL_CONS_VALUE</isNotNull>
+    <isNotNull prepend="," property="isNeedCheck">IS_NEED_CHECK</isNotNull>
+    <isNotNull prepend="," property="isNeedSign">IS_NEED_SIGN</isNotNull>
+    <isNotNull prepend="," property="state">STATE</isNotNull>
+    <isNotNull prepend="," property="description">DESCRIPTION</isNotNull>
+    <isNotNull prepend="," property="javaField">JAVA_FIELD</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )values(utc_timestamp(),utc_timestamp(),uuid()
+  <dynamic >
+    <isNotNull prepend="," property="nodeDescId">#nodeDescId#</isNotNull>
+    <isNotNull prepend="," property="tcpCtrFId">#tcpCtrFId#</isNotNull>
+    <isNotNull prepend="," property="nodeName">#nodeName#</isNotNull>
+    <isNotNull prepend="," property="nodeCode">#nodeCode#</isNotNull>
+    <isNotNull prepend="," property="parentNodeId">#parentNodeId#</isNotNull>
+    <isNotNull prepend="," property="nodePath">#nodePath#</isNotNull>
+    <isNotNull prepend="," property="nodeType">#nodeType#</isNotNull>
+    <isNotNull prepend="," property="nodeLengthCons">#nodeLengthCons#</isNotNull>
+    <isNotNull prepend="," property="nodeTypeCons">#nodeTypeCons#</isNotNull>
+    <isNotNull prepend="," property="nodeNumberCons">#nodeNumberCons#</isNotNull>
+    <isNotNull prepend="," property="nevlConsType">#nevlConsType#</isNotNull>
+    <isNotNull prepend="," property="nevlConsValue">#nevlConsValue#</isNotNull>
+    <isNotNull prepend="," property="isNeedCheck">#isNeedCheck#</isNotNull>
+    <isNotNull prepend="," property="isNeedSign">#isNeedSign#</isNotNull>
+    <isNotNull prepend="," property="state">#state#</isNotNull>
+    <isNotNull prepend="," property="description">#description#</isNotNull>
+    <isNotNull prepend="," property="javaField">#javaField#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+<update id="updateContractFormat" parameterClass="com.ailk.eaap.op2.bo.ContractFormat">
+  update contract_format
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="contractVersionId">CONTRACT_VERSION_ID=#contractVersionId#</isNotNull>
+    <isNotNull prepend="," property="reqRsp">REQ_RSP=#reqRsp#</isNotNull>
+    <isNotNull prepend="," property="conType">CON_TYPE=#conType#</isNotNull>
+    <isNotNull prepend="," property="xsdHeaderFor">XSD_HEADER_FOR=#xsdHeaderFor#</isNotNull>
+    <isNotNull prepend="," property="xsdFormat">XSD_FORMAT=#xsdFormat#</isNotNull>
+    <isNotNull prepend="," property="xsdDemo">XSD_DEMO=#xsdDemo#</isNotNull>
+    <isNotNull prepend="," property="createTime">CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="," property="state">STATE=#state#</isNotNull>
+    <isNotNull prepend="," property="lastestTime">LASTEST_TIME=#lastestTime#</isNotNull>
+    <isNotNull prepend="," property="descriptor">DESCRIPTOR=#descriptor#</isNotNull>
+     <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="tcpCtrFId"> TCP_CTR_F_ID=#tcpCtrFId#</isNotNull>
+    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+<update id="updateNodeDesc" parameterClass="com.ailk.eaap.op2.bo.NodeDesc" >
+  update node_desc
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="nodeName">NODE_NAME=#nodeName#</isNotNull>
+    <isNotNull prepend="," property="nodeCode">NODE_CODE=#nodeCode#</isNotNull>
+    <isNotNull prepend="," property="parentNodeId">PARENT_NODE_ID=#parentNodeId#</isNotNull>
+    <isNotNull prepend="," property="nodePath">NODE_PATH=#nodePath#</isNotNull>
+    <isNotNull prepend="," property="nodeType">NODE_TYPE=#nodeType#</isNotNull>
+    <isNotNull prepend="," property="nodeLengthCons">NODE_LENGTH_CONS=#nodeLengthCons#</isNotNull>
+    <isNotNull prepend="," property="nodeTypeCons">NODE_TYPE_CONS=#nodeTypeCons#</isNotNull>
+    <isNotNull prepend="," property="nodeNumberCons">NODE_NUMBER_CONS=#nodeNumberCons#</isNotNull>
+    <isNotNull prepend="," property="nevlConsType">NEVL_CONS_TYPE=#nevlConsType#</isNotNull>
+    <isNotNull prepend="," property="nevlConsValue">NEVL_CONS_VALUE=#nevlConsValue#</isNotNull>
+    <isNotNull prepend="," property="isNeedCheck">IS_NEED_CHECK=#isNeedCheck#</isNotNull>
+    <isNotNull prepend="," property="isNeedSign"> IS_NEED_SIGN=#isNeedSign#</isNotNull>  
+    <isNotNull prepend="," property="state">STATE=#state#</isNotNull>
+    <isNotNull prepend="," property="createTime">CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="," property="lastestTime">LASTEST_TIME=#lastestTime#</isNotNull>
+    <isNotNull prepend="," property="description">DESCRIPTION=#description#</isNotNull>
+    <isNotNull prepend="," property="javaField">JAVA_FIELD=#javaField#</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  where NODE_DESC_ID=#nodeDescId# 
+  and  tenant_id=#tenantId#
+</update>
+<update id="updateSerTechImpl" parameterClass="com.ailk.eaap.op2.bo.SerTechImpl">
+  update ser_tech_impl
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="serviceId">SERVICE_ID=#serviceId#</isNotNull>
+    <isNotNull prepend="," property="techImplId">TECH_IMPL_ID=#techImplId#</isNotNull>
+    <isNotNull prepend="," property="createTime">CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="," property="state">STATE=#state#</isNotNull>
+    <isNotNull prepend="," property="lastestTime">LASTEST_TIME=#lastestTime#</isNotNull>
+     <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="serTechImplId">SER_TECH_IMPL_ID=#serTechImplId#</isNotNull>
+    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+<select id="selectMainDataType" parameterClass="com.ailk.eaap.op2.bo.MainDataType" resultClass="com.ailk.eaap.op2.bo.MainDataType">
+  select MDT_CD MDTCD, MDT_NAME MDTNAME ,MDT_DESC MDTDESC , CREATE_TIME CREATETIME, STATE STATE ,LASTEST_TIME LASTESTTIME,MDT_SIGN MDTSIGN,  tenant_id tenantId from main_data_type
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="mdtCd"> MDT_CD=#mdtCd#</isNotNull>
+    <isNotNull prepend="and" property="mdtName"> MDT_NAME=#mdtName#</isNotNull>
+    <isNotNull prepend="and" property="mdtDesc"> MDT_DESC=#mdtDesc#</isNotNull>
+    <isNotNull prepend="and" property="createTime"> CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="and" property="state"> STATE=#state#</isNotNull>
+    <isNotNull prepend="and" property="lastestTime"> LASTEST_TIME=#lastestTime#</isNotNull>
+    <isNotNull prepend="and" property="mdtSign"> MDT_SIGN=#mdtSign#</isNotNull>
+    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+<select id="selectMainData" parameterClass="com.ailk.eaap.op2.bo.MainData" resultClass="com.ailk.eaap.op2.bo.MainData">
+  select MAIND_ID MAINDID, MDT_CD MDTCD, BASE_MAIND_ID BASEMAINDID,  CEP_NAME CEPNAME, CEP_CODE CEPCODE,
+  CEP_VALUES CEPVALUES,  STATE STATE,  CREATE_TIME CREATETIME, LASTEST_TIME LASTESTTIME, CEP_DES CEPDES,tenant_id tenantId from main_data
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="maindId"> MAIND_ID=#maindId#</isNotNull>
+    <isNotNull prepend="and" property="mdtCd"> MDT_CD=#mdtCd#</isNotNull>
+    <isNotNull prepend="and" property="baseMaindId"> BASE_MAIND_ID=#baseMaindId#</isNotNull>
+    <isNotNull prepend="and" property="cepName"> CEP_NAME=#cepName#</isNotNull>
+    <isNotNull prepend="and" property="cepCode"> CEP_CODE=#cepCode#</isNotNull>
+    <isNotNull prepend="and" property="cepValues"> CEP_VALUES=#cepValues#</isNotNull>
+    <isNotNull prepend="and" property="state"> STATE=#state#</isNotNull>
+    <isNotNull prepend="and" property="createTime"> CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="and" property="lastestTime"> LASTEST_TIME=#lastestTime#</isNotNull>
+    <isNotNull prepend="and" property="cepDes"> CEP_DES=#cepDes#</isNotNull>
+     <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  ORDER BY SEQ ASC
+</select>
+<update id="updateProdOfferById" parameterClass="java.util.HashMap">
+  update prod_offer set status_cd='1300' where  prod_offer_publisher=#componentId# and tenant_id=#tenantId#
+</update>
+
+
+	<select id="getProcessList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        SELECT
+			A.ID_ PROCESS_ID,
+			A.NAME_ PROCESS_NAME,
+			A.TENANT_ID_
+		FROM
+			ACT_RE_MODEL A,
+			FLOW_COUNTRY_MID B
+		WHERE
+			A.ID_ = B.FLOW_ID
+		AND B.SYSTEM_ID = #SYSTEMID#
+	 </select>
+<select id="queryTechImplAttrSpec" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+       select c.attr_spec_value,t.attr_spec_name,t.attr_spec_code,t.comm_pro_type,t.attr_spec_id,t.tenant_id
+	     from (select a.attr_spec_id,a.comm_pro_type,b.attr_spec_name,b.attr_spec_code,b.tenant_id  tenant_id
+	             from TECH_IMP_ATTR_SPEC a ,ATTR_SPEC b 
+	            where a.attr_spec_id=b.attr_spec_id and  b.tenant_id=#tenantId#
+	            and (a.comm_pro_type=2 or a.comm_pro_type is null)
+	              and a.comm_pro_cd=#commProCd# order by TECH_IMP_ATTR_SPEC_ID desc ) t
+	left join TECH_IMP_ATT c
+	       on t.attr_spec_id = c.attr_spec_id  and t.tenant_id=#tenantId# and c.tenant_id=#tenantId#
+  <dynamic >
+    <isNotNull prepend="and " property="techImplId"> c.tech_impl_id=#techImplId#</isNotNull>
+  </dynamic>
+</select>
+<update id="editTechImplAtt" parameterClass="com.ailk.eaap.op2.bo.TechImpAtt">
+  update tech_imp_att set ATTR_SPEC_VALUE=#attrSpecValue#
+  where TECH_IMPL_ID=#techImplId# and ATTR_SPEC_ID=#attrSpecId# and tenant_id=#tenantId#
+</update>
+<select id="exitTechImplAtt" parameterClass="com.ailk.eaap.op2.bo.TechImpAtt" resultClass="java.lang.Integer">
+ select count(*) from tech_imp_att
+ where TECH_IMPL_ID=#techImplId# and ATTR_SPEC_ID=#attrSpecId# and tenant_id=#tenantId#
+</select>
+ 
+
+<select id="queryComponentState" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        SELECT
+			A.STATE,
+			A.COMPONENT_ID,
+			B.PROD_OFFER_ID,
+			A.UP_STATE,
+			A.tenant_id
+		FROM
+			COMPONENT A,
+			PROD_OFFER B
+		WHERE
+			A.COMPONENT_ID = B.PROD_OFFER_PUBLISHER
+		AND A.COMPONENT_ID = #componentId#
+		AND B.PROD_OFFER_ID =#prodOfferId#
+		AND  A.tenant_id=#tenantId# AND B.tenant_id=#tenantId#
+</select>
+ 
+<update id="updateSerTechImplState" parameterClass="java.util.HashMap">
+  update ser_tech_impl set state = 'A' where TECH_IMPL_ID = #techImpId# and tenant_id=#tenantId#
+</update>
+
+<select id="getMessageFlowBeginAndEndEndpoint"  parameterClass="java.util.HashMap"  resultClass="com.ailk.eaap.op2.bo.Endpoint">
+	SELECT
+		e.endpoint_id endpointId,
+		e.endpoint_spec_id endpointSpecId,
+		e.in_data_type_id inDataTypeId,
+		e.out_data_type_id outDataTypeId,
+		e.endpoint_name endpointName,
+		e.endpoint_code endpointCode,
+		e.enable_in_trace enableInTrace,
+		e.enable_out_trace enableOutTrace,
+		e.enable_in_log enableInLog,
+		e.enable_out_log enableOutLog,
+		e.create_date createDate,
+		e.state state,
+		e.lastest_date lastestDate,
+		e.endpoint_desc endpointDesc,
+		e.tenant_id
+	FROM endpoint e
+	LEFT JOIN service_route_config r on e.endpoint_id in(r.from_endpoint_id) or e.endpoint_id in(r.to_endpoint_id) 
+	WHERE r.message_flow_id=#messageFlowId#
+		AND r.state='A'
+		AND e.state='A'
+		AND e.endpoint_spec_id in(7,11)
+		AND e.tenant_id=#tenantId#
+		AND r.tenant_id=#tenantId#
+</select>
+
+</sqlMap>

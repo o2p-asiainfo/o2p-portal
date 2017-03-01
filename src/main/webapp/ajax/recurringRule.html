@@ -1,0 +1,96 @@
+<div class="form-group">
+  <label class="col-md-4 control-label"> <font color="FF0000">*</font>Rule Name:</label>
+  <div class="col-md-8">
+    <input type="text" class="form-control input-medium" placeholder="" name="">
+  </div>
+</div>
+<div class="form-group">
+  <label class="col-md-4 control-label"><i data-toggle="tooltip" data-placement="top" data-original-title="Define how to calculate the subscription amount. If customer A subscribes to the same product twice, and then the subscription amount is 1 according to customer, and is 2 according to subscription." class="fa fa-question-circle"></i> <font color="FF0000">*</font>Subscription Statistics Method:</label>
+  <div class="col-md-8 form-inline">
+    <select class="form-control input-medium">
+      <option value="2">Up to Customer</option>
+      <option value="1">Up to User</option>
+    </select>
+  </div>
+</div>
+<div class="form-group">
+  <label class="col-md-4 control-label"><i data-toggle="tooltip" data-placement="top" data-original-title="<div style='text-align:left!important'> <p>For the statistics rules (except the specified date), the subscription amount is calculated in the last day.</p> <p>Calculate the subscription amount in the specified date in each month. It is only used in the monthly cycle.</p> <p>Calculate the subscription amount for the last settlement cylce.</p> <p>Calculate the subscription amount for the current settlement cylce.</p> <p>Calculate the average of the subscription amounts in the last and current settlement cycles.</p> </div>" class="fa fa-question-circle"></i> <font color="FF0000">*</font>Subscription Statistics Rule:</label>
+  <div class="col-md-8 form-inline">
+    <select class="form-control input-medium">
+      <option value="3">the Current Cycle Order Number</option>
+      <option value="2">the Last Cycle Number to Order</option>
+      <option value="4">Cycles And the Average Current Cycle</option>
+    </select>
+  </div>
+</div>
+<div class="form-group">
+  <label class="col-md-4 control-label"><i data-toggle="tooltip" data-placement="top" data-original-title="No matter which subscription statistics method is adopted, the reduce amount should be deducted from the final calculated subscription amount."></i> <font color="FF0000">*</font>Reduce Amount:</label>
+  <div class="col-md-8 form-inline">
+    <input type="text" class="form-control input-medium" placeholder="0" name="">
+  </div>
+</div>
+<div class="form-group">
+  <label class="col-md-4 control-label"><i data-toggle="tooltip" data-placement="top" data-original-title="Define the settlement amount is paid from whom to whom."></i> <font color="FF0000">*</font>Settlement Direction:</label>
+  <div class="col-md-8 form-inline">
+    <select class="form-control input-medium">
+      <option value="2">Partner Pays to Operator</option>
+      <option value="1">Operator Pays to Partner</option>
+    </select>
+  </div>
+</div>
+<div class="form-group">
+  <label class="col-md-4 control-label"> <font color="FF0000">*</font>Currency:</label>
+  <div class="col-md-8 form-inline">
+    <select class="form-control input-medium currency">
+      <option value="10302">Euro</option>
+      <option value="11403">DKK</option>
+    </select>
+  </div>
+</div>
+<div class="form-group">
+  <label class="col-md-4 control-label"><i data-toggle="tooltip" data-placement="top" data-original-title="Configure the different settlement rules according to the different subscription amount ranges. (-1 represents the infinity.)"></i> <font color="FF0000">*</font>Settlement Conditions:</label>
+  <div class="col-md-8 form-inline">
+    <table class="table table-bordered table-condensed table-advance ladder">
+      <thead>
+        <tr>
+          <th> <i class="fa fa-plus"></i> </th>
+          <th> Subscription Range <span class="label label-yellow"> <span class="numArea">3</span>*<span class="unitArea">Piece</span> </span> </th>
+          <th> Unit Price <span class="label label-yellow"> <span class="currencyArea">DKK</span>/<span class="numArea">3</span>*<span class="unitArea">Piece</span> </span> </th>
+          <th> Basic Charge <span class="label label-yellow"> <span class="currencyArea">DKK</span></span> </th>
+          <th> Opertion </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><div class="input-group input-xs">
+              <input type="text" name="from3" class="form-control">
+              <span class="input-group-addon"> To </span>
+              <input type="text" name="to3" class="form-control">
+            </div>
+          <td><input type="text" name="" placeholder="" class="form-control input-xs"></td>
+          <td><input type="text" name="" placeholder="" class="form-control input-xs"></td>
+          <td><a class="btn default btn-sm black btn-del" href="#"> <i class="fa fa-trash-o"></i> Delete </a></td>
+        </tr>
+        <tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="form-group">
+  <label class="col-md-4 control-label"> <font color="FF0000">*</font>Valid Period:</label>
+  <div class="col-md-8 form-inline">
+    <div data-date-format="mm/dd/yyyy" data-date-start-date="+0d" data-date="10/11/2012" class="input-group input-medium date-picker input-daterange" data-error-container="#here6">
+      <input type="text" name="from6" class="form-control od">
+      <span class="input-group-addon"> To </span>
+      <input type="text" name="to6" class="form-control od">
+    </div>
+    <div id="here6"></div>
+  </div>
+</div>
+<div class="form-group">
+  <label class="col-md-4 control-label"> Description :</label>
+  <div class="col-md-8">
+    <textarea rows="3" class="form-control"></textarea>
+  </div>
+</div>

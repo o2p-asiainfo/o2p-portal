@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd"
+	default-autowire="byName">
+	
+	<bean class="com.ailk.eaap.o2p.common.spring.config.O2pPropertyPlaceholderConfigurer">
+        <property name="remoteOverride" value="true"></property>
+        <property name="cacheHolder" ref="cacheHolder"></property>
+    </bean>
+     <bean id="cacheHolder" class="com.ailk.eaap.o2p.common.spring.config.ZKCfgCacheHolder">
+        <property name="ignoreResourceNotFound" value="true"></property>
+    </bean>
+    
+	<!-- <bean id="localePropertyConfigurer" -->
+	<!-- class="com.ailk.eaap.op2.tp.utils.LocalePropertyPlaceholderConfigurer"> -->
+	<!-- <property name="locations"> -->
+	<!-- <list> -->
+	<!-- <value>classpath*:local/locale.properties</value> -->
+	<!-- <value>classpath*:local/test_pile_zh_CN.properties</value> -->
+	<!-- <value>classpath*:local/test_pile_en_US.properties</value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+	<!-- Spring iBatis相关 -->
+	<bean id="lobHandler" class="org.springframework.jdbc.support.lob.DefaultLobHandler" />
+
+	<!-- Spring 管理数据库连接池 用于在tomcat下做测试使用
+	 <bean id="confDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"   destroy-method="close">
+        <property name="driverClass"><value>${o2pCommon.jdbcDriver}</value></property>
+		<property name="jdbcUrl"><value>${o2pCommon.database}</value></property>
+		<property name="user"><value>${o2pCommon.user}</value></property>
+		<property name="password"><value>${o2pCommon.password}</value></property>
+         <property name="minPoolSize"><value>1</value></property>
+         <property name="maxPoolSize"><value>${o2pCommon.maxActive}</value></property>
+         <property name="maxIdleTime"><value>1800</value></property>
+         <property name="acquireIncrement"><value>2</value></property>
+         <property name="maxStatements"><value>0</value></property>
+         <property name="initialPoolSize"><value>${o2pCommon.initialSize}</value></property>
+         <property name="testConnectionOnCheckout"><value>${o2pCommon.testConnectionOnCheckout}</value></property> 
+         <property name="testConnectionOnCheckin"><value>${o2pCommon.testConnectionOnCheckin}</value></property> 
+         <property name="breakAfterAcquireFailure"><value>${o2pCommon.breakAfterAcquireFailure}</value></property>
+         <property name="idleConnectionTestPeriod"><value>${o2pCommon.idleConnectionTestPeriod}</value></property>
+         <property name="acquireRetryAttempts"><value>${o2pCommon.acquireRetryAttempts}</value></property>
+         <property name="acquireRetryDelay"><value>${o2pCommon.maxWait}</value></property>
+	</bean>
+	 -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">   
+	    <!-- 基本属性 url、user、password -->  
+	    <property name="url" value="${o2pCommon.database}" />  
+	    <property name="username" value="${o2pCommon.user}" />  
+	    <property name="password" value="${o2pCommon.password}" />  
+	    <!-- 配置初始化大小、最小、最大 -->  
+	    <property name="initialSize" value="${o2pCommon.initialSize}" />  
+	    <property name="minIdle" value="${o2pCommon.minIdle}" />   
+	    <property name="maxActive" value="${db_maxActive}" />  
+	    <!-- 配置获取连接等待超时的时间 -->  
+	    <property name="maxWait" value="60000" />  
+	    <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->  
+	    <property name="timeBetweenEvictionRunsMillis" value="60000" />  
+	    <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->  
+	    <property name="minEvictableIdleTimeMillis" value="300000" />  
+	    <property name="validationQuery" value="SELECT 'x' from dual" />  
+	    <property name="testWhileIdle" value="true" />  
+	    <property name="testOnBorrow" value="false" />  
+	    <property name="testOnReturn" value="false" />  
+	    <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->  
+	    <property name="poolPreparedStatements" value="true" />  
+	    <property name="maxPoolPreparedStatementPerConnectionSize" value="20" />  
+	    <!-- 配置监控统计拦截的filters，去掉后监控界面sql无法统计 -->  
+	    <property name="filters" value="stat" />   
+	</bean>  
+	
+
+
+
+	<bean id="sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean"
+		abstract="false" scope="singleton" lazy-init="default" autowire="default">
+		<description>Spring iBatis结合</description>
+		<property name="configLocation" value="classpath:ibatis/sqlMap-config.xml" />
+		<!-- 新修改配置 -->
+		<property name="mappingLocations">
+			<list>
+				<!--<value>classpath:/ibatis/model/${databaseType}/org-sqlmap.xml</value>-->
+				<value>classpath:/ibatis/model/${databaseType}/portal/*.xml</value>
+				<value>classpath:/ibatis/model/${databaseType}/product-sqlmap.xml</value>
+				<value>classpath:/ibatis/model/${databaseType}/baseMessage-sqlmap.xml</value>
+				<value>classpath:/ibatis/model/${databaseType}/productAttr-sqlmap.xml</value>
+				<value>classpath:/ibatis/model/${databaseType}/prodOfferChannelType-sqlmap.xml</value>
+				<value>classpath:/ibatis/model/${databaseType}/offerProdRel-sqlmap.xml</value>
+				<value>classpath:/ibatis/model/${databaseType}/mainData-sqlmap.xml</value>
+				<value>classpath:/ibatis/model/${databaseType}/mainDataType-sqlmap.xml</value>
+				<value>classpath:/ibatis/model/${databaseType}/international-sqlmap.xml</value>
+				<!-- develop center -->
+			  	<value>classpath:/ibatis/model/${databaseType}/appType-sqlmap.xml</value>
+			  	<value>classpath:/ibatis/model/${databaseType}/component-sqlmap.xml</value>
+			  	<value>classpath:/ibatis/model/${databaseType}/app-sqlmap.xml</value>
+			  	<value>classpath:/ibatis/model/${databaseType}/appApiList-sqlmap.xml</value>
+			  	<value>classpath:/ibatis/model/${databaseType}/serviceSpec-sqlmap.xml</value>
+			  	<value>classpath:/ibatis/model/productServiceRel-sqlmap.xml</value>
+			  	<value>classpath:/ibatis/model/measureUnit-sqlmap.xml</value>
+			  	<value>classpath:/ibatis/model/${databaseType}/charSpec-sqlmap.xml</value>
+			  	<value>classpath:/ibatis/model/${databaseType}/component-sqlmap.xml</value>
+			  	<!-- business data info -->
+			  	<value>classpath:/ibatis/model/${databaseType}/busiDataInfo-sqlmap.xml</value>
+			  	<!-- settleRuleOrgRel -->
+			  	<value>classpath:/ibatis/model/${databaseType}/settle-rule-org-rel-sqlmap.xml</value>
+			  	<value>classpath:/ibatis/model/*.xml</value>
+			</list>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+		<property name="lobHandler" ref="lobHandler" />
+	</bean>
+
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+		scope="singleton">
+		<description>Spring 事务管理</description>
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<!-- 使用annotation定义事务 -->
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+    
+	<!-- 系统事务处理AOP配置 
+	<aop:config proxy-target-class="false">
+		<aop:pointcut id="txPointcut"
+			expression="execution(* com.ailk.o2p.portal.service.*.**(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="txPointcut" />
+	</aop:config>
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="insert*" propagation="REQUIRED"
+				rollback-for="Exception" />
+			<tx:method name="add*" propagation="REQUIRED" rollback-for="Exception" />
+			<tx:method name="do*" propagation="REQUIRED" rollback-for="Exception" />
+			<tx:method name="update*" propagation="REQUIRED"
+				rollback-for="Exception" />
+			<tx:method name="modify*" propagation="REQUIRED"
+				rollback-for="Exception" />
+			<tx:method name="edit*" propagation="REQUIRED" rollback-for="Exception" />
+			<tx:method name="del*" propagation="REQUIRED" rollback-for="Exception" />
+			<tx:method name="get*" read-only="true" />
+			<tx:method name="find*" read-only="true" />
+			<tx:method name="query*" read-only="true" />
+			<tx:method name="search*" read-only="true" />
+			<tx:method name="select*" read-only="true" />
+			<tx:method name="count*" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+	-->
+	<!-- Spring中常用事务类型： REQUIRED 支持当前事务，如果当前没有事务，就新建一个事务。这是最常见的选择。 SUPPORTS 
+		支持当前事务，如果当前没有事务，就以非事务方式执行。 MANDATORY 支持当前事务，如果当前没有事务，就抛出异常。 REQUIRES_NEW 
+		新建事务，如果当前存在事务，把当前事务挂起。 NOT_SUPPORTED 以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。 NEVER 
+		以非事务方式执行，如果当前存在事务，则抛出异常。 NESTED 如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则进行与PROPAGATION_REQUIRED类似的操作。 -->
+	<!-- 获取bean工具注入 -->
+	<bean id="springContextHolder" class="com.ailk.o2p.portal.utils.SpringContextHolder"
+		lazy-init="false" />
+
+
+	<bean id="iBatisSqlMapDAO" class="com.linkage.rainbow.dao.impl.IBatisSqlMapDAOImpl"
+		scope="prototype">
+		<description>数据库基础操作工具包</description>
+		<property name="sqlMapClient" ref="sqlMapClient" />
+	</bean>
+	<bean id="mainDataSqlDAO" class="com.ailk.eaap.op2.dao.MainDataDaoImpl"
+		scope="prototype">
+		<description>主数据(MAIN_DATA)基础操作工具包</description>
+		<property name="sqlMapDao" ref="iBatisSqlMapDAO" />
+	</bean>
+	<bean id="mainDataTypeSqlDAO" class="com.ailk.eaap.op2.dao.MainDataTypeDaoImpl"
+		scope="prototype">
+		<description>主数据类型(MAIN_DATA_TYPE)基础操作工具包</description>
+		<property name="sqlMapDao" ref="iBatisSqlMapDAO" />
+	</bean>
+	<bean id="fileShareSqlDao" class="com.ailk.eaap.op2.dao.FileShareDaoImpl"
+		scope="prototype">
+		<description>文件共享(FileShare)基础操作工具包</description>
+		<property name="sqlMapDao" ref="iBatisSqlMapDAO" />
+	</bean>
+	
+	<bean id="messageBaseSqlDAO" name="msgBaseDao" class="com.ailk.eaap.op2.dao.MessageBaseDaoImpl" scope="prototype" >
+		<description>消息(MESSAGE)基础操作工具包</description>
+		<property name="sqlMapDao" ref="iBatisSqlMapDAO"/>
+	</bean>
+	
+	<bean id="serviceSpecDAO" name="serviceSpecDAO" class="com.ailk.eaap.op2.dao.ServiceSpecDaoImpl" scope="prototype" >
+		<description>服务(serviceSpec)基础操作工具包</description>
+		<property name="sqlMapDao" ref="iBatisSqlMapDAO"/>
+	</bean>
+	
+	<bean id="productServiceDAO" name="productServiceDAO" class="com.ailk.eaap.op2.dao.ProductServiceDAOImpl" scope="prototype" >
+		<description>产品服务(productService)基础操作工具包</description>
+		<property name="sqlMapDao" ref="iBatisSqlMapDAO"/>
+	</bean>
+	
+	<bean id="charSpecDao" class="com.ailk.eaap.op2.dao.CharSpecDaoImpl" scope="prototype" >
+		<description>特征规格工具包</description>
+		<property name="sqlMapDao" ref="iBatisSqlMapDAO"/>
+	</bean>
+	
+	<bean id="busiDataInfoDao" class="com.ailk.eaap.op2.dao.BusiDataInfoDaoImpl"  scope="prototype">
+		<description>业务数据信息工具包</description>
+		<property name="sqlMapDao" ref="iBatisSqlMapDAO"/>
+	</bean>
+	
+	
+	<bean id="settleRuleOrgRelDao" class="com.ailk.eaap.op2.settleRuleOrgRel.dao.SettleRuleOrgRelDaoImpl"  scope="prototype">
+		<description>结算规则关联运营商工具包</description>
+		<property name="sqlMapDao" ref="iBatisSqlMapDAO"/>
+	</bean>
+	
+	<bean id="measureUnitDao" class="com.ailk.eaap.op2.dao.MeasureUnitDaoImpl"  scope="prototype">
+		<description>单位转换工具包</description>
+		<property name="sqlMapDao" ref="iBatisSqlMapDAO"/>
+	</bean>
+	
+	<bean id="baseDaoOrgDao" class="com.ailk.eaap.op2.dao.OrgDaoImpl"  scope="prototype">
+		<description>ORG工具包</description>
+		<property name="sqlMapDao" ref="iBatisSqlMapDAO"/>
+	</bean>
+	
+   
+	
+	<bean id="validator"
+		class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+		<property name="providerClass" value="org.hibernate.validator.HibernateValidator" />
+		<!-- <property name="validationMessageSource" ref="messageSource" /> -->
+	</bean>
+
+	<context:component-scan base-package="com.ailk.o2p.portal.dao" />
+	<context:component-scan base-package="com.ailk.o2p.portal.service" />
+	
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="1048576"></property>  
+	</bean>
+	
+	<bean id="springContextUtil" class="com.ailk.eaap.op2.util.SpringContextUtil" />
+	
+	<!-- spirng jdbcTemplate 配置-->
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource">
+			<ref local="dataSource" />
+		</property>
+  	</bean>
+  	
+   <bean id="busiDataInfoDeal" lazy-init="true" class="com.ailk.o2p.portal.controller.busiDataDeal.BusiDataInfoDeal">    
+               <property name="busiDataInfoServ" ref="busiDataInfoServ"></property>    
+   </bean>
+   
+  	<context:component-scan base-package="com.ailk.o2p.portal.utils"/>
+
+</beans>

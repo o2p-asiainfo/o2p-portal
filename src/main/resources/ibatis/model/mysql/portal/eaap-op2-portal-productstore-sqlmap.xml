@@ -1,0 +1,271 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-productsotre">
+	<resultMap class="com.ailk.eaap.op2.bo.Directory" id="directoryResult">
+		<result column="DIR_ID" property="dirId" />
+		<result column="FA_DIR_ID" property="faDirId" />
+		<result column="S_FILE_ID" property="sFileId" />
+		<result column="DIR_NAME" property="dirName" />
+		<result column="DIR_CODE" property="dirCode" />
+<!-- 		<result column="DIR_CREATE_TIME" property="dirCreateTime" />-->		
+		<!-- <result column="DIR_STATE" property="dirState" /> -->
+		<!-- <result column="DIR_TYPE" property="dirType" /> -->
+<!-- 		<result column="DIR_LASTEST_TIME" property="dirLastestTime" /> -->
+		 <result column="TENANT_ID" property="tenantId" /> 
+	</resultMap>
+
+
+	<select id="queryProductCategory" parameterClass="java.util.HashMap"
+		resultMap="directoryResult">
+		select C.DIR_ID,C.FA_DIR_ID,C.S_FILE_ID,C.DIR_NAME,C.DIR_CODE,C.TENANT_ID
+		 from `directory` C
+		where  C.TENANT_ID = #tenantId#
+		AND C.DIR_STATE = 'A'
+		AND C.DIR_TYPE = '3'
+		
+	</select>
+
+	<select id="queryProductList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+<!-- 		SELECT
+			AA.*, ifnull(BB.PAGE_VIEW,0) PAGE_VIEW,
+			ifnull(BB.COLLECT_CNT,0) COLLECT_CNT
+		FROM
+			(
+			SELECT
+				A.*
+			FROM
+				PROD_OFFER A,
+				offer_catalog_location B,
+				`directory` C
+			WHERE
+				A.prod_offer_id = B.prod_offer_id
+			AND B.dir_id = C.dir_id
+			AND A.COOPERATION_TYPE = '11'
+			AND A.STATUS_CD != '1300'
+			AND B.DIR_ID = #dirId#
+			AND A.TENANT_ID = #tenantId#
+			AND B.TENANT_ID = #tenantId#
+			AND C.TENANT_ID = #tenantId#
+			AND C.DIR_STATE = 'A'
+			AND C.DIR_TYPE = '3'
+			AND A.exp_date >= NOW()
+			) AA
+		LEFT JOIN ITEM_CNT BB ON AA.PROD_OFFER_ID = BB.item_code
+		AND BB.tenant_id = #tenantId# -->
+			SELECT
+			AA.*, ifnull(BB.PAGE_VIEW,0) PAGE_VIEW,
+			ifnull(BB.COLLECT_CNT,0) COLLECT_CNT
+		FROM
+			(
+			SELECT
+				A.*
+			FROM
+				PROD_OFFER A
+			WHERE A.COOPERATION_TYPE = '11'
+			AND A.STATUS_CD = '1000'
+			AND A.TENANT_ID = #tenantId#
+			AND A.exp_date >= NOW()
+		  	<isNotNull prepend="AND" property="dirId"> 
+		  		A.PROD_OFFER_ID in (select PROD_OFFER_ID from offer_catalog_location t1 
+		  						where t1.tenant_id = #tenantId# 
+		  						  and t1.dir_id in (
+		  						  	select dir_id from directory 
+		  						  	 where (dir_id = #dirId# or fa_dir_id = #dirId#) and tenant_id = 1 and dir_state='A' and dir_type=3
+		  						  )
+		  						)
+		  	</isNotNull> 				
+			) AA
+		LEFT JOIN ITEM_CNT BB ON AA.PROD_OFFER_ID = BB.item_code
+		AND BB.tenant_id = #tenantId# AND BB.item_type = 2
+	
+	</select>
+	
+	<select id="queryCRProductList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+<!-- 		SELECT
+			AA.*, ifnull(BB.PAGE_VIEW,0) PAGE_VIEW,
+			ifnull(BB.COLLECT_CNT,0) COLLECT_CNT
+		FROM
+			(
+			SELECT
+				A.*
+			FROM
+				PROD_OFFER A,
+				offer_catalog_location B,
+				`directory` C
+			WHERE
+				A.prod_offer_id = B.prod_offer_id
+			AND B.dir_id = C.dir_id
+			AND A.COOPERATION_TYPE = '11'
+			AND A.STATUS_CD != '1300'
+		<dynamic>
+			<isNotNull prepend="AND" property="dirId"> B.DIR_ID in (select dir_id from directory where fa_dir_id = #dirId# or dir_id=#dirId#)</isNotNull>
+		</dynamic>		
+			AND A.TENANT_ID = #tenantId#
+			AND B.TENANT_ID = #tenantId#
+			AND C.TENANT_ID = #tenantId#
+			AND C.DIR_STATE = 'A'
+			AND C.DIR_TYPE = '3'
+			AND A.exp_date >= NOW()
+			) AA
+		LEFT JOIN ITEM_CNT BB ON AA.PROD_OFFER_ID = BB.item_code
+		 AND BB.tenant_id = #tenantId#
+		left join item_sort its on AA.PROD_OFFER_ID = its.item_code 
+	 	 and its.item_type = 2
+	 	 and its.sort_type = 1
+	 	 and its.tenant_id = #tenantId#
+	   order by sort_no desc,prod_offer_id desc
+	   limit #startRow#,#pageSize# -->
+		SELECT
+			AA.*, ifnull(BB.PAGE_VIEW,0) PAGE_VIEW,
+			ifnull(BB.COLLECT_CNT,0) COLLECT_CNT
+		FROM
+			(
+			SELECT
+				A.*
+			FROM
+				PROD_OFFER A
+			WHERE
+			 A.COOPERATION_TYPE = '11'
+			AND A.STATUS_CD = '1000'
+			AND A.TENANT_ID = #tenantId#
+			AND A.exp_date >= NOW()
+		  	<isNotNull prepend="AND" property="dirId"> 
+		  		A.PROD_OFFER_ID IN (select PROD_OFFER_ID from offer_catalog_location t1 
+		  						where t1.tenant_id = #tenantId# 
+		  						  and t1.dir_id in (
+		  						  	select dir_id from directory 
+		  						  	 where (dir_id = #dirId# or fa_dir_id = #dirId#) and tenant_id = 1 and dir_state='A' and dir_type=3
+		  						  )
+		  						)
+		  	</isNotNull> 				
+			) AA
+		LEFT JOIN ITEM_CNT BB ON AA.PROD_OFFER_ID = BB.item_code
+		 AND BB.tenant_id = #tenantId# and BB.item_type = 2
+		left join item_sort its on AA.PROD_OFFER_ID = its.item_code 
+	 	 and its.item_type = 2
+	 	 and its.sort_type = 1
+	 	 and its.tenant_id = #tenantId#	 	 
+	   order by sort_no desc,prod_offer_id desc
+	   limit #startRow#,#pageSize#	   
+	</select>
+
+
+	<select id="queryNewProductList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+<!-- 		SELECT
+			AA.*, ifnull(BB.PAGE_VIEW,0) PAGE_VIEW,
+			ifnull(BB.COLLECT_CNT,0) COLLECT_CNT
+		FROM
+			(
+			SELECT
+				A.*
+			FROM
+				PROD_OFFER A,
+				offer_catalog_location B,
+				`directory` C
+			WHERE
+				A.prod_offer_id = B.prod_offer_id
+			AND B.dir_id = C.dir_id
+			AND A.COOPERATION_TYPE = '11'
+			AND A.STATUS_CD != '1300'
+		<dynamic>
+			<isNotNull prepend="AND" property="dirId"> B.DIR_ID in (select dir_id from directory where fa_dir_id = #dirId# or dir_id=#dirId#)</isNotNull>
+		</dynamic>				
+			AND A.TENANT_ID = #tenantId#
+			AND B.TENANT_ID = #tenantId#
+			AND C.TENANT_ID = #tenantId#
+			AND C.DIR_STATE = 'A'
+			AND C.DIR_TYPE = '3'
+			AND A.exp_date >= NOW()
+			) AA
+		LEFT JOIN ITEM_CNT BB ON AA.PROD_OFFER_ID = BB.item_code
+		AND BB.tenant_id = #tenantId#
+		ORDER BY AA.EFF_DATE DESC,AA.PROD_OFFER_ID DESC
+		limit #startRow#,#pageSize# -->
+
+		SELECT
+			AA.*, ifnull(BB.PAGE_VIEW,0) PAGE_VIEW,
+			ifnull(BB.COLLECT_CNT,0) COLLECT_CNT
+		FROM
+			(
+			SELECT
+				A.*
+			FROM
+				PROD_OFFER A
+			WHERE
+				A.COOPERATION_TYPE = '11'
+			AND A.STATUS_CD = '1000'
+			AND A.TENANT_ID = #tenantId#
+			AND A.exp_date >= NOW()
+		  	<isNotNull prepend="AND" property="dirId"> 
+		  		A.PROD_OFFER_ID in (select PROD_OFFER_ID from offer_catalog_location t1 
+		  						where t1.tenant_id = #tenantId# 
+		  						  and t1.dir_id in (
+		  						  	select dir_id from directory 
+		  						  	 where (dir_id = #dirId# or fa_dir_id = #dirId#) and tenant_id = 1 and dir_state='A' and dir_type=3
+		  						  )
+		  						)
+		  	</isNotNull> 				
+			) AA
+		LEFT JOIN ITEM_CNT BB ON AA.PROD_OFFER_ID = BB.item_code
+		AND BB.tenant_id = #tenantId#
+		ORDER BY AA.EFF_DATE DESC,AA.PROD_OFFER_ID DESC
+		limit #startRow#,#pageSize#		
+		
+	</select>
+	
+	<select id="queryProductOfferCnt" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer"> 
+<!-- 		SELECT COUNT(1) prod_offer_cnt
+		FROM
+			(
+			SELECT
+				A.*
+			FROM
+				PROD_OFFER A,
+				offer_catalog_location B,
+				`directory` C
+			WHERE
+				A.prod_offer_id = B.prod_offer_id
+			AND B.dir_id = C.dir_id
+			AND A.COOPERATION_TYPE = '11'
+			AND A.STATUS_CD != '1300'
+		<dynamic>
+			<isNotNull prepend="AND" property="dirId"> B.DIR_ID in (select dir_id from directory where fa_dir_id = #dirId# or dir_id=#dirId#)</isNotNull>
+		</dynamic>				
+			AND A.TENANT_ID = #tenantId#
+			AND B.TENANT_ID = #tenantId#
+			AND C.TENANT_ID = #tenantId#
+			AND C.DIR_STATE = 'A'
+			AND C.DIR_TYPE = '3'
+			AND A.exp_date >= NOW()
+			) AA -->
+
+		SELECT COUNT(1) prod_offer_cnt
+		FROM
+			(
+			SELECT
+				A.*
+			FROM PROD_OFFER A
+			WHERE A.COOPERATION_TYPE = '11'
+			AND A.STATUS_CD = '1000'
+			AND A.TENANT_ID = #tenantId#
+			AND A.exp_date >= NOW()
+		  	<isNotNull prepend="AND" property="dirId"> 
+		  		A.prod_offer_id in (select prod_offer_id from offer_catalog_location t1 
+		  						where t1.tenant_id = #tenantId# 
+		  						  and t1.dir_id in (
+		  						  	select dir_id from directory 
+		  						  	 where (dir_id = #dirId# or fa_dir_id = #dirId#) and tenant_id = 1 and dir_state='A' and dir_type=3
+		  						  )
+		  						)
+		  	</isNotNull> 			
+			) AA			
+			
+	 </select>
+
+
+
+</sqlMap>

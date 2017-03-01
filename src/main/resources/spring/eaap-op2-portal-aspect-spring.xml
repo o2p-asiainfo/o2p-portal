@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd"
+	default-autowire="byName">
+		
+
+		<!--UTC时间处理拦截器-->
+ 		<bean id="utcAspectForSpring" class="com.ailk.o2p.portal.utils.UtcAspectForSpring"/>
+ 		<aop:config proxy-target-class="true"> 
+ 			<aop:aspect ref="utcAspectForSpring"> 
+ 				<aop:around method="aroundMethod" pointcut="
+ 				(execution(* com.ailk.o2p.portal.dao.*.*.*(..)) and !execution(* com.ailk.o2p.portal.dao.*.*.delete*(..)))"/>  
+ 			</aop:aspect> 
+ 		</aop:config> 
+		
+		<!--国际化处理拦截器-->
+		<bean id="i18nAspectForSpring" class="com.ailk.o2p.portal.utils.I18nAspectForSpring" init-method="initialize"/>
+		<aop:config proxy-target-class="true">
+			<aop:aspect ref="i18nAspectForSpring">
+				<aop:around method="aroundMethod" pointcut="
+				execution(* com.ailk.eaap.op2.dao.MainDataDaoImpl.*(..))
+				|| execution(* com.ailk.o2p.portal.dao.doc.ApiDocumentDao.*(..))
+				"/> 
+			</aop:aspect>
+		</aop:config>
+		
+		<!--租户拦截器-->
+	<bean id="tenantAspectForSpring" class="com.ailk.o2p.portal.utils.TenantAspectForSpring" />
+	<aop:config proxy-target-class="true">
+		<aop:aspect ref="tenantAspectForSpring">
+			<aop:around method="aroundMethod"
+				pointcut="(execution(* com.ailk.o2p.portal.dao.*.*.*(..)) || execution(* com.ailk.eaap.op2.dao.*.*(..)) || execution(* com.ailk.eaap.op2.settleRuleOrgRel.dao.*.*(..)) || execution(* com.ailk.eaap.op2.informationArchiving.dao.*.*(..)))" />
+		</aop:aspect>
+	</aop:config>
+		
+		<!--
+ 		<bean id="measureAspectForSpring" class="com.ailk.o2p.portal.utils.MeasureUnitAspect"/>
+ 		<aop:config proxy-target-class="true"> 
+ 			<aop:aspect ref="measureAspectForSpring"> 
+ 				<aop:around method="aroundMethod" pointcut="execution(* com.ailk.o2p.portal.dao.price.PricePlanDetailImpl.*(..)) "/>  
+ 			</aop:aspect> 
+ 		</aop:config> 
+ 		-->
+</beans>

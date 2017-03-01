@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="partner">
+	
+	<select id="queryDirById" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		SELECT dir_id FROM directory dr WHERE (dr.dir_id in (#dirId#) or dr.fa_dir_id in (#dirId#)) and dr.dir_state='A'
+		<isNotNull prepend="AND" property="tenantId"> dr.tenant_id = #tenantId#</isNotNull>
+	</select>
+	
+	<select id="queryPartnerInfo" parameterClass="com.asiainfo.integration.o2p.web.bo.Org"  resultClass="java.util.HashMap">
+	   SELECT org.org_id ,name,org_code ,org_username ,s_file_id ,logo_file_id,org.descriptor
+	 	 from org 
+	     <dynamic prepend="where">
+			 	<isNotNull prepend="AND" property="orgId"> org.org_id = #orgId#</isNotNull>
+			 	<isNotNull prepend="AND" property="tenantId"> org.tenant_id = #tenantId#</isNotNull>
+		 </dynamic>	
+	</select>
+	
+	
+	<select id="queryArticleList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select t1.article_id,t1.article_title,t1.article_content
+		  from ITEM_ARTICLE t1
+		 where t1.column_id = #columnId# and t1.tenant_id = #tenantId# and t1.state='A'
+		 <dynamic>
+	 		<isNotNull prepend="AND" property="itemCode">
+ 				t1.item_code=#itemCode#
+	 		</isNotNull>
+		 </dynamic>	
+		 order by t1.article_sort
+		 
+	</select>
+	
+	<select id="queryCategoryByOrgId" parameterClass="com.asiainfo.integration.o2p.web.bo.Org" resultClass="java.lang.String">
+		select t3.dir_name dirName 
+		  from org t1
+		  left join org_category t2 on t1.org_id = t2.org_id and t2.tenant_id = #tenantId#
+		  left join directory t3 on t2.dir_id = t3.dir_id and t3.tenant_id = #tenantId#
+	     where t1.state = 'D'
+	       and t1.org_id = #orgId#
+	       and t3.fa_dir_id is null
+	       and t1.tenant_id = #tenantId#
+
+	</select>
+	
+	
+	 <select id="queryPartnerList" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap"> 
+	   SELECT org.org_id ,name,org_code ,org_username ,s_file_id ,org.descriptor,ifnull(ic.page_view,0) page_view,t1.provide_api_cnt,t1.provide_prod_cnt
+	 	 from org 
+	 	<!-- inner join org_category t1 on org.org_id = t1.org_id -->
+	 	 left join item_sort its on org.org_id = its.item_code 
+	 	  and its.item_type = 3 
+	 	  and its.sort_type = 1
+	 	  and its.tenant_id = #tenantId#
+	 	 left join item_cnt ic 
+	       on org.org_id = ic.item_code
+	      and ic.item_type = 3
+	      and ic.tenant_id = #tenantId#
+	     left join (select t1.offer_provider_id,
+	                       count(distinct case when cooperation_type=11 then t1.prod_offer_id end) provide_prod_cnt,
+	                       count(distinct case when cooperation_type=13 then t1.prod_offer_id end) provide_api_cnt
+	                  from prod_offer t1, offer_catalog_location t2 where t1.prod_offer_id = t2.prod_offer_id and t1.status_cd = '1000' AND t1.exp_date >= NOW() and t1.tenant_id = #tenantId#
+	                   and t2.tenant_id = #tenantId#
+	                 group by offer_provider_id ) t1 on org.org_id = t1.offer_provider_id
+		where org.state='D'
+	     <dynamic>
+			 	<isNotNull prepend="AND" property="orgId"> org.org_id = #orgId#</isNotNull>
+			 	<!-- <isNotNull prepend="AND" property="dirId"> t1.dir_id in (select dir_id from directory where dir_id = #dirId# or fa_dir_id= #dirId#)</isNotNull> -->
+			  	<isNotNull prepend="AND" property="dirId"> 
+			  		org.org_id in (select org_id from org_category t1 
+			  						where t1.tenant_id = #tenantId# 
+			  						  and t1.dir_id in (
+			  						  	select dir_id from directory 
+			  						  	 where (dir_id = #dirId# or fa_dir_id = #dirId#) and tenant_id = 1 and dir_state = 'A'
+			  						  )
+			  						)
+			  	</isNotNull> 
+			 	<isNotNull prepend="AND" property="tenantId"> org.tenant_id = #tenantId#</isNotNull>
+
+		 </dynamic>	
+		 <dynamic>
+		 		<isNotNull property="sortType">
+		 			<isEqual prepend="ORDER BY" property="sortType" compareValue="1">
+		 				sort_no desc,org_id desc
+		 			</isEqual>
+		 			<isEqual prepend="ORDER BY" property="sortType" compareValue="2">
+		 				org.state_time desc
+		 			</isEqual>
+		 			<isEqual prepend="ORDER BY" property="sortType" compareValue="3">
+		 				ic.page_view desc,org_id
+		 			</isEqual>		 			
+		 		</isNotNull>
+		 </dynamic>	 
+		 limit #startRow#,#pageSize#
+	 </select>
+
+
+	 <select id="queryPartnerCnt" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer"> 
+	   SELECT count(1) partner_cnt
+	 	 from org 
+	 	<!--  inner join org_category t1 on org.org_id = t1.org_id -->
+		where org.state='D'
+	     <dynamic>
+			 	<isNotNull prepend="AND" property="orgId"> org.org_id = #orgId#</isNotNull>
+			 	<!-- <isNotNull prepend="AND" property="dirId"> t1.dir_id in (select dir_id from directory where dir_id = #dirId# or fa_dir_id= #dirId#)</isNotNull> -->
+			  	<isNotNull prepend="AND" property="dirId"> 
+			  		org.org_id in (select org_id from org_category t1 
+			  						where t1.tenant_id = #tenantId# 
+			  						  and t1.dir_id in (
+			  						  	select dir_id from directory 
+			  						  	 where (dir_id = #dirId# or fa_dir_id = #dirId#) and tenant_id = 1 and dir_state = 'A'
+			  						  )
+			  						)
+			  	</isNotNull> 
+			 	<isNotNull prepend="AND" property="tenantId"> org.tenant_id = #tenantId#</isNotNull>
+		 </dynamic>	
+	 </select>
+
+	<!-- provider product offer -->
+	<select id="queryOrgCategory" parameterClass="com.ailk.eaap.op2.bo.Directory" resultClass="java.util.HashMap">
+		SELECT
+			t1.dir_id,
+			t1.dir_name,
+			t2.s_file_name
+		FROM
+			DIRECTORY t1
+		LEFT JOIN file_share t2 ON t1.s_file_id = t2.s_file_id and t2.tenant_id = #tenantId#
+		where t1.dir_type = 5 and t1.tenant_id = #tenantId# and t1.dir_state='A'
+	     <dynamic>
+			 	<isNotNull prepend="AND" property="dirId"> t1.fa_dir_id = #dirId#</isNotNull>
+			 	<isNull prepend="AND" property="dirId"> t1.fa_dir_id is null</isNull>
+		 </dynamic>			
+	</select>
+
+
+	<select id="queryAllOrgCategory" parameterClass="com.ailk.eaap.op2.bo.Directory" resultClass="com.ailk.eaap.op2.bo.Directory">
+		SELECT
+			t1.dir_id dirId,
+			t1.dir_name dirName,
+			t1.fa_dir_id faDirId,
+			t1.dir_code dirCode
+		FROM
+			DIRECTORY t1
+		where t1.dir_type = 5 and t1.dir_state='A' and t1.tenant_id = #tenantId#	
+	</select>
+
+	<!-- provider product offer -->
+	<select id="queryMyProdOffer" parameterClass="com.asiainfo.integration.o2p.web.bo.Org" resultClass="com.ailk.eaap.op2.bo.ProdOffer">
+		SELECT distinct A.prod_offer_id prodOfferId,
+			   A.prod_offer_name prodOfferName,
+			   A.logo_file_id	logoFileId
+			   FROM PROD_OFFER  A,offer_catalog_location B
+		 where A.PROD_OFFER_ID = B.PROD_OFFER_ID AND A.OFFER_PROVIDER_ID=#orgId# and A.COOPERATION_TYPE in     
+  	('11')  AND A.STATUS_CD = '1000' AND A.exp_date >= NOW() and A.tenant_id = #tenantId# AND B.tenant_id=#tenantId#  ORDER BY  A.prod_offer_id DESC 
+	</select>
+	
+	<!-- provider API offer -->
+	<select id="queryMyApiOffer" parameterClass="com.asiainfo.integration.o2p.web.bo.Org" resultClass="com.ailk.eaap.op2.bo.ProdOffer">
+		SELECT distinct A.prod_offer_id prodOfferId,
+			   A.prod_offer_name prodOfferName,
+			   A.logo_file_id	logoFileId
+			   FROM PROD_OFFER  A,offer_catalog_location B
+		 where A.PROD_OFFER_ID = B.PROD_OFFER_ID AND A.OFFER_PROVIDER_ID=#orgId# and A.COOPERATION_TYPE in     
+  	('13')  AND A.STATUS_CD = '1000' AND A.exp_date >= NOW() and A.tenant_id = #tenantId# AND B.tenant_id=#tenantId#  ORDER BY  A.prod_offer_id DESC 
+	</select>
+
+	<!-- consumer api offer -->
+	<select id="queryConsumerApiOffer" parameterClass="com.asiainfo.integration.o2p.web.bo.Org" resultClass="com.ailk.eaap.op2.bo.ProdOffer">
+		SELECT PO.prod_offer_id prodOfferId,
+			   PO.prod_offer_name prodOfferName,
+			   PO.logo_file_id	logoFileId
+		  FROM PROD_OFFER PO,org_offer_order_rela  OOOR
+		 where PO.COOPERATION_TYPE in ('13')  AND PO.STATUS_CD = '1000' 
+		   and po.tenant_id = #tenantId# AND PO.exp_date >= NOW()
+		   and PO.prod_offer_id = OOOR.PROD_OFFER_ID  and OOOR.ORG_ID=#orgId#
+		  and OOOR.tenant_id = #tenantId#
+		   
+	</select>
+	
+	<!-- resale product offer -->
+	<select id="queryResaleProdOffer" parameterClass="com.asiainfo.integration.o2p.web.bo.Org" resultClass="com.ailk.eaap.op2.bo.ProdOffer">
+		SELECT PO.prod_offer_id prodOfferId,
+			   PO.prod_offer_name prodOfferName,
+			   PO.logo_file_id	logoFileId
+		  FROM PROD_OFFER PO ,org_offer_order_rela OOOR
+		 where PO.COOPERATION_TYPE in ('11')  AND PO.STATUS_CD = '1000' 
+		   AND PO.tenant_id = #tenantId# AND PO.exp_date >= NOW()
+		   and PO.prod_offer_id = OOOR.PROD_OFFER_ID and OOOR.ORG_ID=#orgId#
+		   and OOOR.tenant_id = #tenantId#
+	</select>
+	
+	
+	<select id="queryItemCnt" parameterClass="com.ailk.eaap.op2.bo.ItemCnt" resultClass="com.ailk.eaap.op2.bo.ItemCnt">
+	  	  select item_cnt_id itemCntId,item_code itemCode,item_type itemType,page_view pageView
+	  	    from item_cnt
+	  	   where item_code = #itemCode# and item_type=#itemType# and tenant_id = #tenantId#
+	</select>
+	
+	
+	<update id="updateItemCnt" parameterClass="com.ailk.eaap.op2.bo.ItemCnt" >
+	  	  update ITEM_CNT set PAGE_VIEW= #pageView#
+		  where ITEM_CODE = #itemCode# and item_type=#itemType# and tenant_id = #tenantId#
+	</update>
+	
+	<insert id="insertItemCnt" parameterClass="com.ailk.eaap.op2.bo.ItemCnt">
+	  	<selectKey resultClass="java.lang.String" keyProperty="itemCntId">
+			SELECT nextval('SEQ_ITEM_CNT') from dual
+	    </selectKey>	
+		insert into item_cnt (tenant_id
+		<dynamic prepend="">
+			<isNotNull prepend="," property="itemCntId">item_cnt_id</isNotNull>
+			<isNotNull prepend="," property="itemCode">item_code</isNotNull>
+			<isNotNull prepend="," property="itemType">item_type</isNotNull>
+			<isNotNull prepend="," property="pageView">page_view</isNotNull>
+			<!-- <isNotNull prepend="," property="tenantId">tenant_id</isNotNull> -->
+		</dynamic>
+		)
+		values (#tenantId#
+		<dynamic prepend="">
+			<isNotNull prepend="," property="itemCntId">#itemCntId#</isNotNull>
+			<isNotNull prepend="," property="itemCode">#itemCode#</isNotNull>
+			<isNotNull prepend="," property="itemType">#itemType#</isNotNull>
+			<isNotNull prepend="," property="pageView">#pageView#</isNotNull>
+			<!-- <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> -->
+		</dynamic>		
+		)
+	</insert>
+	
+</sqlMap>

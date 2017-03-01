@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-pardMealRate">
+
+	<select id="getVoiceList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	 SELECT A.OFFER_TYPE , A.STATUS_CD , A.VALUE_ADDED_FLAG , A.COOPERATION_TYPE ,B.ATTR_SPEC_ID ,B.ATTR_SPEC_NAME ,C.PROD_OFFER_ATTR_ID ,C.MIN_VALUE,C.MAX_VALUE,C.STATUS_CD,C.DEFAULT_VALUE ,D.MAIND_ID MAINDID, D.CEP_NAME ,B.SCALE 
+     FROM 
+     PROD_OFFER A , ATTR_SPEC B, PROD_OFFER_ATTR C ,MAIN_DATA D ,MAIN_DATA_TYPE E 
+     WHERE 
+     	A.PROD_OFFER_ID = C.PROD_OFFER_ID AND C.ATTR_SPEC_ID = B.ATTR_SPEC_ID AND trim(B.UNIT) = D.CEP_CODE  AND E.MDT_CD = D.MDT_CD AND C.STATUS_CD = '10' AND A.STATUS_CD != '1300' AND INSTR(B.ATTR_SPEC_CODE,'PRICING_VOICE_')>0   
+     	and A.TENANT_ID=#tenantId#
+     	and B.TENANT_ID=#tenantId#
+     	and C.TENANT_ID=#tenantId#
+     	and D.TENANT_ID=#tenantId#
+     	and E.TENANT_ID=#tenantId#
+     <dynamic>
+		 	<isNotNull prepend="AND" property="mdt_sign"> E.MDT_SIGN = #mdt_sign#</isNotNull>
+		 	<isNotNull prepend="AND" property="prodOfferId">  A.PROD_OFFER_ID = #prodOfferId#</isNotNull>
+	 </dynamic>
+     ORDER BY  B.ATTR_SPEC_ID 
+	</select>
+	
+	<select id="getDataList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	 SELECT A.OFFER_TYPE , A.STATUS_CD , A.VALUE_ADDED_FLAG , A.COOPERATION_TYPE ,B.ATTR_SPEC_ID ,B.ATTR_SPEC_NAME ,C.PROD_OFFER_ATTR_ID,C.MIN_VALUE,C.MAX_VALUE,C.STATUS_CD,C.DEFAULT_VALUE ,D.MAIND_ID MAINDID, D.CEP_NAME ,B.SCALE    
+     FROM 
+     PROD_OFFER A , ATTR_SPEC B, PROD_OFFER_ATTR C ,MAIN_DATA D ,MAIN_DATA_TYPE E 
+     WHERE 
+     A.PROD_OFFER_ID = C.PROD_OFFER_ID AND C.ATTR_SPEC_ID = B.ATTR_SPEC_ID AND trim(B.UNIT) = D.CEP_CODE  AND E.MDT_CD = D.MDT_CD AND C.STATUS_CD = '10' AND A.STATUS_CD != '1300' AND INSTR(B.ATTR_SPEC_CODE,'PRICING_DATA_')>0  
+     	and A.TENANT_ID=#tenantId#
+     	and B.TENANT_ID=#tenantId#
+     	and C.TENANT_ID=#tenantId#
+     	and D.TENANT_ID=#tenantId#
+     	and E.TENANT_ID=#tenantId#
+     <dynamic>
+		 	<isNotNull prepend="AND" property="mdt_sign"> E.MDT_SIGN = #mdt_sign#</isNotNull>
+		 	<isNotNull prepend="AND" property="prodOfferId">  A.PROD_OFFER_ID = #prodOfferId#</isNotNull>
+	 </dynamic>
+     ORDER BY  B.ATTR_SPEC_ID
+	</select>
+	
+	<select id="getMsgList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	 SELECT A.OFFER_TYPE , A.STATUS_CD , A.VALUE_ADDED_FLAG , A.COOPERATION_TYPE ,B.ATTR_SPEC_ID ,B.ATTR_SPEC_NAME ,C.PROD_OFFER_ATTR_ID,C.MIN_VALUE,C.MAX_VALUE,C.STATUS_CD,C.DEFAULT_VALUE ,D.MAIND_ID MAINDID, D.CEP_NAME ,B.SCALE 
+     FROM 
+     PROD_OFFER A , ATTR_SPEC B, PROD_OFFER_ATTR C ,MAIN_DATA D ,MAIN_DATA_TYPE E 
+     WHERE 
+     A.PROD_OFFER_ID = C.PROD_OFFER_ID AND C.ATTR_SPEC_ID = B.ATTR_SPEC_ID AND trim(B.UNIT) = D.CEP_CODE  AND E.MDT_CD = D.MDT_CD AND C.STATUS_CD = '10' AND A.STATUS_CD != '1300' AND INSTR(B.ATTR_SPEC_CODE,'PRICING_MSG_')>0  
+     	and A.TENANT_ID=#tenantId#
+     	and B.TENANT_ID=#tenantId#
+     	and C.TENANT_ID=#tenantId#
+     	and D.TENANT_ID=#tenantId#
+     	and E.TENANT_ID=#tenantId#
+     <dynamic>
+		 	<isNotNull prepend="AND" property="mdt_sign"> E.MDT_SIGN = #mdt_sign#</isNotNull>
+		 	<isNotNull prepend="AND" property="prodOfferId">  A.PROD_OFFER_ID = #prodOfferId#</isNotNull>
+	 </dynamic> 
+     ORDER BY  B.ATTR_SPEC_ID 
+	</select>
+	
+	<select id="getProductList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT B.PRODUCT_ID , B.PRODUCT_NAME ,B.PRODUCT_TYPE,B.STATUS_CD,B.PROD_FUNC_TYPE,B.VALUE_ADDED_FLAG,B.IS_TEMPLATE,B.COOPERATION_TYPE,C.ROLE_CD,C.MAX_COUNT,C.MIN_COUNT,C.RULE_TYPE,C.COMPOENT_TYPE ,C.DEFAULT_COUNT ,C.OFFER_PROD_RELA_ID 
+		FROM 
+		PROD_OFFER A , PRODUCT B , OFFER_PROD_REL C 
+		WHERE 
+		B.PRODUCT_ID = C.PRODUCT_ID AND C.PROD_OFFER_ID = A.PROD_OFFER_ID AND A.STATUS_CD != '1300' AND  B.STATUS_CD != '1300' AND  
+		C.COMPOENT_TYPE = '30' AND A.PROD_OFFER_ID = #prodOfferId# 
+		and A.TENANT_ID=#tenantId#
+     	and B.TENANT_ID=#tenantId#
+     	and C.TENANT_ID=#tenantId#
+		ORDER BY B.PRODUCT_ID
+	</select>
+	
+	<select id="queryProdOfferCount" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	  SELECT COUNT(1) ALLNUM  FROM PROD_OFFER A
+		<dynamic prepend="WHERE">
+		 	<isNotNull prepend="AND" property="orgId"> A.OFFER_PROVIDER_ID=#orgId#</isNotNull>
+		 	<isNotNull prepend="AND" property="prodOfferName"> A.PROD_OFFER_NAME LIKE concat('%',#prodOfferName#,'%') </isNotNull>
+		</dynamic>
+		  AND A.TENANT_ID=#tenantId#
+		  AND A.STATUS_CD != '1300'
+		  AND A.COOPERATION_TYPE = '10'
+ 	</select>
+ 	
+ 	<select id="showProdOfferList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">	
+		  SELECT A.PROD_OFFER_ID  PROD_OFFER_ID ,A.PROD_OFFER_NAME PROD_OFFER_NAME,A.STATUS_CD STATUS_CD,A.PROD_OFFER_DESC PROD_OFFER_DESC  
+		  FROM  PROD_OFFER  A
+		 <dynamic prepend="WHERE">
+		 	<isNotNull prepend="AND" property="orgId"> A.OFFER_PROVIDER_ID=#orgId#</isNotNull>
+		 	<isNotNull prepend="AND" property="prodOfferName"> A.PROD_OFFER_NAME LIKE concat('%',#prodOfferName#,'%') </isNotNull>
+		 </dynamic>
+		   AND A.TENANT_ID=#tenantId#
+		   AND A.STATUS_CD != '1300'
+		   AND A.COOPERATION_TYPE = '10'
+		   LIMIT #start#,#pageRecord# 
+	</select>
+	
+	<select id="queryMoreExtByOrgId" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+	  SELECT COUNT(1) FROM PROD_OFFER A
+		<dynamic prepend="WHERE">
+		 	<isNotNull prepend="AND" property="orgId"> A.OFFER_PROVIDER_ID=#orgId#</isNotNull>
+		 	<isNotNull prepend="AND" property="extProdOfferId"> A.EXT_PROD_OFFER_ID=#extProdOfferId# </isNotNull>
+		</dynamic>
+		  AND A.TENANT_ID=#tenantId#
+		  AND A.STATUS_CD != '1300'
+		  AND A.COOPERATION_TYPE = '10'
+ 	</select>
+	
+ <select id="selectPricingListByOfferId" parameterClass="com.ailk.eaap.op2.bo.ProdOffer" resultClass="java.util.HashMap">
+	SELECT E.NAME , D.PRICING_DESC ,D.PRICING_INFO_ID ,D.BEYOND_DESC  
+    FROM PROD_OFFER_PRICING A , PRICING_PLAN D , PRICING_CLASSIFY E  
+    WHERE A.PRICING_INFO_ID = D.PRICING_INFO_ID 
+    AND D.PRICING_CLASSIFY = E.CD AND  A.PROD_OFFER_ID = #prodOfferId# 
+	AND A.TENANT_ID=#tenantId#
+	AND D.TENANT_ID=#tenantId#
+	AND E.TENANT_ID=#tenantId#
+ </select>
+ 
+</sqlMap>

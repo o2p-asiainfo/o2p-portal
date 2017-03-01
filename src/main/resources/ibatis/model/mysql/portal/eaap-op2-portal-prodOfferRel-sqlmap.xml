@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-prodOfferRel">
+
+   <delete id="deleteprodOfferRel" parameterClass="com.ailk.eaap.op2.bo.ProdOfferRel">
+	  delete from PROD_OFFER_REL
+	  <dynamic prepend="where">
+	    <isNotNull prepend="and" property="prodOfferRelId"> PROD_OFFER_RELA_ID=#prodOfferRelId# </isNotNull>
+	    <isNotNull prepend="and" property="offerAId"> OFFER_A_ID=#offerAId# </isNotNull>
+        <isNotNull prepend="and" property="offerZId"> OFFER_Z_ID=#offerZId# </isNotNull>
+         <isNotNull prepend="and" property="tenantId"> TENANT_ID=#tenantId# </isNotNull>
+  </dynamic>
+</delete>
+
+<update id="updateProdOfferRel" parameterClass="com.ailk.eaap.op2.bo.ProdOfferRel">
+  update PROD_OFFER_REL
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="roleId">ROLE_CD=#roleId#</isNotNull>
+    <isNotNull prepend="," property="offerAId">OFFER_A_ID=#offerAId#</isNotNull>
+    <isNotNull prepend="," property="offerZId">OFFER_Z_ID=#offerZId#</isNotNull>
+    <isNotNull prepend="," property="maxCount">MAX_COUNT=#maxCount#</isNotNull>
+    <isNotNull prepend="," property="minCount">MIN_COUNT=#minCount#</isNotNull>
+    <isNotNull prepend="," property="effDate">EFF_DATE=#effDate#</isNotNull>
+    <isNotNull prepend="," property="expDate">EXP_DATE=#expDate#</isNotNull>
+    <isNotNull prepend="," property="tenantId">TENANT_ID=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="prodOfferRelId"> PROD_OFFER_RELA_ID=#prodOfferRelId# </isNotNull>
+    <isNotNull prepend="and" property="offerAId"> OFFER_A_ID=#offerAId# </isNotNull>
+    <isNotNull prepend="and" property="offerZId"> OFFER_Z_ID=#offerZId# </isNotNull>
+    <isNotNull prepend="and" property="relTypeCd"> RELATION_TYPE_CD=#relTypeCd# </isNotNull>
+    <isNotNull prepend="and" property="tenantId"> TENANT_ID=#tenantId# </isNotNull>
+  </dynamic>
+</update>
+
+<insert id="insertProdOfferRel" parameterClass="com.ailk.eaap.op2.bo.ProdOfferRel">
+        <selectKey resultClass="int" keyProperty="prodOfferRelId">
+        SELECT nextval('SEQ_PROD_OFFER_REL') FROM DUAL
+		</selectKey>	
+  insert into PROD_OFFER_REL
+  (PROD_OFFER_RELA_ID
+ <dynamic>
+    <isNotNull prepend="," property="roleId">ROLE_CD</isNotNull>
+    <isNotNull prepend="," property="offerAId">OFFER_A_ID</isNotNull>
+    <isNotNull prepend="," property="offerZId">OFFER_Z_ID</isNotNull>
+    <isNotNull prepend="," property="maxCount">MAX_COUNT</isNotNull>
+    <isNotNull prepend="," property="minCount">MIN_COUNT</isNotNull>
+    <isNotNull prepend="," property="relTypeCd">RELATION_TYPE_CD</isNotNull>
+    <isNotNull prepend="," property="effDate">EFF_DATE</isNotNull>
+    <isNotNull prepend="," property="expDate">EXP_DATE</isNotNull>
+    <isNotNull prepend="," property="tenantId">TENANT_ID</isNotNull>
+ </dynamic>
+ )
+  values 
+  (#prodOfferRelId#
+  <dynamic>
+    <isNotNull prepend="," property="roleId">#roleId#</isNotNull>
+    <isNotNull prepend="," property="offerAId">#offerAId#</isNotNull>
+    <isNotNull prepend="," property="offerZId">#offerZId#</isNotNull>
+    <isNotNull prepend="," property="maxCount">#maxCount#</isNotNull>
+    <isNotNull prepend="," property="minCount">#minCount#</isNotNull>
+    <isNotNull prepend="," property="relTypeCd">#relTypeCd#</isNotNull>
+    <isNotNull prepend="," property="effDate">#effDate#</isNotNull>
+    <isNotNull prepend="," property="expDate">#expDate#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+
+<select id="selectProdOfferRel" parameterClass="com.ailk.eaap.op2.bo.ProdOfferRel" resultClass="com.ailk.eaap.op2.bo.ProdOfferRel">
+  select PROD_OFFER_RELA_ID prodOfferRelId,
+         ROLE_CD roleId,
+         OFFER_A_ID offerAId,
+         OFFER_Z_ID offerZId,
+         MAX_COUNT maxCount,
+         MIN_COUNT minCount,
+         RELATION_TYPE_CD relTypeCd,
+         EFF_DATE effDate,
+		 EXP_DATE expDate
+ from PROD_OFFER_REL
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="prodOfferRelId"> PROD_OFFER_RELA_ID=#prodOfferRelId#</isNotNull>
+    <isNotNull prepend="and" property="roleId"> ROLE_CD=#roleId#</isNotNull>
+    <isNotNull prepend="and" property="offerAId"> OFFER_A_ID=#offerAId#</isNotNull>
+    <isNotNull prepend="and" property="offerZId"> OFFER_Z_ID=#offerZId#</isNotNull>
+    <isNotNull prepend="and" property="maxCount"> MAX_COUNT=#maxCount#</isNotNull>
+    <isNotNull prepend="and" property="minCount"> MIN_COUNT=#minCount#</isNotNull>
+    <isNotNull prepend="and" property="relTypeCd"> RELATION_TYPE_CD=#relTypeCd#</isNotNull>
+    <isNotNull prepend="and" property="effDate">
+    	<![CDATA[ CAST(SUBSTR(eff_Date,1,6) AS DECIMAL)>=#effDate# ]]>
+    </isNotNull>
+    <isNotNull prepend="and" property="expDate">
+		<![CDATA[ CAST(SUBSTR(exp_Date,1,6) AS DECIMAL)<=#expDate# ]]>
+	</isNotNull>
+	 <isNotNull prepend="and" property="tenantId"> TENANT_ID=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+
+<select id="queryProdOfferRel" parameterClass="com.ailk.eaap.op2.bo.ProdOfferRel" resultClass="com.ailk.eaap.op2.bo.ProdOfferRel">
+select PROD_OFFER_RELA_ID prodOfferRelId,
+         ROLE_CD roleId,
+         OFFER_A_ID offerAId,
+         OFFER_Z_ID offerZId,
+         MAX_COUNT maxCount,
+         MIN_COUNT minCount,
+         RELATION_TYPE_CD relTypeCd,
+         EFF_DATE effDate,
+		 EXP_DATE expDate,
+		 TENANT_ID tenantId
+ from PROD_OFFER_REL
+ where OFFER_A_ID=#offerAId# and OFFER_Z_ID=#offerZId# and RELATION_TYPE_CD=#relTypeCd#
+			and TENANT_ID=#tenantId#
+ </select>
+</sqlMap>

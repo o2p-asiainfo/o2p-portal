@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="eaap-op2-portal-pardSell">
+ 	<!--查询可销售产品列表 -->
+ 	<select id="queryPardSell" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">	
+		SELECT T.PROD_OFFER_ID, T.PROD_OFFER_NAME, T.OFFER_NBR, A.NAME, 
+		 	   T.PROD_OFFER_DESC, TT.STATUS_CD, TT.AUDIT_FLOW_ID
+ 		FROM PROD_OFFER T,PROD_OFFER_CHANNEL TT, CHANNEL TTT, PROD_OFFER_CHANNEL_TYPE TTTT, ORG A
+ 	    WHERE T.OFFER_PROVIDER_ID = #OFFER_PROVIDER_ID#
+ 	    AND T.PROD_OFFER_ID = TT.PROD_OFFER_ID
+ 	    AND TT.CHANNEL_ID = TTT.CHANNEL_ID
+ 	    AND TT.STATUS_CD = #STATUS_CD#
+ 	    AND TTT.STATUS_CD = '1000'
+ 	    AND T.PROD_OFFER_ID = TTTT.PROD_OFFER_ID
+ 	    AND TTTT.CHANNEL_TYPE = '20'
+ 	    AND T.OFFER_PROVIDER_ID = A.ORG_ID
+ 	    AND T.STATUS_CD = '1000'
+ 	    AND T.TENANT_ID=#tenantId#
+ 	    AND TT.TENANT_ID=#tenantId#
+ 	    AND TTT.TENANT_ID=#tenantId#
+ 	    AND TTTT.TENANT_ID=#tenantId#
+ 	    AND A.TENANT_ID=#tenantId#
+ 	    <isNotNull prepend="AND" property="PROD_OFFER_NAME"> 
+ 	    	T.PROD_OFFER_NAME = #PROD_OFFER_NAME#
+ 	    </isNotNull>
+		LIMIT #start#,#pageRecord# 
+	</select>
+ 	
+ 	<!--查询可销售产品总数 -->
+ 	<select id="queryPardSellNum" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+ 		SELECT COUNT(1) TOTAL_NUM
+ 		FROM PROD_OFFER T ,PROD_OFFER_CHANNEL TT , CHANNEL TTT, PROD_OFFER_CHANNEL_TYPE TTTT, ORG A
+ 	    WHERE T.OFFER_PROVIDER_ID = #OFFER_PROVIDER_ID#
+ 	    AND T.PROD_OFFER_ID = TT.PROD_OFFER_ID
+ 	    AND TT.CHANNEL_ID = TTT.CHANNEL_ID
+ 	    AND TT.STATUS_CD = #STATUS_CD#
+ 	    AND TTT.STATUS_CD = '1000'
+ 	    AND T.PROD_OFFER_ID = TTTT.PROD_OFFER_ID
+ 	    AND TTTT.CHANNEL_TYPE = '20'
+ 	    AND T.OFFER_PROVIDER_ID = A.ORG_ID
+ 	    AND T.STATUS_CD = '1000'
+ 	    AND T.TENANT_ID=#tenantId#
+ 	    AND TT.TENANT_ID=#tenantId#
+ 	    AND TTT.TENANT_ID=#tenantId#
+ 	    AND TTTT.TENANT_ID=#tenantId#
+ 	    AND A.TENANT_ID=#tenantId#
+ 	    <isNotNull prepend="AND" property="PROD_OFFER_NAME"> 
+ 	    	T.PROD_OFFER_NAME = #PROD_OFFER_NAME#
+ 	    </isNotNull>
+ 	</select>
+ 	
+ 	<!--可添加产品查询 -->
+ 	<select id="queryAddProd" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT T.PROD_OFFER_ID, A.NAME, T.PROD_OFFER_NAME, T.OFFER_NBR,
+			   T.INNER_OFFER_NAME, T.PROD_OFFER_DESC
+	 	FROM PROD_OFFER T, PROD_OFFER_CHANNEL_TYPE TTT, ORG A
+	    WHERE T.OFFER_PROVIDER_ID = #OFFER_PROVIDER_ID#
+	    AND T.COOPERATION_TYPE = #COOPERATION_TYPE#
+	    AND T.PROD_OFFER_ID = TTT.PROD_OFFER_ID
+ 	    AND TTT.CHANNEL_TYPE = '20'
+ 	    AND T.OFFER_PROVIDER_ID = A.ORG_ID
+ 	    AND T.STATUS_CD = '1000'
+	    AND NOT EXISTS 
+	    (
+		    SELECT (1) FROM PROD_OFFER_CHANNEL TT
+		    WHERE T.PROD_OFFER_ID = TT.PROD_OFFER_ID
+		    AND TT.STATUS_CD IN ('1000','1299')
+	    )
+ 	    AND T.TENANT_ID=#tenantId#
+ 	    AND TTT.TENANT_ID=#tenantId#
+ 	    AND A.TENANT_ID=#tenantId#
+	 	<isNotNull prepend="AND" property="PROD_OFFER_NAME"> 
+	 		T.PROD_OFFER_NAME = #PROD_OFFER_NAME#
+	 	</isNotNull>
+		LIMIT #start#,#pageRecord# 
+	</select>
+	
+	<!--查询可添加产品总数 (如果存在待审核或审核通过的记录则不显示)-->
+ 	<select id="queryAddProdNum" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	 	SELECT COUNT(1) TOTAL_NUM
+	 	FROM PROD_OFFER T, PROD_OFFER_CHANNEL_TYPE TTT, ORG A
+	 	WHERE T.OFFER_PROVIDER_ID = #OFFER_PROVIDER_ID#
+	    AND T.COOPERATION_TYPE = #COOPERATION_TYPE#
+	    AND T.PROD_OFFER_ID = TTT.PROD_OFFER_ID
+ 	    AND TTT.CHANNEL_TYPE = '20'
+ 	    AND T.OFFER_PROVIDER_ID = A.ORG_ID
+ 	    AND T.STATUS_CD = '1000'
+	    AND NOT EXISTS 
+	    (
+		    SELECT (1) FROM PROD_OFFER_CHANNEL TT
+		    WHERE T.PROD_OFFER_ID = TT.PROD_OFFER_ID
+		    AND TT.STATUS_CD IN ('1000','1299')
+	    )
+ 	    AND T.TENANT_ID=#tenantId#
+ 	    AND TTT.TENANT_ID=#tenantId#
+ 	    AND A.TENANT_ID=#tenantId#
+	 	<isNotNull prepend="AND" property="PROD_OFFER_NAME"> 
+	        T.PROD_OFFER_NAME = #PROD_OFFER_NAME#
+	 	</isNotNull>
+	 	<isNotNull prepend="AND" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+ 	</select>
+ 	
+ 	<!--查询新增产品列表 -->
+ 	<select id="queryApplyProdInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">	
+ 		SELECT T.PROD_OFFER_ID, T.PROD_OFFER_NAME, T.OFFER_NBR,T.INNER_OFFER_NAME,
+		 	   T.PROD_OFFER_DESC,T.COOPERATION_TYPE 
+		FROM PROD_OFFER T
+		WHERE T.OFFER_PROVIDER_ID = #OFFER_PROVIDER_ID#
+ 	    AND T.TENANT_ID=#tenantId#
+ 	    <isNotNull prepend="AND" property="CUR_ADD_ID">
+ 	    	T.PROD_OFFER_ID IN
+ 	    	<iterate  property="CUR_ADD_ID" open="(" close=")" conjunction=",">
+ 	    		#CUR_ADD_ID[]#
+ 	    	</iterate>
+ 	    </isNotNull>
+ 	</select>
+ 	
+ 	<!-- 查询合作伙伴渠道ID -->
+ 	<select id="queryChannelId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+ 		SELECT CHANNEL_ID FROM CHANNEL WHERE ORG_ID = #ORG_ID# AND TENANT_ID=#tenantId#
+ 	</select>
+ 	
+ 	<!-- 渠道信息入库 -->
+ 	<insert id="saveChannelInfo"  parameterClass="HashMap">
+ 	    <selectKey resultClass="int" keyProperty="CHANNEL_ID">
+			SELECT nextval('SEQ_CHANNEL') FROM DUAL
+		</selectKey>
+		INSERT INTO CHANNEL(CHANNEL_ID, ORG_ID, STATUS_CD, CHANNEL_MAIN_TYPE, CHANNEL_TYPE_CD, 
+		                    CHANNEL_SUBTYPE_CD, CHANNEL_NAME,TENANT_ID)
+		SELECT #CHANNEL_ID#, #ORG_ID#, '1000', '20', '1500', 150403, ORG_USERNAME,#tenantId#
+		FROM ORG WHERE ORG_ID = #ORG_ID# 
+		AND TENANT_ID=#tenantId#
+    </insert>
+    
+    <!-- 销售可选渠道信息入库 -->
+ 	<insert id="saveOfferChannel"  parameterClass="HashMap">
+ 	    <selectKey resultClass="int" keyProperty="PROD_OFFER_CHANNEL_ID">
+			SELECT nextval('SEQ_PROD_OFFER_CHANNEL') FROM DUAL
+		</selectKey>
+ 		INSERT INTO PROD_OFFER_CHANNEL(PROD_OFFER_CHANNEL_ID,PROD_OFFER_ID,CHANNEL_ID,STATUS_CD,AUDIT_FLOW_ID,TENANT_ID)
+ 		SELECT #PROD_OFFER_CHANNEL_ID#, #PROD_OFFER_ID#, #CHANNEL_ID#, '1299', #AUDIT_FLOW_ID#,#tenantId#
+ 		FROM PROD_OFFER 
+ 		WHERE PROD_OFFER_ID = #PROD_OFFER_ID#
+ 		AND OFFER_PROVIDER_ID = #ORG_ID#
+ 		AND TENANT_ID=#tenantId#
+    </insert>
+    
+    <!-- 取消可销售产品 -->
+    <update id="cancalProduct"  parameterClass="HashMap">
+    	UPDATE PROD_OFFER_CHANNEL SET STATUS_CD = '1300' WHERE PROD_OFFER_ID = #PROD_OFFER_ID# AND AUDIT_FLOW_ID = #AUDIT_FLOW_ID# AND TENANT_ID=#tenantId# 
+    </update>
+</sqlMap>

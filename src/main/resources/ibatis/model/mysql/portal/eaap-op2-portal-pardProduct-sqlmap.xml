@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="eaap-op2-portal-pardProduct">
+
+	<!-- 查询系统编码信息 -->
+ 	<select id="queryComponentList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT B.COMPONENT_ID,B.NAME,B.STATE
+		  FROM ORG A, COMPONENT B
+		 WHERE B.COMPONENT_TYPE_ID=1 AND A.ORG_ID = B.ORG_ID AND B.STATE != 'X' 
+			AND A.TENANT_ID=#tenantId#
+			AND B.TENANT_ID=#tenantId#
+		 <isNotNull prepend="AND" property="orgId">  A.ORG_ID=#orgId#</isNotNull>
+		 <isNotNull prepend="AND" property="componentId">  B.COMPONENT_ID=#componentId#</isNotNull>
+ 	</select>
+ 		<!-- 查询某供应者下合作伙伴产品信息 -->
+	<select id="showProdList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">	
+		 	SELECT A.PRODUCT_ID,
+		 	       A.PRODUCT_NAME,
+		 	       A.STATUS_CD,
+		 	       A.PRODUCT_DESC,
+		 	       date_format(A.CREATE_DATE,'%Y-%m-%d %H:%i:%s') as CREATE_DATE,
+		 	       A.S_FILE_ID
+		 	  FROM PRODUCT  A
+		  WHERE A.STATUS_CD != '1300'
+		  AND A.COOPERATION_TYPE != '13'
+		  AND A.TENANT_ID=#tenantId#
+		  <dynamic>
+		 	<isNotNull prepend="AND" property="orgId"> A.PRODUCT_PROVIDER_ID=#orgId#</isNotNull>
+		 	<isNotNull prepend="AND" property="productName"> A.PRODUCT_NAME LIKE concat('%',#productName#,'%')</isNotNull>
+		</dynamic>
+		   order  by  a.CREATE_date DESC , a.PRODUCT_ID DESC
+		 
+	</select>
+ 		<!-- 查询某供应者下合作伙伴产品信息总记录数 -->
+	<select id="queryProdCount" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	  SELECT COUNT(1) ALLNUM  FROM PRODUCT A
+		<dynamic prepend="WHERE">
+		 	<isNotNull prepend="AND" property="orgId"> A.PRODUCT_PROVIDER_ID=#orgId#</isNotNull>
+		 	<isNotNull prepend="AND" property="productName"> A.PRODUCT_NAME LIKE concat('%',#productName#,'%')</isNotNull>
+		</dynamic>
+		  AND A.STATUS_CD != '1300'
+		  AND A.COOPERATION_TYPE != '13'
+		  AND A.TENANT_ID=#tenantId#
+ 	</select>
+ 	
+ 	<delete id="deleteProductAttrValue" parameterClass="com.ailk.eaap.op2.bo.Product" >
+		 DELETE FROM PROD_ATTR_VALUE   
+		WHERE  PROD_ATTR_VALUE.PRODUCT_ATTR_ID IN (SELECT B.PRODUCT_ATTR_ID FROM PRODUCT_ATTR B WHERE B.PRODUCT_ID=#productId# AND B.TENANT_ID=#tenantId#)
+		AND TENANT_ID=#tenantId#
+	 </delete>
+	 
+	 <delete id="deleteProductAttr" parameterClass="com.ailk.eaap.op2.bo.Product" >
+	   DELETE FROM PRODUCT_ATTR WHERE PRODUCT_ID=#productId# AND TENANT_ID=#tenantId#
+	 </delete>
+    
+    <insert id="insertProdAttrValue" parameterClass="java.util.HashMap">
+    <selectKey resultClass="int" keyProperty="prodAttrValueId">
+		  SELECT nextval('SEQ_PROD_ATTR_VALUE') from dual
+    </selectKey>
+ 	 INSERT INTO PROD_ATTR_VALUE(PROD_ATTR_VALUE_ID,PRODUCT_ATTR_ID,ATTR_VALUE_ID,TENANT_ID) 
+	values(#prodAttrValueId#,#PRODUCT_ATTR_ID#,#ATTR_VALUE_ID#,#tenantId#)
+ 	 </insert>
+ 	 
+	  <select id="queryProductAttrInfo" resultClass="java.util.HashMap" parameterClass="com.ailk.eaap.op2.bo.ProductAttr">	
+		SELECT
+			A.PRODUCT_ATTR_ID,
+			A.ATTR_SPEC_ID,
+			A.DEFAULT_VALUE,
+			A.DISPLAY_TYPE,
+			B.IS_CUSTOMIZED,
+			B.CODE,
+			B.CHAR_SPEC_NAME,
+			B.VALUE_TYPE,
+			B.DESCRIPTION,
+			B.DEFAULT_VALUE SPEC_DEFAULT_VALUE 
+		FROM
+			PRODUCT_ATTR A,
+			CHAR_SPEC B
+		WHERE
+			A.ATTR_SPEC_ID = B.CHAR_SPEC_ID
+		AND A.PRODUCT_ID = #productId#
+		AND A.TENANT_ID=#tenantId#
+		AND B.TENANT_ID=#tenantId#
+		 <isNotNull prepend="AND" property="displayType"> A.DISPLAY_TYPE = #displayType# </isNotNull>
+	</select>
+	<select id="queryProdAttrValue" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">	
+		SELECT A.PROD_ATTR_VALUE_ID,A.ATTR_VALUE_ID 
+		FROM PROD_ATTR_VALUE A 
+		where A.product_attr_id=#PRODUCT_ATTR_ID#
+		AND A.TENANT_ID=#tenantId#
+	</select>
+	 <select id="compareProdId" resultClass="com.ailk.eaap.op2.bo.Product" parameterClass="com.ailk.eaap.op2.bo.Product">	
+          select a.EXT_PROD_ID as extProdId from product a where a.EXT_PROD_ID=#extProdId# and a.STATUS_CD !='1300' AND a.TENANT_ID=#tenantId#
+	 </select>
+	<select id="selectProduct" parameterClass="com.ailk.eaap.op2.bo.Product"
+		resultClass="com.ailk.eaap.op2.bo.Product">
+		SELECT A.PRODUCT_ID productId,A.PRODUCT_NBR productNbr,A.PRODUCT_NAME productName,A.PRODUCT_DESC productDesc,
+	    	A.MANAGE_GRADE manageGrade,A.PRODUCT_TYPE productType,A.PRODUCT_PROVIDER_ID productProviderId,
+			A.STATUS_CD	statusCd,A.STATUS_DATE statusDate,A.EFF_DATE effDate,A.EXP_DATE expDate,
+	 		A.PROD_FUNC_TYPE prodFuncType,A.EXT_PROD_ID extProdId,A.VALUE_ADDED_FLAG valueAddedFlag,A.INNER_PROD_NBR innerProdNbr,
+			A.COMMON_REGION_ID commonRegionId,A.IS_TEMPLATE isTemplate,A.COOPERATION_TYPE cooperationType,A.audit_flow_id auditFlowId,A.S_FILE_ID sFileId
+		FROM   product A
+		<dynamic prepend="where">
+			<isNotNull prepend="and" property="productId">
+				PRODUCT_ID=#productId#</isNotNull>
+			<isNotNull prepend="and" property="productNbr"> PRODUCT_NBR=#productNbr#</isNotNull>
+			<isNotNull prepend="and" property="productName">
+				PRODUCT_NAME=#productName#</isNotNull>
+			<isNotNull prepend="and" property="productType">
+				PRODUCT_TYPE=#productType#</isNotNull>
+			<isNotNull prepend="and" property="productProviderId"> PRODUCT_PROVIDER_ID=#productProviderId#</isNotNull>
+			<isNotNull prepend="and" property="statusCd"> STATUS_CD=#statusCd#</isNotNull>
+			<isNotNull prepend="and" property="effDate"> EFF_DATE=#effDate#</isNotNull>
+			<isNotNull prepend="and" property="expDate"> EXP_DATE=#expDate#</isNotNull>
+			<isNotNull prepend="and" property="commonRegionId"> COMMON_REGION_ID=#commonRegionId#</isNotNull>
+			<isNotNull prepend="and" property="cooperationType">
+				COOPERATION_TYPE=#cooperationType#</isNotNull>
+			<isNotNull prepend="and" property="extProdId"> EXT_PROD_ID=#extProdId#</isNotNull>
+			<isNotNull prepend="and" property="tenantId"> TENANT_ID=#tenantId#</isNotNull>
+		</dynamic>
+	</select>
+
+	 <select id="queryProductList" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+      select t.*,org.name name 
+		from product t, org org
+		 where t.STATUS_CD != '1300' and  t.product_provider_id = org.org_id AND t.TENANT_ID=#tenantId# AND org.TENANT_ID=#tenantId#
+		<dynamic>
+			<isNotNull prepend="and" property="prodName"> t.PRODUCT_NAME like concat('%',#prodName#,'%')</isNotNull>
+			<isNotNull prepend="and" property="prodCode"> t.EXT_PROD_ID like concat('%',#prodCode#,'%')</isNotNull>
+			<isEqual compareValue="cloud" property="project">
+				<isEqual prepend="and" property="cooperationType" compareValue="10"> t.COOPERATION_TYPE = '10' </isEqual>
+				<isEqual prepend="and" property="cooperationType" compareValue="11"> t.COOPERATION_TYPE = '11' </isEqual>
+				<isNotNull prepend="and" property="providerId"> 
+					t.product_provider_id IN 
+						<iterate prepend="" property="providerId"  open="("  close=")"  conjunction=",">
+		             				  #providerId[]#
+		  				</iterate>
+				</isNotNull>
+			</isEqual>
+			<isEqual compareValue="local" property="project">
+				<isNotNull property="providerId"> 
+					<isEqual prepend="and" property="cooperationType" compareValue="10"> t.COOPERATION_TYPE = '10' </isEqual>
+					<isEqual prepend="and" property="cooperationType" compareValue="11"> t.COOPERATION_TYPE = '11' and t.product_provider_id = #providerId# </isEqual>
+					<isEqual prepend="and" property="cooperationType" compareValue="13"> t.COOPERATION_TYPE = '13' and t.product_provider_id = #providerId# </isEqual>
+					<isNull prepend="and" property="cooperationType"> (t.COOPERATION_TYPE = '10' or t.COOPERATION_TYPE = '11' and t.product_provider_id = #providerId#) </isNull>
+				</isNotNull>
+			</isEqual>
+		</dynamic>
+		AND t.cooperation_type!='13'
+		ORDER BY t.PRODUCT_ID DESC 
+       limit #pro_mysql#,#page_record#
+ 	</select>
+ 	
+ 	<select id="countProductList" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+      select count(1) 
+		from product t, org org
+		 where t.STATUS_CD != '1300'  and t.product_provider_id = org.org_id  AND t.TENANT_ID=#tenantId# AND org.TENANT_ID=#tenantId#
+		<dynamic>
+			<isNotNull prepend="and" property="prodName"> t.PRODUCT_NAME like concat('%',#prodName#,'%')</isNotNull>
+			<isNotNull prepend="and" property="prodCode"> t.EXT_PROD_ID like concat('%',#prodCode#,'%')</isNotNull>
+			<isEqual compareValue="cloud" property="project">
+				<isEqual prepend="and" property="cooperationType" compareValue="10"> t.COOPERATION_TYPE = '10' </isEqual>
+				<isEqual prepend="and" property="cooperationType" compareValue="11"> t.COOPERATION_TYPE = '11' </isEqual>
+				<isNotNull prepend="and" property="providerId"> 
+					t.product_provider_id IN 
+						<iterate prepend="" property="providerId"  open="("  close=")"  conjunction=",">
+		             				  #providerId[]#
+		  				</iterate>
+				</isNotNull>
+			</isEqual>
+			<isEqual compareValue="local" property="project">
+				<isNotNull property="providerId"> 
+					<isEqual prepend="and" property="cooperationType" compareValue="10"> t.COOPERATION_TYPE = '10' </isEqual>
+					<isEqual prepend="and" property="cooperationType" compareValue="11"> t.COOPERATION_TYPE = '11' and t.product_provider_id = #providerId# </isEqual>
+					<isEqual prepend="and" property="cooperationType" compareValue="13"> t.COOPERATION_TYPE = '13' and t.product_provider_id = #providerId# </isEqual>
+					<isNull prepend="and" property="cooperationType"> (t.COOPERATION_TYPE = '10' or t.COOPERATION_TYPE = '11' and t.product_provider_id = #providerId#) </isNull>
+				</isNotNull>
+			</isEqual>
+		</dynamic>
+		 AND t.cooperation_type!='13'
+ 	</select>
+ 	
+ 	<select id="offShelfProduct" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+      select count(1) from prod_offer where status_cd != '1300' and prod_offer_id in 
+		(select prod_offer_id from OFFER_PROD_REL where product_id = #productId# ) 
+		and TENANT_ID=#tenantId#
+ 	</select>
+</sqlMap>

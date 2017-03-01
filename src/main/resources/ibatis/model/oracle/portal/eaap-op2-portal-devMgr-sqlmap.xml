@@ -1,0 +1,1018 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-devMgr">
+  
+<select id="queryApiList" parameterClass="com.ailk.eaap.op2.bo.App"  resultClass="java.util.HashMap">
+ SELECT * FROM (
+		SELECT DISTINCT
+			A.PROD_OFFER_ID,
+			A.PROD_OFFER_NAME PACKAGENAME,
+		  A.PROD_OFFER_DESC,
+			(
+				SELECT
+					wm_concat(G.API_NAME)
+				FROM
+					PRODUCT B,
+					OFFER_PROD_REL C,
+					SERVICE_PRODUCT_REAL F,
+					API G
+				WHERE
+					C.PROD_OFFER_ID = A.PROD_OFFER_ID
+				AND B.PRODUCT_ID = C.PRODUCT_ID
+				AND B.PRODUCT_ID = F.PRODUCT_ID
+				AND F.SERVICE_ID = G.SERVICE_ID
+				AND G.API_STATE = 'D'
+				AND B.STATUS_CD = '1000'
+				 AND B.tenant_id= #tenantId#
+				 AND C.tenant_id= #tenantId#
+				 AND F.tenant_id= #tenantId#
+				 AND G.tenant_id= #tenantId#
+			) API_NAME_S,
+			(
+				SELECT
+					wm_concat(D.PRICING_NAME)
+				FROM
+					PRICING_PLAN D,
+					PROD_OFFER_PRICING E
+				WHERE
+					D.STATUS_CD != '11'
+				AND E.PROD_OFFER_ID = A.PROD_OFFER_ID
+				AND D.PRICING_INFO_ID = E.PRICING_INFO_ID
+				AND D.tenant_id= #tenantId#
+				AND E.tenant_id= #tenantId#
+			) PRICING_NAME_S,
+			(
+				SELECT H.NAME FROM ORG H WHERE H.ORG_ID = A.OFFER_PROVIDER_ID AND H.tenant_id= #tenantId#
+			) ORG_NAME,
+			to_char(EFF_TIME,'yyyy-mm-dd hh:mi:ss')EFF_TIME,to_char(EXP_TIME,'yyyy-mm-dd hh:mi:ss')EXP_TIME
+		FROM
+			PROD_OFFER A,ORG_OFFER_ORDER_RELA OOOR
+		WHERE
+      a.prod_offer_id = OOOR.PROD_OFFER_ID
+    and OOOR.APP_ID = #appId#
+    and A.STATUS_CD = '1000'  
+    and A.tenant_id = #tenantId#
+    and OOOR.tenant_id = #tenantId#) OO
+  ORDER BY OO.PROD_OFFER_ID DESC
+ 
+ </select>
+ 
+ <select id="queryAppApiNum" parameterClass="com.ailk.eaap.op2.bo.App"  resultClass="java.util.HashMap">
+      select app.* , decode(appapi.appapinum,null,0,appapi.appapinum) appapinum from  app app ,
+    (select count(appapi.app_id) appapinum, appapi.app_id,appapi.tenant_id
+      from app_api_list appapi, app app
+      where appapi.state!='X'  
+	              and appapi.app_id = app.app_id   and appapi.tenant_id =#tenantId#  and  app.tenant_id=#tenantId#
+            and app.app_deve=#appDeve#
+     group by appapi.app_id) appapi
+     where  app.app_deve=#appDeve# 
+     and  app.app_state !='X'
+     and appapi.app_id(+) = app.app_id
+     and app.tenant_id=#tenantId# 
+	      and appapi.tenant_id=#tenantId# 
+     order by app.app_create_time desc
+ </select>
+ 
+ 
+  <select id="queryCityForReg" parameterClass="com.asiainfo.integration.o2p.web.bo.Org"  resultClass="java.util.HashMap">
+       select tab2.area_id provinceid, decode(tab1.area_id, null, tab2.area_id, tab1.area_id) cityid, 
+       trim(tab2.zone_name) couname,
+       trim(decode(tab1.zone_name, null, tab2.zone_name, tab1.zone_name)) cityname
+       from (select * from area where up_area_id is not null and tenant_id = #tenantId# ) tab1,
+       (select * from area where up_area_id is null and tenant_id = #tenantId# ) tab2
+       where tab1.up_area_id(+) = tab2.area_id and  tab1.tenant_id = #tenantId#  and tab2.tenant_id=#tenantId# 
+       order by tab2.zone_name,cityid
+ </select>
+ 
+  <select id="queryProvinceForReg" parameterClass="com.asiainfo.integration.o2p.web.bo.Org"  resultClass="java.util.HashMap">
+       select area_id PROVINCEID, zone_name PROVINCENAME from area where up_area_id is null and tenant_id=#tenantId# order by zone_name
+ </select>
+ 
+  <select id="queryAppStatistics" parameterClass="java.util.Map"  resultClass="java.util.HashMap">
+ select * from (select row_number() over( order by DATE_TRAN_ID desc ) rn , newtab.* from (
+         select substr(DATE_TRAN_ID, 0, 6) DATE_TRAN_ID, sys_code,  sum(TOTAL_TRANS) - sum(TOTAL_BIZ_ERR)-sum(TOTAL_SYS_ERR) SUCCESSNUM,
+          round(sum(TOTAL_TRANS*qos)/sum(TOTAL_TRANS)) QOS , sum(TOTAL_TRANS) TOTAL_TRANS, sum(TOTAL_BIZ_ERR) TOTAL_BIZ_ERR, 
+         sum(TOTAL_SYS_ERR) TOTAL_SYS_ERR  from USE_STAT_CNT_RECENT 
+           <dynamic prepend="where">
+            <isNotNull prepend="and" property="dateType"> DATE_TYPE=#dateType#</isNotNull>
+		    <isNotNull prepend="and" property="sysCode"> sys_code=#sysCode#</isNotNull>
+		    <isNotNull prepend="and" property="btime"> to_number(substr(DATE_TRAN_ID, 0, 6))>=#btime#</isNotNull>
+		    <isNotNull prepend="and" property="etime">
+		    <![CDATA[ to_number(substr(DATE_TRAN_ID, 0, 6))<=#etime# ]]>
+		    </isNotNull>
+		    <isNotNull prepend="and" property="myComIds"> 
+		    	sys_code in
+		    	<iterate property="myComIds" conjunction="," close=")" open="(">
+		            #myComIds[]#
+		        </iterate>
+		   	</isNotNull>
+		   	<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		   </dynamic>
+		   group by substr(DATE_TRAN_ID, 0, 6), sys_code
+           ) newtab ) where rn between #pro# and #end# 
+ </select>
+ 
+ <select id="queryAppStatisticsCount" parameterClass="java.util.Map"  resultClass="java.util.HashMap">
+ select count(*) ALLNUM  from (
+         select substr(DATE_TRAN_ID, 0, 6) DATE_TRAN_ID, sys_code,  sum(TOTAL_TRANS) - sum(TOTAL_BIZ_ERR)-sum(TOTAL_SYS_ERR) SUCCESSNUM,
+          sum(TOTAL_TRANS*qos)/sum(TOTAL_TRANS) QOS , sum(TOTAL_TRANS) TOTAL_TRANS, sum(TOTAL_BIZ_ERR) TOTAL_BIZ_ERR, 
+         sum(TOTAL_SYS_ERR) TOTAL_SYS_ERR  from USE_STAT_CNT_RECENT 
+           <dynamic prepend="where">
+            <isNotNull prepend="and" property="dateType"> DATE_TYPE=#dateType#</isNotNull>
+		    <isNotNull prepend="and" property="sysCode"> sys_code=#sysCode#</isNotNull>
+		    <isNotNull prepend="and" property="btime"> to_number(substr(DATE_TRAN_ID, 0, 6))>=#btime#</isNotNull>
+		    <isNotNull prepend="and" property="etime">
+		    <![CDATA[ to_number(substr(DATE_TRAN_ID, 0, 6))<=#etime# ]]>
+		    </isNotNull>
+		    <isNotNull prepend="and" property="myComIds">
+		    	sys_code in
+				<iterate property="myComIds" conjunction="," close=")" open="(">
+		            #myComIds[]#
+		        </iterate>
+		    </isNotNull>
+		    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		   </dynamic>
+		   group by substr(DATE_TRAN_ID, 0, 6), sys_code
+		  )
+ </select>
+ 
+ 
+  <select id="queryAppStatisticsByDay" parameterClass="java.util.Map"  resultClass="java.util.HashMap">
+  select * from (select row_number() over( order by DATE_TRAN_ID desc ) rn , newtab.* from (
+                select DATE_TRAN_ID, sys_code, 
+                       sum(TOTAL_TRANS) TOTAL_TRANS,
+                       sum(TOTAL_BIZ_ERR) TOTAL_BIZ_ERR,
+                       sum(TOTAL_SYS_ERR) TOTAL_SYS_ERR,
+                       sum(TOTAL_TRANS) - sum(TOTAL_BIZ_ERR) - sum(TOTAL_SYS_ERR) SUCCESSNUM ,
+                       round(sum(TOTAL_TRANS*qos)/sum(TOTAL_TRANS)) QOS from USE_STAT_CNT_RECENT
+          <dynamic prepend="where">
+            <isNotNull prepend="and" property="dateType"> DATE_TYPE=#dateType#</isNotNull>
+		    <isNotNull prepend="and" property="sysCode"> sys_code=#sysCode#</isNotNull>
+		    <isNotNull prepend="and" property="btime"> to_number(substr(DATE_TRAN_ID, 0, 8))>=#btime#</isNotNull>
+		    <isNotNull prepend="and" property="etime">
+		    <![CDATA[ to_number(substr(DATE_TRAN_ID, 0, 8))<=#etime# ]]>
+		    </isNotNull>
+		    <isNotNull prepend="and" property="myComIds">
+		    	sys_code in
+				<iterate property="myComIds" conjunction="," close=")" open="(">
+		            #myComIds[]#
+		        </iterate>
+		    </isNotNull>
+        	<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		   </dynamic>
+		   group by DATE_TRAN_ID ,sys_code
+		 ) newtab ) where rn between #pro# and #end# 
+ </select>
+ 
+ <select id="queryAppStatisticsByDayCount" parameterClass="java.util.Map"  resultClass="java.util.HashMap">
+ select count(*) ALLNUM  from (
+                      select DATE_TRAN_ID, sys_code, 
+                       sum(TOTAL_TRANS) TOTAL_TRANS,
+                       sum(TOTAL_BIZ_ERR) TOTAL_BIZ_ERR,
+                       sum(TOTAL_SYS_ERR) TOTAL_SYS_ERR,
+                       sum(TOTAL_TRANS) - sum(TOTAL_BIZ_ERR) - sum(TOTAL_SYS_ERR) SUCCESSNUM ,
+                       sum(TOTAL_TRANS*qos)/sum(TOTAL_TRANS) QOS from USE_STAT_CNT_RECENT
+          <dynamic prepend="where">
+            <isNotNull prepend="and" property="dateType"> DATE_TYPE=#dateType#</isNotNull>
+		    <isNotNull prepend="and" property="sysCode"> sys_code=#sysCode#</isNotNull>
+		    <isNotNull prepend="and" property="btime"> to_number(substr(DATE_TRAN_ID, 0, 8))>=#btime#</isNotNull>
+		    <isNotNull prepend="and" property="etime">
+		    <![CDATA[ to_number(substr(DATE_TRAN_ID, 0, 8))<=#etime# ]]>
+		    </isNotNull>
+		    <isNotNull prepend="and" property="myComIds">
+		   	 	sys_code in
+				<iterate property="myComIds" conjunction="," close=")" open="(">
+		            #myComIds[]#
+		        </iterate>
+		    </isNotNull>
+		    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		   </dynamic>
+		   group by DATE_TRAN_ID ,sys_code
+		 )
+ </select>
+ 
+ 
+ <select id="queryApiStatistics" parameterClass="java.util.Map"  resultClass="java.util.HashMap">
+  select * from (select row_number() over( order by DATE_TRAN_ID desc ) rn , newtab.* from (
+         select substr(DATE_TRAN_ID, 0, 6) DATE_TRAN_ID, BIZ_INTF_CODE, sum(TOTAL_TRANS) - sum(TOTAL_BIZ_ERR)-sum(TOTAL_SYS_ERR) SUCCESSNUM,
+          round(sum(TOTAL_TRANS*qos)/sum(TOTAL_TRANS)) QOS ,   sum(TOTAL_TRANS) TOTAL_TRANS, sum(TOTAL_BIZ_ERR) TOTAL_BIZ_ERR, 
+         sum(TOTAL_SYS_ERR) TOTAL_SYS_ERR  from USE_STAT_CNT_RECENT 
+           <dynamic prepend="where">
+            <isNotNull prepend="and" property="dateType"> DATE_TYPE=#dateType#</isNotNull>
+		   <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		    <isNotNull prepend="and" property="btime"> to_number(substr(DATE_TRAN_ID, 0, 6))>=#btime#</isNotNull>
+		    <isNotNull prepend="and" property="etime">
+		    <![CDATA[ to_number(substr(DATE_TRAN_ID, 0, 6))<=#etime# ]]>
+		    </isNotNull>
+		    <isNotNull prepend="and" property="myBizCodes"> 
+		    	 BIZ_INTF_CODE in
+        		<iterate property="myBizCodes" conjunction="," close=")" open="(">
+            		#myBizCodes[]#
+        		</iterate>
+      		</isNotNull>
+		    <isNotNull prepend="and" property="sysCode"> sys_code=#sysCode#</isNotNull>
+		   </dynamic>
+		    
+          group by substr(DATE_TRAN_ID, 0, 6), BIZ_INTF_CODE
+           ) newtab ) where rn between #pro# and #end# 
+ </select>
+ 
+ <select id="queryApiStatisticsCount" parameterClass="java.util.Map"  resultClass="java.util.HashMap">
+ 
+ select count(*) ALLNUM  from (
+ 
+         select substr(DATE_TRAN_ID, 0, 6) DATE_TRAN_ID, BIZ_INTF_CODE, sum(TOTAL_TRANS) - sum(TOTAL_BIZ_ERR)-sum(TOTAL_SYS_ERR) SUCCESSNUM,
+          sum(TOTAL_TRANS*qos)/sum(TOTAL_TRANS) QOS ,   sum(TOTAL_TRANS) TOTAL_TRANS, sum(TOTAL_BIZ_ERR) TOTAL_BIZ_ERR, 
+         sum(TOTAL_SYS_ERR) TOTAL_SYS_ERR  from USE_STAT_CNT_RECENT 
+           <dynamic prepend="where">
+            <isNotNull prepend="and" property="dateType"> DATE_TYPE=#dateType#</isNotNull>
+		   
+		    <isNotNull prepend="and" property="btime"> to_number(substr(DATE_TRAN_ID, 0, 6))>=#btime#</isNotNull>
+		    <isNotNull prepend="and" property="etime">
+		    <![CDATA[ to_number(substr(DATE_TRAN_ID, 0, 6))<=#etime# ]]>
+		    </isNotNull>
+		    <isNotNull prepend="and" property="myBizCodes"> 
+		    	 BIZ_INTF_CODE in
+        		<iterate property="myBizCodes" conjunction="," close=")" open="(">
+            		#myBizCodes[]#
+        		</iterate>
+      		</isNotNull>
+		<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		    <isNotNull prepend="and" property="sysCode"> sys_code=#sysCode#</isNotNull>
+		   </dynamic>
+		    
+          group by substr(DATE_TRAN_ID, 0, 6), BIZ_INTF_CODE
+           )
+ </select>
+ 
+ 
+  <select id="queryApiStatisticsByDay" parameterClass="java.util.Map"  resultClass="java.util.HashMap">
+   select * from (select row_number() over( order by DATE_TRAN_ID desc ) rn , newtab.* from (
+         select DATE_TRAN_ID, BIZ_INTF_CODE, 
+                       sum(TOTAL_TRANS) TOTAL_TRANS,
+                       sum(TOTAL_BIZ_ERR) TOTAL_BIZ_ERR,
+                       sum(TOTAL_SYS_ERR) TOTAL_SYS_ERR,
+                       sum(TOTAL_TRANS) - sum(TOTAL_BIZ_ERR) - sum(TOTAL_SYS_ERR) SUCCESSNUM ,
+                       round(sum(TOTAL_TRANS*qos)/sum(TOTAL_TRANS)) QOS from USE_STAT_CNT_RECENT
+          <dynamic prepend="where">
+            <isNotNull prepend="and" property="dateType"> DATE_TYPE=#dateType#</isNotNull>
+		  
+		    <isNotNull prepend="and" property="btime"> to_number(substr(DATE_TRAN_ID, 0, 8))>=#btime#</isNotNull>
+		    <isNotNull prepend="and" property="etime">
+		    <![CDATA[ to_number(substr(DATE_TRAN_ID, 0, 8))<=#etime# ]]>
+		    </isNotNull>
+		    <isNotNull prepend="and" property="myBizCodes"> 
+		    	 BIZ_INTF_CODE in
+        		<iterate property="myBizCodes" conjunction="," close=")" open="(">
+            		#myBizCodes[]#
+        		</iterate>
+      		</isNotNull>
+		<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		    <isNotNull prepend="and" property="sysCode"> sys_code=#sysCode#</isNotNull>
+		   </dynamic>
+		   group by DATE_TRAN_ID ,BIZ_INTF_CODE
+		   ) newtab ) where rn between #pro# and #end# 
+ </select>
+ 
+ <select id="queryApiStatisticsByDayCount" parameterClass="java.util.Map"  resultClass="java.util.HashMap">
+  select count(*) ALLNUM  from (
+         select DATE_TRAN_ID, BIZ_INTF_CODE, 
+                       sum(TOTAL_TRANS) TOTAL_TRANS,
+                       sum(TOTAL_BIZ_ERR) TOTAL_BIZ_ERR,
+                       sum(TOTAL_SYS_ERR) TOTAL_SYS_ERR,
+                       sum(TOTAL_TRANS) - sum(TOTAL_BIZ_ERR) - sum(TOTAL_SYS_ERR) SUCCESSNUM ,
+                       sum(TOTAL_TRANS*qos)/sum(TOTAL_TRANS) QOS  from USE_STAT_CNT_RECENT
+          <dynamic prepend="where">
+            <isNotNull prepend="and" property="dateType"> DATE_TYPE=#dateType#</isNotNull>
+		  
+		    <isNotNull prepend="and" property="btime"> to_number(substr(DATE_TRAN_ID, 0, 8))>=#btime#</isNotNull>
+		    <isNotNull prepend="and" property="etime">
+		    <![CDATA[ to_number(substr(DATE_TRAN_ID, 0, 8))<=#etime# ]]>
+		    </isNotNull>
+		    <isNotNull prepend="and" property="myBizCodes"> 
+		    	 BIZ_INTF_CODE in
+        		<iterate property="myBizCodes" conjunction="," close=")" open="(">
+            		#myBizCodes[]#
+        		</iterate>
+      		</isNotNull>
+      		<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		    <isNotNull prepend="and" property="sysCode"> sys_code=#sysCode#</isNotNull>
+		   </dynamic>
+		    group by DATE_TRAN_ID ,BIZ_INTF_CODE
+		  )
+ </select>
+ 
+ 
+ 
+  <select id="queryServiceByAppId" parameterClass="com.ailk.eaap.op2.bo.App"  resultClass="java.util.HashMap">
+   select api.service_id, api.api_id, api.api_name ,service.service_code from api ,service 
+    where  api.service_id = service.service_id  and api.api_id in ( select api_id  from app_api_list where app_id = #appId# and tenant_id=#tenantId#)
+  and api.tenant_id=#tenantId# 
+    and service.tenant_id=#tenantId# 
+ </select>
+ 
+ 
+ <insert id="insertSerInvokeIns" parameterClass="com.ailk.eaap.op2.bo.SerInvokeIns">
+ <selectKey resultClass="int" keyProperty="serInvokeInsId">
+			SELECT SEQ_SER_INVOKE_INS.NEXTVAL FROM DUAL
+		</selectKey>
+ 	insert into SER_INVOKE_INS
+ 	(CREATE_DATE, STATE, LASTEST_DATE,SER_INVOKE_INS_CODE
+  <dynamic>
+    <isNotNull prepend="," property="serInvokeInsId">SER_INVOKE_INS_ID</isNotNull>
+    <isNotNull prepend="," property="messageFlowId">MESSAGE_FLOW_ID</isNotNull>
+    <isNotNull prepend="," property="componentId">COMPONENT_ID</isNotNull>
+    <isNotNull prepend="," property="serviceId">SERVICE_ID</isNotNull>
+    <isNotNull prepend="," property="serInvokeInsName">SER_INVOKE_INS_NAME</isNotNull>
+    <isNotNull prepend="," property="serInvokeInsDesc">SER_INVOKE_INS_DESC</isNotNull> 
+     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+  values(SYS_EXTRACT_UTC(current_timestamp)+0 ,'A',SYS_EXTRACT_UTC(current_timestamp)+0,sys_guid()
+  <dynamic>
+    <isNotNull prepend="," property="serInvokeInsId">#serInvokeInsId#</isNotNull>
+    <isNotNull prepend="," property="messageFlowId">#messageFlowId#</isNotNull>
+    <isNotNull prepend="," property="componentId">#componentId#</isNotNull>
+    <isNotNull prepend="," property="serviceId">#serviceId#</isNotNull>
+    <isNotNull prepend="," property="serInvokeInsName">#serInvokeInsName#</isNotNull>
+    <isNotNull prepend="," property="serInvokeInsDesc">#serInvokeInsDesc#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+  </dynamic>
+  )
+</insert>
+
+
+
+<select id="selectService" parameterClass="com.ailk.eaap.op2.bo.Api" resultClass="java.util.HashMap">
+	 select  service.* from service , api  where api.service_id = service.service_id and api.api_id=#apiId#
+        and service.tenant_id=#tenantId# and api.tenant_id=#tenantId#
+	</select>
+	
+	
+		<select id="queryAppApiCount" parameterClass="java.util.Map" resultClass="java.lang.Integer">
+	   select COUNT(*)
+	     from app app
+	left join (select count(appapi.app_id) appapinum, appapi.app_id, app.tenant_id
+	             from app_api_list appapi, app app
+	            where appapi.state!='X'  
+	              and appapi.app_id = app.app_id 
+	            and app.app_deve=#appDeve# and appapi.tenant_id =#tenantId# and  app.tenant_id=#tenantId#
+	         group by appapi.app_id) appapi
+	        on appapi.app_id = app.app_id
+	    where app.app_state !='X'
+	      and app.app_deve=#appDeve# 
+	      and appapi.tenant_id =#tenantId#
+	      app.tenant_id=#tenantId#
+	      <isNotNull prepend="and" property="appName"> 
+			 app.app_name LIKE '%'||#appName#||'%'
+		  </isNotNull>
+	 order by app.app_create_time desc
+
+ </select>
+ 
+  <select id="queryAppApiList" parameterClass="java.util.Map"  resultClass="java.util.HashMap">
+	      select * from (
+     select row_number() over(order by app.app_create_time desc) ROW_NUM,
+            app.app_id APP_ID,
+            app.app_name APP_NAME,
+            app.app_summa APP_SUMMA,
+            app.app_url APP_URL,
+            app.app_deve APP_DEVE,
+            app.component_id COMPONENT_ID,
+            app.app_type APP_TYPE,
+            app.app_oauth_type APP_OAUTH_TYPE,
+            app.s_file_id S_FILE_ID,
+            app.appkey APPKEY,
+            app.appsecure APPSECURE,
+            app.app_create_time APP_CREATE_TIME,
+            app.audit_flow_id AUDIT_FLOW_ID,
+            app.app_state APP_STATE,
+            app.app_callback_url APP_CALLBACK_URL,
+            app.app_desc APP_DESC,
+            case when appapi.appapinum is null then 0 else appapi.appapinum end APPAPINUM,
+            com.audit_flow_id AMOUNT
+       from app app
+  left join (select count(appapi.app_id) appapinum, appapi.app_id,app.tenant_id
+               from app_api_list appapi, app app
+              where appapi.state!='X'  
+                and appapi.app_id = app.app_id 
+                and app.app_deve=#appDeve#
+	              and appapi.tenant_id=#tenantId#
+	              and app.tenant_id=#tenantId#
+                <isNotNull prepend="and" property="appName"> 
+			        app.app_name LIKE '%'||#appName#||'%'
+				</isNotNull>
+           group by appapi.app_id) appapi
+          on appapi.app_id = app.app_id
+   left join component com ON app.component_id = com.component_id
+      where app.app_state !='X'
+        and app.app_deve=#appDeve# 
+	      and app.tenant_id=#tenantId#
+	      and com.tenant_id =#tenantId#
+        <isNotNull prepend="and" property="appName"> 
+		app.app_name LIKE '%'||#appName#||'%'
+		</isNotNull>
+   order by app.app_create_time desc) temp
+
+ </select>
+ 
+ 
+ 
+ <select id="queryApiListForOffer" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	select kk_r.*,rownum from (SELECT * FROM (
+		 SELECT C.PRODUCT_PROVIDER_ID ORG_ID,
+				D.SERVICE_ID API_ID,
+				D.SERVICE_CN_NAME API_NAME,
+				D.SERVICE_DESC API_DESC, 
+				( SELECT F.NAME
+					FROM ORG F
+					WHERE F.ORG_ID = C.PRODUCT_PROVIDER_ID AND  F.tenant_id =#tenantId#
+				) ORG_NAME
+			FROM
+				SERVICE D,
+				DIR_SER_LIST A,
+				SERVICE_PRODUCT_REAL B,
+				PRODUCT C
+			WHERE
+				A.SERVICE_ID = B.SERVICE_ID
+			AND D.SERVICE_ID = A.SERVICE_ID
+			AND B.PRODUCT_ID = C.PRODUCT_ID
+			AND A.STATE = 'A'
+			AND C.STATUS_CD = '1000'
+			AND A.tenant_id=#tenantId#
+			AND B.tenant_id=#tenantId# 
+			AND C.tenant_id=#tenantId# 
+			AND D.tenant_id=#tenantId# 
+			<dynamic prepend="">
+			<isNotNull prepend="and" property="DIR_ID"> 
+			  A.DIR_ID = #DIR_ID#
+			</isNotNull>
+			<isNotNull prepend="and" property="apiNames"> 
+			  D.API_NAME LIKE '%'||#apiNames#||'%'
+			</isNotNull>
+			<isNotNull prepend="and" property="orgName"> 
+			  C.PRODUCT_PROVIDER_ID IN (
+				SELECT E.ORG_ID
+				FROM ORG E
+				WHERE E.NAME LIKE '%'||#orgName#||'%' and E.tenant_id=#tenantId#)
+			</isNotNull>
+			</dynamic>	
+				) OO
+		  
+		 ORDER BY OO.API_NAME )kk_r
+   where rownum between #pro_mysql# and#page_record#
+ </select>
+ 
+ 
+ 
+  <select id="countApiListForOffer" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+	SELECT COUNT(1) FROM (
+		 SELECT C.PRODUCT_PROVIDER_ID,
+				D.SERVICE_ID,
+				D.SERVICE_CN_NAME,
+				D.SERVICE_DESC, 
+				( SELECT F.NAME
+					FROM ORG F
+					WHERE F.ORG_ID = C.PRODUCT_PROVIDER_ID AND  F.tenant_id = #tenantId#
+				) ORG_NAME
+			FROM
+				SERVICE D,
+				DIR_SER_LIST A,
+				SERVICE_PRODUCT_REAL B,
+				PRODUCT C
+			WHERE
+				A.SERVICE_ID = B.SERVICE_ID
+			AND D.SERVICE_ID = A.SERVICE_ID
+			AND B.PRODUCT_ID = C.PRODUCT_ID
+			AND A.STATE = 'A'
+			AND C.STATUS_CD = '1000'
+			AND A.tenant_id=#tenantId#
+			AND B.tenant_id=#tenantId# 
+			AND C.tenant_id=#tenantId# 
+			AND D.tenant_id=#tenantId# 
+			<dynamic prepend="">
+			<isNotNull prepend="and" property="DIR_ID"> 
+			  A.DIR_ID = #DIR_ID#
+			</isNotNull>
+			<isNotNull prepend="and" property="apiNames"> 
+			  D.API_NAME LIKE '%'||#apiNames#||'%'
+			</isNotNull>
+			<isNotNull prepend="and" property="orgName"> 
+			  C.PRODUCT_PROVIDER_ID IN (
+				SELECT E.ORG_ID
+				FROM ORG E
+				WHERE E.NAME LIKE '%'||#orgName#||'%' and E.tenant_id=#tenantId# ) 
+			</isNotNull>
+			</dynamic>	
+				) OO
+		 
+		 
+ </select>
+ 
+  <select id="queryApiIds" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	         SELECT DISTINCT
+				G.SERVICE_ID API_ID,
+				G.SERVICE_DESC API_DESC,
+				G.SERVICE_CN_NAME API_NAME,
+				( SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END
+					FROM APP_API_LIST H,API M
+					WHERE M.API_ID = H.API_ID
+			          AND M.SERVICE_ID = G.SERVICE_ID
+					  AND H.PROD_OFFER_ID = C.PROD_OFFER_ID
+					  AND H.STATE = 'A'
+					  AND H.tenant_id=#tenantId# 
+					  AND M.tenant_id=#tenantId# 
+				) FLAG,
+		        (SELECT K.API_ID 
+		           FROM API K 
+		          WHERE K.SERVICE_ID = G.SERVICE_ID AND K.tenant_id=#tenantId# ) API_ID_R
+			FROM
+				PRODUCT B,
+				OFFER_PROD_REL C,
+				SERVICE_PRODUCT_REAL F,
+				SERVICE G
+			WHERE
+				B.PRODUCT_ID = C.PRODUCT_ID
+			AND B.PRODUCT_ID = F.PRODUCT_ID
+			AND F.SERVICE_ID = G.SERVICE_ID
+		    AND B.tenant_id=#tenantId#
+			AND C.tenant_id=#tenantId# 
+			AND F.tenant_id=#tenantId# 
+			AND G.tenant_id=#tenantId# 
+			AND G.STATE = 'A'
+			AND B.STATUS_CD = '1000'
+         <dynamic>
+            <isNotNull prepend="and" property="offerId"> 
+            C.PROD_OFFER_ID IN 
+			<iterate property="offerId" conjunction="," close=")" open="(">
+	            #offerId[]#
+	        </iterate>
+            </isNotNull> 
+		 </dynamic>
+ </select>
+ 
+ <!-- insert org and offer relation -->
+  <insert id="insertOrgOfferRel" parameterClass="java.util.HashMap">
+  <selectKey resultClass="int" keyProperty="offerApiRelaId">
+          SELECT SEQ_OFFER_API_RELA_ID.NEXTVAL FROM DUAL
+           
+		</selectKey>
+    INSERT INTO ORG_OFFER_ORDER_RELA (
+            OFFER_API_RELA_ID, 
+			ORDER_TIME,
+			ORG_ID,
+			PROD_OFFER_ID,
+			APP_ID,
+			EFF_TIME,
+			EXP_TIME,
+			tenant_id
+		)(SELECT
+		        #offerApiRelaId#,
+				SYS_EXTRACT_UTC(current_timestamp)+0,
+				#appDeve#,
+				#offerId#,
+				#appId#,
+				SYS_EXTRACT_UTC(current_timestamp)+0,
+				to_date('2099-12-31 23:59:59','yyyy-mm-dd hh24:mi:ss'),
+				#tenantId#
+		FROM DUAL
+		WHERE NOT EXISTS
+		(SELECT *
+			FROM
+				ORG_OFFER_ORDER_RELA FF
+			WHERE
+				FF.PROD_OFFER_ID = #offerId#
+				AND FF.tenant_id = #tenantId#
+			AND FF.ORG_ID = #appDeve#
+			AND FF.APP_ID = #appId#
+			AND FF.EXP_TIME>SYS_EXTRACT_UTC(current_timestamp)+0)) 
+  
+</insert>
+
+<!-- get the delete apiIds -->
+  <select id="queryApiIdsDel" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	      SELECT APP_API_LIST_ID,
+				API_ID,
+				APP_ID,
+				REG_TIME,
+				STATE
+			FROM
+				APP_API_LIST AAL
+			WHERE AAL.APP_ID = #apiId# AND AAL.tenant_id=#tenantId#
+			AND AAL.API_ID IN (
+				SELECT F.SERVICE_ID
+				FROM OFFER_PROD_REL C,
+					SERVICE_PRODUCT_REAL F
+				WHERE C.PROD_OFFER_ID = #offerId#
+				AND F.PRODUCT_ID = C.PRODUCT_ID
+				AND F.tenant_id =#tenantId#
+				AND C.tenant_id=#tenantId#
+			)
+			AND AAL.API_ID NOT IN (
+				SELECT F.SERVICE_ID
+				FROM OFFER_PROD_REL C,
+					SERVICE_PRODUCT_REAL F,
+					ORG_OFFER_ORDER_RELA OOOR
+				WHERE C.PROD_OFFER_ID = OOOR.PROD_OFFER_ID
+				AND F.PRODUCT_ID = C.PRODUCT_ID
+				AND OOOR.APP_ID = #apiId#   
+			    AND F.tenant_id =#tenantId#
+				AND C.tenant_id=#tenantId#
+				AND OOOR.tenant_id=#tenantId#
+	         )
+ </select>
+ <!-- get category dictionary -->
+  <select id="getCategory" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+      SELECT DIR_ID,DIR_NAME
+		FROM
+			DIRECTORY
+		WHERE
+			FA_DIR_ID = 401
+		AND DIR_STATE = 'A'
+		<dynamic >
+            <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+  </select>
+  
+  
+  <select id="queryOffersInfo" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+   SELECT * FROM (
+                SELECT DISTINCT
+                        A.PROD_OFFER_ID,
+                        A.PROD_OFFER_NAME PACKAGENAME,
+                  A.PROD_OFFER_DESC,
+                        (
+                                SELECT
+                                        wm_concat(G.API_NAME)
+                                FROM
+                                        PRODUCT B,
+                                        OFFER_PROD_REL C,
+                                        SERVICE_PRODUCT_REAL F,
+                                        API G
+                                WHERE
+                                        C.PROD_OFFER_ID = A.PROD_OFFER_ID
+                                AND B.PRODUCT_ID = C.PRODUCT_ID
+                                AND B.PRODUCT_ID = F.PRODUCT_ID
+                                AND F.SERVICE_ID = G.SERVICE_ID
+                                AND G.API_STATE = 'D'
+                                AND B.STATUS_CD = '1000'
+                               AND B.tenant_id=#tenantId#
+							   AND C.tenant_id=#tenantId# 
+							   AND F.tenant_id=#tenantId# 
+							   AND G.tenant_id=#tenantId#  
+                        ) API_NAME_S,
+                        (
+                                SELECT
+                                        wm_concat(D.PRICING_NAME)
+                                FROM
+                                        PRICING_PLAN D,
+                                        PROD_OFFER_PRICING E
+                                WHERE
+                                        D.STATUS_CD != '11'
+                                AND E.PROD_OFFER_ID = A.PROD_OFFER_ID
+                                AND D.PRICING_INFO_ID = E.PRICING_INFO_ID
+                                AND D.tenant_id=#tenantId# 
+                                AND E.tenant_id=#tenantId#  
+                        ) PRICING_NAME_S,
+                        (
+                                SELECT H.NAME FROM ORG H WHERE H.ORG_ID = A.OFFER_PROVIDER_ID AND H.tenant_id = #tenantId#  
+                        ) ORG_NAME,
+                        A.OFFER_PROVIDER_ID,
+                        A.PROD_OFFER_PUBLISHER
+                 FROM PROD_OFFER A
+                WHERE A.STATUS_CD = '1000'
+                AND A.PROD_OFFER_ID IN 
+                <iterate property="PROD_OFFER_ID" conjunction="," close=")" open="(">
+		            #PROD_OFFER_ID[]#
+		        </iterate>
+                AND A.EXP_DATE > SYS_EXTRACT_UTC(current_timestamp)+0) OO
+ 
+   </select>
+   <select id="getOffersIds" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+     SELECT DISTINCT
+			 FF.PROD_OFFER_ID ,
+			 (SELECT H.NAME FROM ORG H WHERE H.ORG_ID = FF.OFFER_PROVIDER_ID AND H.tenant_id =#tenantId# ) ORG_NAME,
+			 FF.OFFER_PROVIDER_ID ORG_ID
+		FROM
+			SERVICE D,
+			DIR_SER_LIST A,
+			SERVICE_PRODUCT_REAL B,
+			PRODUCT C,
+			OFFER_PROD_REL DD,
+			PROD_OFFER FF
+		WHERE
+			A.SERVICE_ID = B.SERVICE_ID
+		AND D.SERVICE_ID = A.SERVICE_ID
+		AND B.PRODUCT_ID = C.PRODUCT_ID
+		AND A.STATE = 'D'
+		AND C.STATUS_CD = '1000'
+		AND C.PRODUCT_ID = DD.PRODUCT_ID 
+		AND DD.PROD_OFFER_ID = FF.PROD_OFFER_ID
+		AND FF.STATUS_CD = '1000'
+		AND A.tenant_id=#tenantId#
+	   AND B.tenant_id=#tenantId#
+	   AND C.tenant_id=#tenantId# 
+	   AND D.tenant_id=#tenantId# 
+	   AND DD.tenant_id=#tenantId#  
+	   AND FF.tenant_id=#tenantId# 
+		<isNotNull prepend="" property="offerName"> 
+		and FF.prod_offer_name LIKE '%'||#offerName#||'%'
+		</isNotNull>
+		<isNotNull prepend="" property="API_IDS"> 
+	        AND D.SERVICE_ID IN 
+		<iterate property="API_IDS" conjunction="," close=")" open="(">
+            #API_IDS[]#
+        </iterate>
+        </isNotNull>
+        
+   </select>
+   <select id="queryOffersInfoCount" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+         SELECT COUNT(1) COU
+           FROM PROD_OFFER A
+          WHERE A.STATUS_CD = '1000'
+          <isNotNull prepend="" property="PROD_OFFER_ID"> 
+          AND A.PROD_OFFER_ID IN
+          <iterate property="PROD_OFFER_ID" conjunction="," close=")" open="(">
+	        #PROD_OFFER_ID[]#
+	      </iterate>
+	      </isNotNull>
+          AND A.EXP_DATE > SYS_EXTRACT_UTC(current_timestamp)+0
+    
+    </select>
+   <insert id="insertAppApiList" parameterClass="java.util.HashMap">
+	<selectKey resultClass="int" keyProperty="appApiListId">
+			SELECT SEQ_APP_API_LIST.NEXTVAL FROM DUAL
+	  </selectKey>
+	  insert into app_api_list
+	  (REG_TIME,STATE
+	  <dynamic>
+	    <isNotNull prepend="," property="appApiListId">APP_API_LIST_ID</isNotNull>
+	    <isNotNull prepend="," property="apiId">API_ID</isNotNull>
+	    <isNotNull prepend="," property="appId">APP_ID</isNotNull>
+	    <isNotNull prepend="," property="prodOfferId">PROD_OFFER_ID</isNotNull> 
+	   <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+	  </dynamic>
+	   ) values(SYS_EXTRACT_UTC(current_timestamp)+0,'A'
+	  <dynamic>
+	    <isNotNull prepend="," property="appApiListId">#appApiListId#</isNotNull>
+	    <isNotNull prepend="," property="apiId">#apiId#</isNotNull>
+	    <isNotNull prepend="," property="appId">#appId#</isNotNull>
+	    <isNotNull prepend="," property="prodOfferId">#prodOfferId#</isNotNull> 
+	    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+	  </dynamic>
+	  )
+	</insert>
+	
+	<update id="updateAPPwithApi"  parameterClass="HashMap">
+    	UPDATE APP_API_LIST FF
+		SET FF.STATE = 'D'
+		WHERE
+		<isNotNull prepend="" property="apiId"> 
+			FF.API_ID = #apiId#
+			</isNotNull>
+		AND FF.APP_ID = #appId#
+		AND FF.PROD_OFFER_ID = #prodOfferId#
+		AND FF.tenant_id=#tenantId#
+    </update>
+    <update id="updateOrgwithOffer"  parameterClass="HashMap">
+    	UPDATE ORG_OFFER_ORDER_RELA FF
+		SET FF.EXP_TIME = SYSDATE()
+		WHERE
+			FF.PROD_OFFER_ID = #prodOfferId#
+		AND FF.ORG_ID = #org#
+		AND FF.APP_ID = #appId#
+		AND FF.tenant_id=#tenantId#
+    </update>
+    
+    	<select id="getPricingPlanCycle" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+	
+	SELECT
+		a.pricing_info_id pricingInfoId,
+		a.pricing_name pricingName,
+		a.pricing_type pricingType,
+		a.pricing_desc pricingDesc,
+		a.price_sign priceSign,
+		a.price_cha priceCha,
+		a.eff_date effDate,
+		a.exp_date expDate,
+		a.billing_priority billingPriority,
+		a.license_nbr licenseNbr,
+		a.applic_type applicType,
+		a.cycle_type cycletype,
+		a.create_date createDate,
+		a.status_date statusDate,
+		a.status_cd statusCd,
+		b.PRICING_TARGET_ID pricingTargetId,
+		c.SUB_EFFECT_MODE ,
+		c.SUB_DELAY_UNIT, 
+		c.SUB_DELAY_CYCLE, 
+		c.UNSUB_EFFECT_MODE, 
+		c.UNSUB_DELAY_UNIT,
+		c.UNSUB_DELAY_CYCLE,
+		c.VALID_UNIT, 
+		c.VALID_TYPE, 
+		c.FIXED_EXPIRE_DATE, 
+		c.STATUS_CD
+	FROM
+		pricing_plan a,
+		PROD_OFFER_PRICING b,
+		PRICE_PLAN_LIFECYCLE c
+	WHERE
+		a.status_cd != '11'
+	and b.PROD_OFFER_ID = #prodOfferId#  
+	AND c.PRICE_PLAN_ID = a.pricing_info_id
+	AND a.PRICING_INFO_ID = b.PRICING_INFO_ID
+	AND c.STATUS_CD != '11'
+	AND a.tenant_id=#tenantId#
+	AND b.tenant_id=#tenantId#
+	AND c.tenant_id=#tenantId#
+	ORDER BY
+		a.billing_priority DESC
+	</select>
+	<insert id="insertPricingCase" parameterClass="java.util.HashMap">
+	  <selectKey resultClass="int" keyProperty="pricingCaseId">
+			SELECT SEQ_PRICING_CASE_ID.NEXTVAL FROM DUAL
+		</selectKey>
+	insert into PRICING_CASE ( 
+	    PRICING_CASE_ID,
+		OFFER_API_RELA_ID,
+		PROD_OFFER_ID,
+		PRICING_INFO_ID,
+		EFF_TIME,
+		EXP_TIME,
+		tenant_id
+		)VALUES(#pricingCaseId#,
+		#OFFER_API_RELA_ID#,
+		#PROD_OFFER_ID#,
+		#PRICING_INFO_ID#,
+		#EFF_TIME#,
+		#EXP_TIME# ,
+		#tenantId#
+		)
+   </insert>
+   
+   
+   <select id="checkOfferhasBooks" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+		   SELECT
+				d.PROD_OFFER_ID
+			FROM
+				ORG_OFFER_ORDER_RELA d
+			WHERE
+				d.APP_ID =#appId#
+			AND d.ORG_ID =#appDeve#
+			AND d.PROD_OFFER_ID =#offerId#
+	        AND d.tenant_id=#tenantId#
+   </select>
+   
+    
+   <select id="selectServiceById" parameterClass="com.ailk.eaap.op2.bo.Service" resultClass="java.util.HashMap">
+	  select service.SERVICE_ID,
+	         service.CONTRACT_VERSION_ID,
+	         service.SERVICE_CN_NAME,
+	         service.SERVICE_EN_NAME,
+	         service.SERVICE_CODE,
+	         service.SERVICE_TYPE,
+	         service.SERVICE_VERSION,
+	         service.CREATE_DATE,
+	         service.STATE,
+	         service.LASTEST_DATE,
+	         service.SERVICE_DESC,
+	         service.IS_PUBLISHED,
+	         service.SERVICE_PRIORITY,
+	         service.SERVICE_TIMEOUT,
+	         service.DEFAULT_MSG_FLOW,
+	         service.AUDIT_FLOW_ID
+        from service 
+         where service.service_id=#serviceId#
+        and tenant_id=#tenantId#
+	</select>
+		
+		<!-- 由服务调用实例得到webservice的调用地址 -->
+	<select id="getWebServiceMsg" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select basecv.version,
+		cd.DOC_VERSION,
+		cd.RESOURCE_ALISS
+		from CONTRACT_VERSION cv
+		left join service ser on
+		ser.contract_version_id = cv.contract_version_id
+		left join
+		ser_invoke_ins sii on sii.service_id = ser.service_id
+		left join
+		DOC_CONTRACT dc on dc.CONTRACT_VERSION_ID =
+		cv.CONTRACT_VERSION_ID
+		left
+		join CONTRACT_DOC cd on cd.CONTRACT_DOC_ID = dc.CONTRACT_DOC_ID,
+		CONTRACT c,
+		CONTRACT_VERSION basecv,
+		CONTRACT basecon
+		where
+		sii.ser_invoke_ins_id=#serInvokeInsId#
+		and cv.contract_id=c.contract_id
+		and c.BASE_CONTRACT_ID=basecon.CONTRACT_ID
+		and
+		basecv.CONTRACT_ID=basecon.contract_id
+		and ser.tenant_id =#tenantId#
+		and cv.tenant_id=#tenantId#
+		and  sii.tenant_id=#tenantId#
+		and dc.tenant_id =#tenantId#
+		and cd.tenant_id = #tenantId#
+		and c.tenant_id = #tenantId#
+		and  basecv.tenant_id= #tenantId# 
+		and  basecon.tenant_id =  #tenantId# 
+	</select>
+	
+		<!-- 由服务调用实例得到webservice api的调用地址 -->
+	<select id="getWebServiceApiMsg" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select api.api_method,
+		com.code
+		from api api
+		left join
+		service ser on ser.service_id = api.service_id
+		left join ser_invoke_ins
+		sii on sii.service_id = ser.service_id
+		left join component com on
+		com.component_id = sii.component_id
+		where sii.ser_invoke_ins_id =
+		#serInvokeInsId#
+		and ser.tenant_id =#tenantId#
+		and  api.tenant_id=#tenantId#
+		and  sii.tenant_id=#tenantId#
+		and com.tenant_id =#tenantId#
+	</select>
+	<select id="getSerInvokeInsId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT SII.SER_INVOKE_INS_ID
+		  FROM SER_INVOKE_INS SII
+		 WHERE SII.SERVICE_ID = #serviceId#
+		   AND SII.COMPONENT_ID = #componentId#
+	      and SII.tenant_id=#tenantId# 
+	</select>
+	
+	
+	<select id="queryPricingPlan" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	    	SELECT
+				A.PRICING_INFO_ID,
+				A.PRICING_NAME,
+				 
+				C.PROD_OFFER_ID,
+				C.PROD_OFFER_PRICING_ID
+			FROM
+				PRICING_PLAN A,
+			 
+				PROD_OFFER_PRICING C
+			WHERE
+				  A.PRICING_INFO_ID = C.PRICING_INFO_ID
+	 		AND C.PROD_OFFER_ID = #PROD_OFFER_ID#
+	 		AND A.tenant_id=#tenantId#
+	  	    AND C.tenant_id=#tenantId# 
+	</select>
+	<select id="queryPricingDetail" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT
+			 BB.PRICE_ID,
+			BB.TAX_INCLUDED,
+			BB.BASE_ITEM_TYPE,
+			BB.ITEM_ID,
+			BB.RATING_UNIT_TYPE,
+			BB.RATING_UNIT_VAL,
+			BB.CURRENCY_UNIT_TYPE,
+			BB.RATE_TYPE,
+			BB.CREATE_DATE,
+			CC.START_VAL,
+			CC.END_VAL,
+			CC.RATE_VAL,
+			CC.BASE_VAL
+		FROM 
+			BASIC_TARIFF BB,
+			RATING_CURVE_DETAIL CC
+		WHERE
+			 bb.PRICE_ID = #PRICE_ID#
+		AND BB.PRICE_ID = CC.PRICE_ID
+		AND BB.tenant_id=#tenantId#
+	   AND CC.tenant_id=#tenantId# 
+	</select>
+	<select id="queryPricingComponent" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	    	 
+        SELECT AA.PRICE_ID,
+        to_char(AA.EFF_DATE,'yyyy-mm-dd hh:mi:ss') EFF_DATE,
+        to_char(AA.EXP_DATE,'yyyy-mm-dd hh:mi:ss') EXP_DATE
+        FROM COMPONENT_PRICE AA 
+        WHERE AA.PRI_PRICING_INFO_ID = #PRICING_INFO_ID#
+       AND AA.tenant_id=#tenantId#
+	</select>
+	
+	<select id="queryOffersInfoCount" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+         SELECT COUNT(1) COU
+           FROM PROD_OFFER A
+          WHERE A.STATUS_CD = '1000'
+          <isNotNull prepend="" property="PROD_OFFER_ID"> 
+          AND A.PROD_OFFER_ID IN
+          <iterate property="PROD_OFFER_ID" conjunction="," close=")" open="(">
+	        #PROD_OFFER_ID[]#
+	      </iterate>
+	      </isNotNull>
+          AND A.EXP_DATE >SYS_EXTRACT_UTC(current_timestamp)+0
+          AND A.tenant_id=#tenantId# 
+    </select>
+</sqlMap>

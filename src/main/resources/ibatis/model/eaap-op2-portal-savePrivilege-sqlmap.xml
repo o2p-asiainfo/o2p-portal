@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="eaap-op2-portal-savePrivilege">
+
+	<select id="countSpec" parameterClass="java.util.HashMap" resultClass="Integer">
+		select COUNT(1) from char_spec where char_spec_id = #objectId# and ORG_ID = #userId#
+		<dynamic>
+      	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ 	</select>
+ 	
+ 	<select id="countServiceSpec" parameterClass="java.util.HashMap" resultClass="Integer">
+		select COUNT(1) from service_spec where service_id = #objectId# and service_provider_id = #userId#
+		<dynamic>
+      	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ 	</select>
+ 	
+ 	<select id="countProduct" parameterClass="java.util.HashMap" resultClass="Integer">
+		select COUNT(1) from product where product_id = #objectId# and product_provider_id = #userId#
+		<dynamic>
+      	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ 	</select>
+ 	
+ 	<select id="countOffer" parameterClass="java.util.HashMap" resultClass="Integer">
+		select COUNT(1) from prod_offer where prod_offer_id = #objectId# and offer_provider_id = #userId#
+		<dynamic>
+      	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ 	</select>
+ 	
+ 	<select id="countPricePlan" parameterClass="java.util.HashMap" resultClass="Integer">
+		select COUNT(1) from prod_offer where PROD_OFFER_ID = (
+			select PROD_OFFER_ID from PROD_OFFER_PRICING where PRICING_INFO_ID = #objectId#) 
+			and OFFER_PROVIDER_ID = #userId#
+		<dynamic>
+      	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ 	</select>
+ 	
+ 	<select id="countPricePlanRule" parameterClass="java.util.HashMap" resultClass="Integer">
+		select COUNT(1) from prod_offer where PROD_OFFER_ID = (
+			select PROD_OFFER_ID from PROD_OFFER_PRICING where PRICING_INFO_ID = (
+				select PRI_PRICING_INFO_ID from COMPONENT_PRICE where PRICE_ID = #objectId#)) 
+			and OFFER_PROVIDER_ID = #userId#
+		<dynamic>
+      	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ 	</select>
+ 	
+ 	<select id="countSettlement" parameterClass="java.util.HashMap" resultClass="Integer">
+		select COUNT(1) from settle_sp_busi_def where BUSI_ID = #objectId# and PARTNER_CODE = #userId#
+		<dynamic>
+      	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ 	</select>
+ 	
+ 	<select id="countSettlementRule" parameterClass="java.util.HashMap" resultClass="Integer">
+		select COUNT(1) from settle_rule where rule_id = #objectId# and PARTNER_CODE = #userId#
+		<dynamic>
+      	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ 	</select>
+ 	
+ 	<select id="countApp" parameterClass="java.util.HashMap" resultClass="Integer">
+		select COUNT(1) from app where app_id = #objectId# and app_deve = #userId#
+		<dynamic>
+      	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ 	</select>
+ 	
+ 	<select id="countSys" parameterClass="java.util.HashMap" resultClass="Integer">
+		select count(1) from component where component_id = #objectId#  and org_id = #userId#
+		<dynamic>
+      	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ 	</select>
+ 	
+ 	<select id="countSysPricePlan" parameterClass="java.util.HashMap" resultClass="Integer">
+		select count(1) from PROD_OFFER_PRICING p,prod_offer o where p.pricing_info_id= #objectId# and o.offer_provider_id = #userId# and p.prod_offer_id = o.prod_offer_id
+		<dynamic>
+      	 <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+ 	</select>
+</sqlMap>

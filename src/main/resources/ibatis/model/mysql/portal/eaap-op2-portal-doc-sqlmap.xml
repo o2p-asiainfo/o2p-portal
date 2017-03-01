@@ -1,0 +1,551 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="eaap-op2-portal-doc">
+
+	<!-- ############### API文档管理和技术管理中所需的SQL ################################## -->
+	
+	<select id="qryApiByService"  parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT api_id APIID,api_name APINAME FROM api WHERE service_id = #serviceId# and TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 查询API文档一级目录信息 FA_DIR_ID = 100代表着是帮助目录类别 -->
+	<select id="selectDirList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT DIR_ID DIRID,FA_DIR_ID FADIRID,DIR_NAME DIRNAME FROM directory
+		D WHERE D.DIR_STATE = 'A'
+		AND D.DIR_TYPE = 2 AND D.FA_DIR_ID = 100 AND
+		D.DIR_ID IN
+		<iterate property="DirId" conjunction="," close=")" open="(">
+			#DirId[]#
+		</iterate>
+		and D.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 查询API文档二级目录信息 ;401 API目录按DIR_TYPE=0配置 -->
+	<select id="selectDirNexList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT DIR_ID DIRID,FA_DIR_ID FADIRID,DIR_NAME DIRNAME,DIR_TYPE DIRTYPE FROM directory
+		D WHERE D.DIR_STATE = 'A' AND (D.DIR_TYPE = 2 or D.DIR_ID=401) AND
+		D.FA_DIR_ID IN
+		<iterate property="DirId" conjunction="," close=")" open="(">
+			#DirId[]#
+		</iterate>
+		and D.TENANT_ID=#tenantId#
+	</select>
+	
+	<select id="selectApiDirList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT DIR_ID DIRID,FA_DIR_ID FADIRID,DIR_NAME DIRNAME,DIR_TYPE DIRTYPE FROM directory
+		D WHERE D.DIR_STATE = 'A' AND  D.DIR_ID=401 and D.TENANT_ID=#tenantId#
+	</select>
+	
+	<!-- 查询API文档三级目录信息  -->
+	<select id="selectDirThirdList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT DIR_ID DIRID,FA_DIR_ID FADIRID,DIR_NAME DIRNAME,DIR_TYPE DIRTYPE FROM directory
+		D WHERE D.DIR_STATE = 'A' AND D.DIR_TYPE = 0 AND
+		D.FA_DIR_ID IN
+		<iterate property="DirId" conjunction="," close=")" open="(">
+			#DirId[]#
+		</iterate>
+		and D.TENANT_ID=#tenantId#
+	</select>
+
+
+	<!-- 获取API文档二级目录的头信息 -->
+	<select id="nexDirTitle" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		SELECT DIR_NAME DIRNAME FROM directory D WHERE D.DIR_STATE
+		= 'A' AND D.DIR_TYPE = 2 AND D.DIR_ID=#dirId# and D.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 点击文档目录树后展示内容，因为文档内容是CLOB内容，下列需要转换 -->
+	<resultMap class="java.util.HashMap" id="Model_htmlMap">
+		<result property="DIRID" column="DIRID" javaType="String" />
+		<result property="HELPID" column="HELPID" javaType="String" />
+		<result property="QUETITLE" column="QUETITLE" javaType="String" />
+		<result property="QUEASKCONTENT" column="QUEASKCONTENT"
+			nullValue="" javaType="java.lang.String" jdbcType="CLOB" />
+		<result property="DIRTYPE" column="DIRTYPE" javaType="String" />
+	</resultMap>
+	<select id="showPlatform" parameterClass="java.util.HashMap"
+		resultMap="Model_htmlMap">
+		SELECT A.DIR_ID DIRID,B.QUE_HELP_ID HELPID,B.QUE_TITLE
+		QUETITLE,B.QUE_ASK_CONTENT QUEASKCONTENT,C.DIR_TYPE DIRTYPE
+		FROM
+		que_he_dir_list A,ques_help B, directory C WHERE A.QUE_HE_DIR_ID =
+		B.QUE_HELP_ID AND B.QUE_AUDIT_STATE='A'
+		AND A.DIR_ID=C.DIR_ID AND
+		A.DIR_ID=#dirId#
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 搜索API函数信息(输入参数为API函数名) -->
+	<select id="selectApiList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT A.API_ID APIID,A.API_NAME APINAME,A.API_METHOD
+		APIMETHOD,D.DIR_NAME DIRNAME FROM api A,service B,dir_ser_list
+		C,directory D WHERE A.SERVICE_ID=B.SERVICE_ID
+		AND
+		B.SERVICE_ID=C.SERVICE_ID AND C.DIR_ID=D.DIR_ID AND (A.API_NAME like
+		concat('%',#id#,'%') or A.API_METHOD like concat('%',#id#,'%'))
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+	</select>
+	<!-- 没有参数的情况下,显示全部的API信息 -->
+	
+	<select id="findAllApiListCount" resultClass="java.lang.Integer" parameterClass="java.util.HashMap">
+		SELECT count(1) 
+		FROM api A,service B,dir_ser_list C,directory D WHERE
+		A.SERVICE_ID=B.SERVICE_ID
+		AND B.SERVICE_ID=C.SERVICE_ID
+		AND C.DIR_ID=D.DIR_ID AND C.DIR_ID IN
+		<iterate property="DirId" conjunction="," close=")" open="(">
+			#DirId[]#
+		</iterate>
+		<dynamic>
+			<isNotNull prepend="and" property="searchValue"> 
+				(A.API_NAME LIKE concat('%',#searchValue#,'%') OR A.API_METHOD LIKE concat('%',#searchValue#,'%') OR D.DIR_NAME LIKE concat('%',#searchValue#,'%'))
+			</isNotNull>
+		</dynamic>
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+	</select>
+	
+	<select id="findAllApiList" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+		SELECT A.API_ID APIID,
+		A.API_NAME APINAME,
+		A.API_METHOD APIMETHOD,D.DIR_NAME DIRNAME
+		FROM api A,service B,dir_ser_list C,directory D WHERE
+		A.SERVICE_ID=B.SERVICE_ID
+		AND B.SERVICE_ID=C.SERVICE_ID AND
+		C.DIR_ID=D.DIR_ID AND C.DIR_ID IN
+		<iterate property="DirId" conjunction="," close=")" open="(">
+			#DirId[]#
+		</iterate>
+		<dynamic>
+			<isNotNull prepend="and" property="searchValue"> 
+				(A.API_NAME LIKE concat('%',#searchValue#,'%') OR A.API_METHOD LIKE concat('%',#searchValue#,'%') OR D.DIR_NAME LIKE concat('%',#searchValue#,'%'))
+			</isNotNull>
+		</dynamic>
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+		limit #pro_mysql#,#page_record#
+	</select>
+
+	<!-- 查看API函数信息(点击目录文件名) -->
+	<select id="selectDirApiList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT A.API_ID APIID,A.API_NAME APINAME,A.API_METHOD
+		APIMETHOD,D.DIR_NAME DIRNAME FROM api A,service B,dir_ser_list
+		C,directory D WHERE A.SERVICE_ID=B.SERVICE_ID
+		AND
+		B.SERVICE_ID=C.SERVICE_ID AND C.DIR_ID=D.DIR_ID AND D.DIR_ID=#id#
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 展示左边树状目录树，只显示API文档目录， DIR_TYPE = 0为API文档，区别上面的DIR_TYPE = 2 -->
+	<select id="selectDirectoryList" resultClass="java.util.HashMap">
+		SELECT A.DIR_ID
+		DIRID, A.DIR_NAME DIRNAME, A.FA_DIR_ID FADIRID, B.S_FILE_ID
+		SFILEID
+		FROM directory A,file_share B
+		WHERE A.DIR_STATE = 'A' AND A.DIR_TYPE =
+		0 AND A.S_FILE_ID = B.S_FILE_ID
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+	</select>
+	<select id="selectApiAndDirList" resultClass="java.util.HashMap"
+		parameterClass="java.util.HashMap">
+		SELECT A.API_ID APIID,A.API_NAME APINAME,A.API_METHOD
+		APIMETHOD,D.DIR_ID
+		DIRID,D.DIR_NAME DIRNAME
+		FROM api A,service
+		B,dir_ser_list C,directory D WHERE
+		A.SERVICE_ID=B.SERVICE_ID
+		AND
+		B.SERVICE_ID=C.SERVICE_ID AND C.DIR_ID=D.DIR_ID AND A.API_ID=#value#
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+	</select>
+	<!-- ################################################# -->
+
+
+
+	<!-- ############### 以下SQL为API明细内容所必需的语句 ################################## -->
+	<!-- 能力简介 -->
+	<select id="selectAbilityIntro" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		SELECT S.SERVICE_DESC SERVICEDESC FROM api A,service S WHERE
+		A.API_ID=#value# and A.service_id=S.service_id
+		and A.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- API用户授权类型(字段缺失，先用STATE代替) -->
+	<select id="selectAPIUserGetType" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		SELECT A.IS_NEED_USER_AUTH USERAUTH FROM api A WHERE
+		A.API_ID=#value#
+		and A.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 请求URL地址 -->
+	<select id="selectReqURL" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		select  
+           ttt.attr_spec_value ATTRSPECVALUE
+       from 
+	       api a,
+	       service b,
+	       tech_impl c,
+	       component d,
+       		(select tt.tech_impl_id tech_impl_id,
+               aaa.service_id service_id,
+               aaa.create_time create_time,
+               group_concat(tt.attr_spec_value) attr_spec_value,
+               aaa.ser_tech_impl_id ser_tech_impl_id
+         		 from tech_imp_att tt,ser_tech_impl aaa
+				where tt.tech_impl_id = aaa.tech_impl_id and tt.attr_spec_id=1
+		    	and aaa.tenant_id=#tenantId# and tt.tenant_id=#tenantId#
+         		group by tech_impl_id) ttt
+    where ttt.service_id = b.service_id
+			    and ttt.tech_impl_id = c.tech_impl_id
+			    and c.component_id = d.component_id
+			    and  a.service_id=b.service_id and a.api_id=#value#
+			    and a.tenant_id=#tenantId#
+				and b.tenant_id=#tenantId#
+				and c.tenant_id=#tenantId#
+				and d.tenant_id=#tenantId#
+	</select>
+
+	<!-- HTTP请求方式 -->
+	<select id="selectHTTPQeq" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		SELECT distinct E.COMM_PRO_NAME COMMPRONAME,E.COMM_PRO_CD COMMPROCD
+		FROM api A,service B,ser_tech_impl C,tech_impl
+		D,comm_protocal E,component F WHERE A.SERVICE_ID=B.SERVICE_ID
+		AND
+		C.SERVICE_ID=B.SERVICE_ID AND D.TECH_IMPL_ID=C.TECH_IMPL_ID AND
+		E.COMM_PRO_CD = D.COMM_PRO_CD AND A.API_ID=#value#
+		AND
+		F.COMPONENT_ID=D.COMPONENT_ID
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+		and F.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 响应支持格式(通过协议版本找版本格式) -->
+	<select id="selectRspSupport" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		SELECT E.CEP_NAME CEPNAME FROM api A,service
+		B,contract_version C,contract_format D, main_data E, main_data_type F
+		WHERE
+		A.SERVICE_ID=B.SERVICE_ID AND C.CONTRACT_VERSION_ID =
+		B.CONTRACT_VERSION_ID AND D.REQ_RSP='REQ'
+		AND D.CON_TYPE = E.CEP_CODE
+		AND C.CONTRACT_VERSION_ID = D.CONTRACT_VERSION_ID AND F.MDT_SIGN =
+		'type_contract' AND F.MDT_CD = E.MDT_CD
+		AND E.CEP_CODE= D.CON_TYPE AND
+		A.API_ID=#value#
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+		and E.TENANT_ID=#tenantId#
+		and F.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 注意事项(暂时空缺) -->
+	<select id="selectNotice" parameterClass="java.lang.String"
+		resultClass="java.lang.String">
+	</select>
+
+	<!-- 系统级请求参数(示例值还没有取出来，另外区分系统性和应用级的是需要把协议版本表中的协议规格ID放到协议规格表中去遍历一下基类协议规格ID，然后通过基类协议规格ID再去协议版本表找对应的 
+		协议版本ID，所以下面的SQL还需要关联一下协议规格,已经关联了协议规格)是否必须中文值改成节点约束 通过节点值约束类型类型为主数据，取约束值表达式，再去关联主数据类型表，再通过主数据类型表去取主数据。 -->
+	<select id="selectSysQeqList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT F.NODE_NAME NONENAME, H.MAIND_ID MAINDID,
+		H.CEP_NAME NODETYPE, I.CEP_NAME ISNOT, F.NEVL_CONS_VALUE,F.DESCRIPTION
+		FROM api A,service B,contract_version C,contract_format D,contract
+		E,node_desc F,contract_version G,main_data H,main_data I
+		WHERE
+		A.SERVICE_ID = B.SERVICE_ID AND C.CONTRACT_VERSION_ID =
+		B.CONTRACT_VERSION_ID
+		AND E.CONTRACT_ID = C.CONTRACT_ID AND
+		E.BASE_CONTRACT_ID = G.CONTRACT_ID
+		AND G.CONTRACT_VERSION_ID =
+		D.CONTRACT_VERSION_ID AND F.TCP_CTR_F_ID =
+		D.TCP_CTR_F_ID AND
+		I.CEP_CODE = F.NODE_NUMBER_CONS
+		AND H.CEP_CODE =
+		F.NODE_TYPE_CONS AND
+		H.MDT_CD = '303' AND I.MDT_CD = '301' AND
+		D.REQ_RSP = 'REQ' AND F.STATE = 'A' AND 
+		A.API_ID=#value#
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+		and E.TENANT_ID=#tenantId#
+		and F.TENANT_ID=#tenantId#
+		and G.TENANT_ID=#tenantId#
+		and H.TENANT_ID=#tenantId#
+		and I.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 应用级请求参数 -->
+	<select id="selectApplyReqList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT F.NONENAME,
+		F.FNONENAME,
+		F.NODEPATH,
+		E.MAIND_ID MAINDID,
+		E.CEP_NAME NODETYPE,
+		G.CEP_NAME ISNOT,
+		F.NEVL_CONS_VALUE,
+		F.DESCRIPTION
+		from api A left join service B on A.SERVICE_ID=B.SERVICE_ID
+		left join contract_version C on C.CONTRACT_VERSION_ID =
+		B.CONTRACT_VERSION_ID
+		left join contract_format D on C.CONTRACT_VERSION_ID =
+		D.CONTRACT_VERSION_ID
+		left join (SELECT m.node_name NONENAME,n.node_name FNONENAME,m.node_path NODEPATH,m.TCP_CTR_F_ID,m.NEVL_CONS_VALUE,m.DESCRIPTION,m.NODE_TYPE_CONS,m.NODE_NUMBER_CONS,m.STATE FROM node_desc m LEFT JOIN node_desc n ON m.parent_node_id = n.node_desc_id and m.tenant_id=#tenantId#) F on F.TCP_CTR_F_ID = D.TCP_CTR_F_ID
+		left join main_data E on F.NODE_TYPE_CONS =E.CEP_CODE AND E.MDT_CD='303'
+		left join main_data G on G.CEP_CODE=F.NODE_NUMBER_CONS AND
+		G.MDT_CD='301'
+		where D.REQ_RSP='REQ' AND F.STATE = 'A' AND A.API_ID=#value#
+		and A.tenant_id=#tenantId#
+		and B.tenant_id=#tenantId#
+		and C.tenant_id=#tenantId#
+		and D.tenant_id=#tenantId#
+		and E.tenant_id=#tenantId#
+		and G.tenant_id=#tenantId#
+	</select>
+
+	<!-- 请求示例 -->
+	<select id="selectReqInstance" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		SELECT D.XSD_DEMO REQINSTANCE FROM api A,service
+		B,contract_version C,contract_format D WHERE A.SERVICE_ID=B.SERVICE_ID
+		AND C.CONTRACT_VERSION_ID = B.CONTRACT_VERSION_ID
+		AND
+		C.CONTRACT_VERSION_ID = D.CONTRACT_VERSION_ID AND A.API_ID=#value#
+		AND
+		D.REQ_RSP='REQ'
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 系统级返回结果(实例值需要重新获取) -->
+	<select id="selectSysResult" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT F.NODE_PATH FANONENAME, F.NODE_NAME
+		NONENAME,H.MAIND_ID MAINDID,H.CEP_NAME NODETYPE, I.CEP_NAME ISNOT,
+		F.NEVL_CONS_VALUE,F.DESCRIPTION
+		FROM api A,service B,contract_version
+		C,contract_format D,contract
+		E,node_desc F,contract_version G,main_data
+		H,main_data I
+		WHERE
+		A.SERVICE_ID = B.SERVICE_ID AND
+		C.CONTRACT_VERSION_ID =
+		B.CONTRACT_VERSION_ID AND E.CONTRACT_ID =
+		C.CONTRACT_ID
+		AND E.BASE_CONTRACT_ID = G.CONTRACT_ID AND
+		G.CONTRACT_VERSION_ID =
+		D.CONTRACT_VERSION_ID AND F.TCP_CTR_F_ID =
+		D.TCP_CTR_F_ID
+		AND I.CEP_CODE = F.NODE_NUMBER_CONS AND H.CEP_CODE =
+		F.NODE_TYPE_CONS AND
+		H.MDT_CD = '303' AND I.MDT_CD = '301'
+		AND D.REQ_RSP
+		= 'RSP' AND A.API_ID=#value#
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+		and E.TENANT_ID=#tenantId#
+		and F.TENANT_ID=#tenantId#
+		and G.TENANT_ID=#tenantId#
+		and H.TENANT_ID=#tenantId#
+		and I.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 应用级返回结果 -->
+	<select id="selectAppResult" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+
+		SELECT F.NODE_PATH FANONENAME,F.NODE_NAME NONENAME,
+		E.MAIND_ID
+		MAINDID,E.CEP_NAME NODETYPE,G.CEP_NAME ISNOT,
+		F.NEVL_CONS_VALUE,
+		F.DESCRIPTION
+		from api A left join service B on
+		A.SERVICE_ID=B.SERVICE_ID
+		left join contract_version C on
+		C.CONTRACT_VERSION_ID =
+		B.CONTRACT_VERSION_ID
+		left join contract_format
+		D on C.CONTRACT_VERSION_ID =
+		D.CONTRACT_VERSION_ID
+		left join node_desc F
+		on F.TCP_CTR_F_ID = D.TCP_CTR_F_ID AND F.STATE = 'A' 
+		left join main_data E on
+		F.NODE_TYPE_CONS =E.CEP_CODE AND E.MDT_CD='303'
+		left join main_data G
+		on G.CEP_CODE=F.NODE_NUMBER_CONS AND
+		G.MDT_CD='301'
+		where
+		D.REQ_RSP='RSP' AND A.API_ID=#value#
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+		and E.TENANT_ID=#tenantId#
+		and F.TENANT_ID=#tenantId#
+		and G.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 返回示例 -->
+	<select id="selectReturnInstance" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		SELECT D.XSD_DEMO REQINSTANCE FROM api A,service
+		B,contract_version C,contract_format D
+		WHERE A.SERVICE_ID=B.SERVICE_ID
+		AND C.CONTRACT_VERSION_ID =
+		B.CONTRACT_VERSION_ID
+		AND
+		C.CONTRACT_VERSION_ID = D.CONTRACT_VERSION_ID AND A.API_ID=#value#
+		AND
+		D.REQ_RSP='RSP'
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+	</select>
+
+	<!-- 错误代码 -->
+	<select id="selectErrorCode" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT TYPE_ID TYPEID, CODE CODE, NAME NAME, DESCRIPTOR
+		DESCRIPTOR FROM
+		exception_type
+		WHERE INSTR( ','||(SELECT distinct
+		F.NEVL_CONS_VALUE FROM api A,service
+		B,contract_version
+		C,contract_format D,contract E,node_desc
+		F,contract_version G
+		WHERE
+		A.SERVICE_ID = B.SERVICE_ID AND C.CONTRACT_VERSION_ID =
+		B.CONTRACT_VERSION_ID AND E.CONTRACT_ID = C.CONTRACT_ID
+		AND
+		E.BASE_CONTRACT_ID = G.CONTRACT_ID AND G.CONTRACT_VERSION_ID =
+		D.CONTRACT_VERSION_ID AND F.TCP_CTR_F_ID = D.TCP_CTR_F_ID
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+		and C.TENANT_ID=#tenantId#
+		and D.TENANT_ID=#tenantId#
+		and E.TENANT_ID=#tenantId#
+		and F.TENANT_ID=#tenantId#
+		and G.TENANT_ID=#tenantId#
+		AND D.REQ_RSP
+		= 'RSP' AND NEVL_CONS_TYPE = 4 AND
+		A.API_ID=#value#)||',',','||code||',')>0
+	</select>
+
+	<!-- 展现渠道信息 -->
+	<select id="selectChannelList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT A.CEP_CODE CEPCODE,A.MAIND_ID MAINDID, A.CEP_NAME
+		CEPNAME, A.CEP_DES CEPDES FROM main_data A WHERE
+		INSTR(concat(',',#value#,','),
+		concat(',',cep_values,',')) > 0
+		and TENANT_ID=#tenantId#
+	</select>
+
+	<!-- ############### 结束 ################################## -->
+
+
+	<!-- ############### 以下SQL为技术支持页面所必需的语句【像目录树功能的SQL与上面的API文档管理中的SQL重用】 ################################## -->
+
+	<!-- 点击文档目录树后展示内容，因为文档内容是CLOB内容，下列需要转换,601表明内容是属于应用问题 -->
+	<resultMap class="java.util.HashMap" id="Model_htmlMap">
+		<result property="DIRID" column="DIRID" javaType="String" />
+		<result property="QUETITLE" column="QUETITLE" javaType="String" />
+		<result property="QUEASKCONTENT" column="QUEASKCONTENT"
+			nullValue="" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	<select id="searchProblem" parameterClass="java.util.HashMap"
+		resultMap="Model_htmlMap">
+		SELECT A.DIR_ID DIRID,B.QUE_TITLE QUETITLE,B.QUE_ASK_CONTENT
+		QUEASKCONTENT FROM que_he_dir_list A,ques_help B
+		WHERE A.DIR_ID='601'
+		AND A.QUE_HE_DIR_ID=B.QUE_HELP_ID AND
+		B.QUE_AUDIT_STATE='A' AND
+		(B.QUE_ASK_CONTENT LIKE
+		concat('%',#value#,'%') or B.QUE_TITLE LIKE
+		concat('%',#value#,'%'))
+		and A.TENANT_ID=#tenantId#
+		and B.TENANT_ID=#tenantId#
+	</select>
+	<select id="showSupportName" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		SELECT DIR_NAME DIRNAME FROM directory D WHERE D.DIR_STATE
+		= 'A'
+		AND D.DIR_TYPE = 2 AND D.DIR_ID=#dirId#
+		and D.TENANT_ID=#tenantId#
+	</select>
+	<select id="selectSuccessCase" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from org a ,file_share b where
+		a.fil_s_file_id=b.s_file_id and a.isindex='1'
+		and a.TENANT_ID=#tenantId#
+		and b.TENANT_ID=#tenantId#
+	</select>
+	<select id="successCaseDetails" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select a.name OrgName,b.name ComponentName,b.s_file_id
+		from org a,component b where a.org_id=b.org_id and a.org_id=#orgId#
+		and a.TENANT_ID=#tenantId#
+		and b.TENANT_ID=#tenantId#
+	</select>
+	<select id="successCaseCount" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT COUNT(1) ALLNUM
+		FROM org A where A.ISSUCCESSCASE='1'
+		and A.TENANT_ID=#tenantId#
+	</select>
+	
+	
+	<select id="successCaseList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT A.ORG_ID,A.NAME,A.FIL_S_FILE_ID,A.ORG_USERNAME,A.CAPABILITY FROM org A
+		WHERE A.ISSUCCESSCASE='1' and A.TENANT_ID=#tenantId#
+	</select>
+	
+	
+	<select id="querySuccessCaseIndexList"  resultClass="java.util.HashMap">
+		SELECT A.ORG_ID,A.NAME,A.FIL_S_FILE_ID,A.ORG_USERNAME,A.CAPABILITY FROM org A
+		where 1 = 1 and A.ISSUCCESSCASE='1' AND A.ISINDEX = 1 and A.TENANT_ID=#tenantId# 
+	</select>
+	
+</sqlMap>

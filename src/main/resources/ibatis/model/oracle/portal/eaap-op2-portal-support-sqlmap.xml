@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="eaap-op2-portal-support">
+	<!--查询 selectTabName 修改updateTabName 插入insertTabName 删除deleteTabName  -->
+	<!-- 查询API函数信息(输入参数为API函数名) -->
+	<select id="selectSupportList" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+		 SELECT A.API_ID APIID,A.API_NAME APINAME,A.API_METHOD APIMETHOD,D.DIR_NAME DIRNAME FROM API A,SERVICE B,DIR_SER_LIST C,DIRECTORY D WHERE A.SERVICE_ID=B.SERVICE_ID 
+    AND B.SERVICE_ID=C.SERVICE_ID AND C.DIR_ID=D.DIR_ID  AND A.API_NAME like '%'||#value#||'%'
+	</select>
+	<!-- 查询API函数信息(输入参数为文件名) -->
+	<select id="selectContaceList" resultClass="java.util.HashMap">
+		    SELECT '联系我们,联系我们,联系我们,联系我们,联系我们,联系我们,联系我们,联系我们,联系我们,联系我们,联系我们,联系我们,联系我们,' contace FROM DUAL
+	</select>
+</sqlMap>

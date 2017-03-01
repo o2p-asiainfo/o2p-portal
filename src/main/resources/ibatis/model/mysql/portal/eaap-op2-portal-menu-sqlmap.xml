@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-menu">
+
+	<select id="selectMenu" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	    SELECT B.FUNCTION_ID ,B.FUNCTION_NAME,B.FUNCTION_EN_NAME ,B.BUSINESS_SYSTEM_ID ,B.PARENT_FUNCTION_ID ,B.URL ,B.SYS_STATUS_ID ,B.SHOWNUM   
+	    FROM sys_business_system A , sys_function B  
+	    WHERE A.BUSINESS_SYSTEM_ID = B.BUSINESS_SYSTEM_ID AND A.BUSINESS_SYSTEM_ID = #businessSysId# AND B.PARENT_FUNCTION_ID = #id# 
+	    AND  B.tenant_id=#tenantId# and  A.tenant_id=#tenantId#
+	    ORDER BY B.SHOWNUM 
+	</select>
+
+</sqlMap>

@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="org">
+	<select id="selectOrgSeq" resultClass="java.lang.String">
+	 </select>
+	 
+ <select id="selectSysdate" resultClass="java.lang.String">
+		   select name from org where org_id = '1'
+	</select>
+<delete id="deleteOrg" parameterClass="com.asiainfo.integration.o2p.web.bo.Org">
+  delete from org
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="orgId"> ORG_ID=#orgId#</isNotNull>
+     <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</delete>
+<update id="updateOrg" parameterClass="com.asiainfo.integration.o2p.web.bo.Org">
+  update org
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="orgTypeCode">ORG_TYPE_CODE=#orgTypeCode#</isNotNull>
+    <isNotNull prepend="," property="name">NAME=#name#</isNotNull>
+    <isNotNull prepend="," property="orgCode">ORG_CODE=#orgCode#</isNotNull>
+    <isNotNull prepend="," property="orgUsername">ORG_USERNAME=#orgUsername#</isNotNull>
+    <isNotNull prepend="," property="orgPwd">ORG_PWD=#orgPwd#</isNotNull>
+    <isNotNull prepend="," property="certTypeCode">CERT_TYPE_CODE=#certTypeCode#</isNotNull>
+    <isNotNull prepend="," property="certNumber">CERT_NUMBER=#certNumber#</isNotNull>
+    <isNotNull prepend="," property="auditFlowId">AUDIT_FLOW_ID=#auditFlowId#</isNotNull>
+    <isNotNull prepend="," property="simpleSpell">SIMPLE_SPELL=#simpleSpell#</isNotNull>
+    <isNotNull prepend="," property="state">STATE=#state#</isNotNull>
+    <isNotNull prepend="," property="email">EMAIL=#email#</isNotNull>
+     <isNotNull prepend="," property="subEmail">SUB_EMAIL=#subEmail#</isNotNull>
+    <isNotNull prepend="," property="stateTime">STATE_TIME=#stateTime#</isNotNull>
+    <isNotNull prepend="," property="createTime">CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="," property="descriptor">DESCRIPTOR=#descriptor#</isNotNull>
+    <isNotNull prepend="," property="customerId">CUSTOMER_ID=#customerId#</isNotNull>
+    <isNotNull prepend="," property="accountId">ACCOUNT_ID=#accountId#</isNotNull>
+    <isNotNull prepend="," property="filSFileId">FIL_S_FILE_ID=#filSFileId#</isNotNull>
+    <isNotNull prepend="," property="sFileId">S_FILE_ID=#sFileId#</isNotNull>
+    <isNotNull prepend="," property="areaId">AREA_ID=#areaId#</isNotNull>
+    <isNotNull prepend="," property="address">ADDRESS=#address#</isNotNull>
+    <isNotNull prepend="," property="telephone">TELEPHONE=#telephone#</isNotNull>
+     <isNotNull prepend="," property="subTelephone">SUB_TELEPHONE=#subTelephone#</isNotNull>
+    <isNotNull prepend="," property="partnerType">PARTNER_TYPE=#partnerType#</isNotNull>
+    <isNotNull prepend="," property="pwdUpdateDate">PWD_UPDATE_DATE=#pwdUpdateDate#</isNotNull>
+    ,INDEN_EFF_DATE=#indenEffDate# 
+   ,INDEN_EXP_DATE=#indenExpDate#
+   <isNotNull prepend="," property="indenAddress">INDEN_ADDRESS=#indenAddress#</isNotNull>
+   <isNotNull prepend="," property="legalName">LEGAL_NAME=#legalName#</isNotNull>
+   <isNotNull prepend="," property="partyId">PARTY_ID=#partyId#</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="orgId"> ORG_ID=#orgId#</isNotNull>
+    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+
+<select id="queryOrgIdSeq"  resultClass="java.lang.Integer">
+	SELECT nextval('SEQ_ORG');
+</select>
+ 	
+<insert id="insertOrg" parameterClass="com.asiainfo.integration.o2p.web.bo.Org" >
+  INSERT INTO org
+  (STATE,STATE_TIME,CREATE_TIME  
+  <dynamic >
+    <isNotNull prepend=","  property="orgId">ORG_ID</isNotNull>
+    <isNotNull prepend="," property="orgTypeCode">ORG_TYPE_CODE</isNotNull>
+    <isNotNull prepend="," property="name">NAME</isNotNull>
+    <isNotNull prepend="," property="orgCode">ORG_CODE</isNotNull>
+    <isNull prepend="," property="orgCode">ORG_CODE</isNull>
+    <isNotNull prepend="," property="orgUsername">ORG_USERNAME</isNotNull>
+    <isNotNull prepend="," property="orgPwd">ORG_PWD</isNotNull>
+    <isNotNull prepend="," property="certTypeCode">CERT_TYPE_CODE</isNotNull>
+    <isNotNull prepend="," property="certNumber">CERT_NUMBER</isNotNull>
+   
+   <isNotNull prepend="," property="indenEffDate">INDEN_EFF_DATE</isNotNull>
+   <isNotNull prepend="," property="indenExpDate">INDEN_EXP_DATE</isNotNull>
+   <isNotNull prepend="," property="indenAddress">INDEN_ADDRESS</isNotNull>
+   <isNotNull prepend="," property="legalName">LEGAL_NAME</isNotNull>
+   <isNotNull prepend="," property="partyId">PARTY_ID</isNotNull>
+   
+    <isNotNull prepend="," property="simpleSpell">SIMPLE_SPELL</isNotNull>
+    <isNotNull prepend="," property="descriptor">DESCRIPTOR</isNotNull>
+    <isNotNull prepend="," property="customerId">CUSTOMER_ID</isNotNull>
+    <isNotNull prepend="," property="accountId">ACCOUNT_ID</isNotNull>
+    <isNotNull prepend="," property="email">EMAIL</isNotNull>
+    <isNotNull prepend="," property="subEmail">SUB_EMAIL</isNotNull>
+    <isNotNull prepend="," property="areaId">AREA_ID</isNotNull>
+    <isNotNull prepend="," property="address">ADDRESS</isNotNull>
+    <isNotNull prepend="," property="telephone">TELEPHONE</isNotNull>
+    <isNotNull prepend="," property="subTelephone">SUB_TELEPHONE</isNotNull>
+    <isNotNull prepend="," property="filSFileId">FIL_S_FILE_ID</isNotNull>
+    <isNotNull prepend="," property="sFileId">S_FILE_ID</isNotNull>
+    <isNotNull prepend="," property="partnerType">PARTNER_TYPE</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+  values
+  (<dynamic >
+     <isNotNull property="state">#state#</isNotNull>
+     <isNull property="state">'D'</isNull>
+   </dynamic> ,utc_timestamp(),utc_timestamp()
+   <dynamic >
+    <isNotNull prepend="," property="orgId">#orgId#</isNotNull>
+    <isNotNull prepend="," property="orgTypeCode">#orgTypeCode#</isNotNull>
+    <isNotNull prepend="," property="name">#name#</isNotNull>
+    <isNotNull prepend="," property="orgCode">#orgCode#</isNotNull>
+    <isNull prepend="," property="orgCode">#orgId#</isNull>
+    <isNotNull prepend="," property="orgUsername">#orgUsername#</isNotNull>
+    <isNotNull prepend="," property="orgPwd">#orgPwd#</isNotNull>
+    <isNotNull prepend="," property="certTypeCode">#certTypeCode#</isNotNull>
+    <isNotNull prepend="," property="certNumber">#certNumber#</isNotNull>
+    
+    <isNotNull prepend="," property="indenEffDate">#indenEffDate#</isNotNull>
+   <isNotNull prepend="," property="indenExpDate">#indenExpDate#</isNotNull>
+   <isNotNull prepend="," property="indenAddress">#indenAddress#</isNotNull>
+   <isNotNull prepend="," property="legalName">#legalName#</isNotNull>
+   <isNotNull prepend="," property="partyId">#partyId#</isNotNull>
+   
+    <isNotNull prepend="," property="simpleSpell">#simpleSpell#</isNotNull>
+    <isNotNull prepend="," property="descriptor">#descriptor#</isNotNull>
+    <isNotNull prepend="," property="customerId">#customerId#</isNotNull>
+    <isNotNull prepend="," property="accountId">#accountId#</isNotNull>
+    <isNotNull prepend="," property="email">#email#</isNotNull>
+     <isNotNull prepend="," property="subEmail">#subEmail#</isNotNull>
+    <isNotNull prepend="," property="areaId">#areaId#</isNotNull>
+    <isNotNull prepend="," property="address">#address#</isNotNull>
+    <isNotNull prepend="," property="telephone">#telephone#</isNotNull>
+     <isNotNull prepend="," property="subTelephone">#subTelephone#</isNotNull>
+    <isNotNull prepend="," property="filSFileId">#filSFileId#</isNotNull>
+    <isNotNull prepend="," property="sFileId">#sFileId#</isNotNull>
+    <isNotNull prepend="," property="partnerType">#partnerType#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+   </dynamic>
+  )
+</insert>
+<select id="selectOrg" parameterClass="com.asiainfo.integration.o2p.web.bo.Org" resultClass="com.asiainfo.integration.o2p.web.bo.Org">
+  select ORG_ID ORGID ,ORG_TYPE_CODE  ORGTYPECODE , NAME NAME, ORG_CODE ORGCODE , ORG_USERNAME ORGUSERNAME, 
+  ORG_PWD ORGPWD, CERT_NUMBER CERTNUMBER, CERT_TYPE_CODE CERTTYPECODE, SIMPLE_SPELL SIMPLESPELL ,  STATE STATE,  STATE_TIME stateTime,  CREATE_TIME createTime,
+  DESCRIPTOR DESCRIPTOR,  CUSTOMER_ID CUSTOMERID , ACCOUNT_ID ACCOUNTID, EMAIL EMAIL,AUDIT_FLOW_ID auditFlowId,
+  AREA_ID AREAID, ADDRESS ADDRESS, TELEPHONE TELEPHONE , FIL_S_FILE_ID FILSFILEID , S_FILE_ID SFILEID,PARTNER_TYPE  partnerType,SUB_EMAIL subEmail,SUB_TELEPHONE subTelephone,tenant_id tenantId,
+  INDEN_EFF_DATE  indenEffDate,INDEN_EXP_DATE indenExpDate,INDEN_ADDRESS indenAddress,LEGAL_NAME legalName  from org where 1 = 1 and <![CDATA[STATE <> 'X' ]]>
+  <dynamic>
+    <isNotNull prepend="and" property="orgId"> ORG_ID=#orgId#</isNotNull>
+    <isNotNull prepend="and" property="orgTypeCode"> ORG_TYPE_CODE=#orgTypeCode#</isNotNull>
+    <isNotNull prepend="and" property="name"> NAME LIKE CONCAT('%',#name#,'%')</isNotNull>
+    <isNotNull prepend="and" property="orgCode"> ORG_CODE=#orgCode#</isNotNull>
+    <isNotNull prepend="and" property="orgUsername"> ORG_USERNAME=#orgUsername#</isNotNull>
+    <isNotNull prepend="and" property="orgPwd"> ORG_PWD=#orgPwd#</isNotNull>
+    <isNotNull prepend="and" property="certNumber"> CERT_NUMBER=#certNumber#</isNotNull>
+    <isNotNull prepend="and" property="certTypeCode"> CERT_TYPE_CODE=#certTypeCode#</isNotNull>
+    
+    <isNotNull prepend="and" property="simpleSpell"> SIMPLE_SPELL=#simpleSpell#</isNotNull>
+    <isNotNull prepend="and" property="state"> STATE=#state#</isNotNull>
+    <isNotNull prepend="and" property="stateTime"> STATE_TIME=#stateTime#</isNotNull>
+    <isNotNull prepend="and" property="createTime"> CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="and" property="descriptor"> DESCRIPTOR=#descriptor#</isNotNull>
+    <isNotNull prepend="and" property="customerId"> CUSTOMER_ID=#customerId#</isNotNull>
+    <isNotNull prepend="and" property="accountId"> ACCOUNT_ID=#accountId#</isNotNull>
+    <isNotNull prepend="and" property="email"> EMAIL=#email#</isNotNull>
+     <isNotNull prepend="and" property="subEmail"> SUB_EMAIL=#subEmail#</isNotNull>
+    <isNotNull prepend="and" property="areaId"> AREA_ID=#areaId#</isNotNull>
+    <isNotNull prepend="and" property="telephone"> TELEPHONE=#telephone#</isNotNull>
+    <isNotNull prepend="and" property="subTelephone"> SUB_TELEPHONE=#subTelephone#</isNotNull>
+    <isNotNull prepend="and" property="filSFileId"> FIL_S_FILE_ID=#filSFileId#</isNotNull>
+    <isNotNull prepend="and" property="sFileId"> S_FILE_ID=#sFileId#</isNotNull>
+     <isNotNull prepend="and" property="partnerType"> PARTNER_TYPE=#partnerType#</isNotNull>
+     
+      <isNotNull prepend="and" property="indenEffDate"> INDEN_EFF_DATE=#indenEffDate#</isNotNull>
+     <isNotNull prepend="and" property="indenExpDate"> INDEN_EXP_DATE=#indenExpDate#</isNotNull>
+     <isNotNull prepend="and" property="indenAddress"> INDEN_ADDRESS=#indenAddress#</isNotNull>
+     <isNotNull prepend="and" property="legalName"> LEGAL_NAME=#legalName#</isNotNull>
+     <isNotNull prepend="and" property="partyId"> PARTY_ID=#partyId#</isNotNull>
+     
+     <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+
+ <select id="queryOrgIdAndName"  resultClass="java.util.HashMap">
+ 	<![CDATA[
+ 		SELECT org_id id, CONCAT(org_username,'(',NAME,')') name FROM org WHERE org_username <> '' and state = 'D'  
+ 		<dynamic>
+            <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>  
+       ORDER BY org_username 
+ 	]]>
+ </select>
+
+ <select id="queryCityById" parameterClass="java.util.HashMap"  resultClass="java.lang.String">
+ 	SELECT zone_name FROM AREA WHERE area_id = #areaId# and tenant_id=#tenantId#
+ </select>
+
+ <select id="queryCityForReg" parameterClass="com.asiainfo.integration.o2p.web.bo.Org"  resultClass="java.util.HashMap">
+       select tab2.area_id PROVINCEID,
+              case when tab1.area_id is null then tab2.area_id else tab1.area_id end CITYID,
+              trim(tab2.zone_name) COUNAME,
+              trim(case when tab1.zone_name is null then tab2.zone_name else tab1.zone_name end) CITYNAME
+         from (select * from area where up_area_id is not null) tab1
+   RIGHT JOIN (select * from area where up_area_id is null) tab2
+           on tab1.up_area_id = tab2.area_id
+     order by tab2.zone_name,cityid
+ </select>
+ 
+  <select id="queryProvinceForReg" parameterClass="com.asiainfo.integration.o2p.web.bo.Org"  resultClass="java.util.HashMap">
+        select area_id PROVINCEID, zone_name PROVINCENAME from area where up_area_id is null 
+        <dynamic>
+            <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+      </dynamic>  
+ order by area_id
+ </select>
+ 
+<select id="queryOrgCountry"  parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+     select a.area_id areaId,a.desc_info country 
+      from area a 
+   where a.up_area_id is null 
+       and a.area_id in (select o.area_id from org o where o.partner_type='2' and o.tenant_id=#tenantId#)  
+       and a.tenant_id=#tenantId#
+  order by a.area_id
+</select>
+
+<select id="queryOperatorUnderCountry" parameterClass="com.asiainfo.integration.o2p.web.bo.Org"  resultClass="java.util.HashMap">
+select o.org_id orgId,o.org_username orgUsername,o.area_id areaId from org o 
+where o.area_id=#areaId# and o.partner_type='2' and o.tenant_id=#tenantId#
+</select>
+
+
+<insert id="insertOrgOther" parameterClass="com.asiainfo.integration.o2p.web.bo.Org">
+  insert into org
+  (STATE,STATE_TIME,CREATE_TIME  
+  <dynamic >
+    <isNotNull prepend=","  property="orgId">ORG_ID</isNotNull>
+    <isNotNull prepend="," property="orgTypeCode">ORG_TYPE_CODE</isNotNull>
+    <isNotNull prepend="," property="name">NAME</isNotNull>
+    <isNotNull prepend="," property="orgId">ORG_CODE</isNotNull>
+    <isNotNull prepend="," property="orgUsername">ORG_USERNAME</isNotNull>
+    <isNotNull prepend="," property="orgPwd">ORG_PWD</isNotNull>
+    <isNotNull prepend="," property="certTypeCode">CERT_TYPE_CODE</isNotNull>
+    <isNotNull prepend="," property="certNumber">CERT_NUMBER</isNotNull>
+   
+    <isNotNull prepend="," property="simpleSpell">SIMPLE_SPELL</isNotNull>
+    <isNotNull prepend="," property="descriptor">DESCRIPTOR</isNotNull>
+    <isNotNull prepend="," property="customerId">CUSTOMER_ID</isNotNull>
+    <isNotNull prepend="," property="accountId">ACCOUNT_ID</isNotNull>
+    <isNotNull prepend="," property="email">EMAIL</isNotNull>
+    <isNotNull prepend="," property="areaId">AREA_ID</isNotNull>
+    <isNotNull prepend="," property="telephone">TELEPHONE</isNotNull>
+    <isNotNull prepend="," property="filSFileId">FIL_S_FILE_ID</isNotNull>
+    <isNotNull prepend="," property="sFileId">S_FILE_ID</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+  values
+  ('B' ,utc_timestamp(),utc_timestamp()
+   <dynamic >
+    <isNotNull prepend="," property="orgId">#orgId#</isNotNull>
+    <isNotNull prepend="," property="orgTypeCode">#orgTypeCode#</isNotNull>
+    <isNotNull prepend="," property="name">#name#</isNotNull>
+    <isNotNull prepend="," property="orgId">#orgId#</isNotNull>
+    <isNotNull prepend="," property="orgUsername">#orgUsername#</isNotNull>
+    <isNotNull prepend="," property="orgPwd">#orgPwd#</isNotNull>
+    <isNotNull prepend="," property="certTypeCode">#certTypeCode#</isNotNull>
+    <isNotNull prepend="," property="certNumber">#certNumber#</isNotNull>
+    
+    <isNotNull prepend="," property="simpleSpell">#simpleSpell#</isNotNull>
+    <isNotNull prepend="," property="descriptor">#descriptor#</isNotNull>
+    <isNotNull prepend="," property="customerId">#customerId#</isNotNull>
+    <isNotNull prepend="," property="accountId">#accountId#</isNotNull>
+    <isNotNull prepend="," property="email">#email#</isNotNull>
+    <isNotNull prepend="," property="areaId">#areaId#</isNotNull>
+    <isNotNull prepend="," property="telephone">#telephone#</isNotNull>
+    <isNotNull prepend="," property="filSFileId">#filSFileId#</isNotNull>
+    <isNotNull prepend="," property="sFileId">#sFileId#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+   </dynamic>
+  )
+</insert>
+
+	<select id="selectCity" parameterClass="java.util.HashMap" resultClass="com.ailk.eaap.op2.bo.Area">
+		SELECT AREA_ID areaId,ZONE_NAME zoneName 
+		  FROM (select tab2.area_id up_area_id,
+	             		   case when tab1.area_id is null then tab2.area_id else tab1.area_id end area_id,
+	             		   trim(tab2.zone_name) COUNAME,
+	                      trim(case when tab1.zone_name is null then tab2.zone_name else tab1.zone_name end) zone_name
+	                 from (select * from area where up_area_id is not null) tab1
+	           RIGHT JOIN (select * from area where up_area_id is null) tab2
+	                   on tab1.up_area_id = tab2.area_id
+	             order by tab2.zone_name,area_id) area
+		<dynamic prepend="where">
+		    <isNotNull prepend="and" property="areaId"> UP_AREA_ID=#areaId#</isNotNull>
+		     <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		</dynamic>
+		ORDER BY ZONE_NAME
+	</select>
+	
+	<select id="validatorOrgInfoExistList" parameterClass="com.asiainfo.integration.o2p.web.bo.Org" resultClass="com.asiainfo.integration.o2p.web.bo.Org">
+		  	select * 
+		  	  from org
+		  	 where ORG_CODE=#orgCode#
+		  <dynamic>
+		    <isNotNull prepend="and" property="orgId"> ORG_ID != #orgId#</isNotNull>
+		  </dynamic>
+	</select>
+	
+	<select id="queryTenantIdByCode" parameterClass="java.lang.String" resultClass="java.lang.String">
+		 SELECT tenant_id FROM tenant WHERE CODE = #tenantCode# 	
+	</select>
+	
+	<select id="qryAdminIdByTenantId" parameterClass="java.lang.Integer" resultClass="java.lang.Integer">
+	  SELECT admin_id FROM tenant WHERE tenant_id = #tenantId#;
+	</select>
+	
+	<select id="queryTenant" parameterClass="com.ailk.eaap.op2.bo.Tenant" resultClass="com.ailk.eaap.op2.bo.Tenant">
+		SELECT tenant_id tenantId,
+			name name,
+			code code,
+			logo logo,
+			country country,
+			province province,
+			language language,
+			zip_code zipCode,
+			contract_num contractNum,
+			currency currency,
+			status status,
+			time_zone timeZone,
+			theme theme,
+			create_dt createDt,
+			start_dt startDt,
+			end_dt endDt
+		FROM tenant 
+		<dynamic prepend="where">
+		     <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+		     <isNotNull prepend="and" property="code"> code=#code#</isNotNull>
+		</dynamic>
+	</select>
+	
+</sqlMap>

@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-message">
+	<resultMap id="messageResultMap" class="com.ailk.eaap.op2.bo.message.Message" >
+		<result column="MSG_ID" property="msgId" javaType="java.math.BigDecimal" />
+    	<result column="MSG_TYPE" property="msgType" javaType="java.lang.Integer" />
+    	<result column="MSG_ORIGINATOR" property="msgOriginator" javaType="java.math.BigDecimal" />
+   	 	<result column="MSG_WAY" property="msgWay" javaType="java.lang.String" />
+   	 	<result column="MSG_TITLE" property="msgTitle" javaType="java.lang.String" />
+   	 	<result column="MSG_SUBTITLE" property="msgSubtitle" javaType="java.lang.String" />
+   	 	<result column="MSG_CONTENT" property="msgContent" javaType="java.lang.String" />
+   	 	<result column="CREATE_DATE" property="createDate" javaType="java.util.Date" />
+   	 	<result column="STATUS_CD" property="statusCd" javaType="java.lang.String" />
+   	 	<result column="MSG_HANDLE_ADDRESS" property="msgHandleAddress" javaType="java.lang.String" />
+   	 	<result column="MSG_PRIORITY" property="msgPriority" javaType="java.lang.String" />
+   	 	<result column="STATUS_DATE" property="statusDate" javaType="java.util.Date" />
+   	 	<result column="MSG_REC_TYPE" property="msgRecType" javaType="java.lang.Integer" />
+   	 	<result column="OP_ID" property="opId" javaType="java.lang.String" />
+   	 	<result column="FORMAT_BEGIN_DATE" property="formatBeginDate" javaType="java.lang.String" />
+   	 	<result column="FORMAT_END_DATE" property="formatEndDate" javaType="java.lang.String" />
+   	 	<result column="tenant_id" property="tenantId" javaType="java.lang.Integer" />
+	</resultMap>
+	<resultMap id="messageResultMapDetail" class="com.ailk.eaap.op2.bo.message.Message" >
+		<result column="MSG_ID" property="msgId" javaType="java.math.BigDecimal" />
+    	<result column="MSG_TYPE" property="msgType" javaType="java.lang.Integer" />
+    	<result column="MSG_ORIGINATOR" property="msgOriginator" javaType="java.math.BigDecimal" />
+   	 	<result column="MSG_WAY" property="msgWay" javaType="java.lang.String" />
+   	 	<result column="MSG_TITLE" property="msgTitle" javaType="java.lang.String" />
+   	 	<result column="MSG_SUBTITLE" property="msgSubtitle" javaType="java.lang.String" />
+   	 	<result column="MSG_CONTENT" property="msgContent" javaType="java.lang.String" />
+   	 	<result column="CREATE_DATE" property="createDate" javaType="java.util.Date" />
+   	 	<result column="STATUS_CD" property="statusCd" javaType="java.lang.String" />
+   	 	<result column="MSG_HANDLE_ADDRESS" property="msgHandleAddress" javaType="java.lang.String" />
+   	 	<result column="MSG_PRIORITY" property="msgPriority" javaType="java.lang.String" />
+   	 	<result column="STATUS_DATE" property="statusDate" javaType="java.util.Date" />
+   	 	<result column="MSG_REC_TYPE" property="msgRecType" javaType="java.lang.Integer" />
+   	 	<result column="OP_ID" property="opId" javaType="java.lang.String" />
+   	 	<result column="tenant_id" property="tenantId" javaType="java.lang.Integer" />
+	</resultMap>
+
+	<select id="getRoleByOrgId" parameterClass="java.util.HashMap"  resultClass="java.lang.String">
+		SELECT role_code FROM org_role WHERE ORG_ID = #orgId# and tenant_id=#tenantId#
+	</select>
+
+	<select id="countMessageForLookByRole" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+		SELECT COUNT(1) FROM (
+			SELECT msg.MSG_ID ,
+			msg.tenant_id
+			FROM MESSAGE msg, MSG_RECIPIENT_REL b 
+			WHERE msg.STATUS_CD='1000' AND msg.MSG_REC_TYPE = 1 AND b.REC_ID like concat('%',#roleId#,'%') AND msg.MSG_ID = b.MSG_ID and 
+			<![CDATA[ MSG_BEGINN_DATE <= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') AND MSG_END_DATE >= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') ]]> 
+			<dynamic>
+				<isNotNull prepend=" AND" property="msgType"> msg.MST_TYPE = #msgType# </isNotNull>
+				<isNotNull prepend=" AND" property="query"> (msg.MSG_TITLE like concat('%',#query#,'%') or msg.MSG_SUBTITLE like concat('%',#query#,'%') or msg.MSG_CONTENT like concat('%',#query#,'%'))</isNotNull>
+				<isNotNull prepend="AND" property="tenantId">  msg.tenant_id=#tenantId#</isNotNull>
+			</dynamic>
+			 ) parama where  not exists (
+			select * from 
+				(SELECT MSG_ID,tenant_id  FROM MESSAGE_RECIPENT c WHERE c.REC_ID = #orgId#  and c.tenant_id=#tenantId#) paramb
+			where parama.msg_id = paramb.msg_id and parama.tenant_id =#tenantId# and  paramb.tenant_id=#tenantId#)
+	</select>
+	
+	<select id="showMessageListByRole" parameterClass="java.util.HashMap" resultMap="messageResultMap">
+		SELECT *,date_format(MSG_BEGINN_DATE,'%Y-%c-%d') FORMAT_BEGIN_DATE,date_format(MSG_END_DATE,'%Y-%c-%d') FORMAT_END_DATE  FROM (
+			SELECT msg.* 
+			FROM MESSAGE msg, MSG_RECIPIENT_REL b 
+			WHERE msg.STATUS_CD='1000' AND msg.MSG_REC_TYPE = 1 AND b.REC_ID like concat('%',#roleId#,'%') AND msg.MSG_ID = b.MSG_ID and 
+			<![CDATA[ MSG_BEGINN_DATE <= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') AND MSG_END_DATE >= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') ]]> 
+			<dynamic>
+				<isNotNull prepend=" AND" property="msgType"> msg.MSG_TYPE = #msgType# </isNotNull>
+				<isNotNull prepend=" AND" property="query"> (msg.MSG_TITLE like concat('%',#query#,'%') or msg.MSG_SUBTITLE like concat('%',#query#,'%') or msg.MSG_CONTENT like concat('%',#query#,'%'))</isNotNull>
+				<isNotNull prepend="AND" property="tenantId">  msg.tenant_id=#tenantId#</isNotNull>
+			</dynamic>
+			) parama where  not exists (
+				select * from 
+				(SELECT MSG_ID,tenant_id FROM MESSAGE_RECIPENT c WHERE c.REC_ID = #orgId# and c.tenant_id=#tenantId#) paramb
+			where parama.msg_id = paramb.msg_id and parama.tenant_id =#tenantId# and  paramb.tenant_id=#tenantId#) 
+			ORDER BY MSG_PRIORITY asc ,MSG_ID desc 
+			LIMIT #begin#,#end#
+	</select>
+
+	<select id="countMessageForLookByPerson" parameterClass="java.util.HashMap"  resultClass="java.lang.Integer">
+		SELECT count(1) FROM(
+			SELECT * FROM (
+				SELECT msg.MSG_ID,msg.tenant_id
+				FROM MESSAGE msg, MSG_RECIPIENT_REL b 
+				WHERE msg.STATUS_CD='1000' AND msg.MSG_REC_TYPE = 2  AND b.REC_ID = #orgId# AND 
+				<![CDATA[ MSG_BEGINN_DATE <= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') AND MSG_END_DATE >= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') ]]>
+				AND msg.MSG_ID = b.MSG_ID 
+				<dynamic>
+					<isNotNull prepend=" AND" property="msgType"> msg.MSG_TYPE = #msgType# </isNotNull>
+					<isNotNull prepend=" AND" property="query"> (msg.MSG_TITLE like concat('%',#query#,'%') or msg.MSG_SUBTITLE like concat('%',#query#,'%') or msg.MSG_CONTENT like concat('%',#query#,'%'))</isNotNull>
+					<isNotNull prepend="AND" property="tenantId">  msg.tenant_id=#tenantId#</isNotNull>
+				</dynamic>
+				 )  parama where  not exists  (
+					select * from 
+					(SELECT MSG_ID,tenant_id  FROM MESSAGE_RECIPENT c WHERE c.REC_ID = #orgId# AND c.tenant_id=#tenantId# AND c.STATUS_CD IN ('1600','1500') ) paramb
+				where parama.msg_id = paramb.msg_id and parama.tenant_id =#tenantId# and  paramb.tenant_id=#tenantId#)
+				) as paramc 
+	</select>
+	
+	<select id="showMessageListByPerson" parameterClass="java.util.HashMap" resultMap="messageResultMap">
+		SELECT paramc.*,date_format(paramc.MSG_BEGINN_DATE,'%Y-%c-%d') FORMAT_BEGIN_DATE,date_format(paramc.MSG_END_DATE,'%Y-%c-%d') FORMAT_END_DATE  FROM (
+			SELECT * FROM (
+				SELECT msg.*
+				FROM MESSAGE msg, MSG_RECIPIENT_REL b 
+				WHERE msg.STATUS_CD='1000' AND msg.MSG_REC_TYPE = 2 AND b.REC_ID = #orgId# AND 
+				<![CDATA[ MSG_BEGINN_DATE <= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') AND MSG_END_DATE >= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') ]]>
+				AND msg.MSG_ID = b.MSG_ID AND msg.tenant_id = b.tenant_id
+				<dynamic>
+					<isNotNull prepend=" AND" property="msgType"> msg.MSG_TYPE = #msgType# </isNotNull>
+					<isNotNull prepend=" AND" property="query"> (msg.MSG_TITLE like concat('%',#query#,'%') or msg.MSG_SUBTITLE like concat('%',#query#,'%') or msg.MSG_CONTENT like concat('%',#query#,'%'))</isNotNull>
+					<isNotNull prepend="AND" property="tenantId">  msg.tenant_id=#tenantId#</isNotNull>
+				</dynamic>
+				 ) parama where  not exists (
+					select * from 
+					(SELECT MSG_ID,c.tenant_id  FROM MESSAGE_RECIPENT c WHERE c.REC_ID = #orgId# AND c.tenant_id=#tenantId# AND c.STATUS_CD IN ('1600','1500')) paramb
+				where parama.msg_id = paramb.msg_id and parama.tenant_id =#tenantId# and  paramb.tenant_id=#tenantId#)
+			) as paramc 
+			ORDER BY paramc.MSG_PRIORITY asc  ,paramc.MSG_ID desc 
+			LIMIT #begin#,#end#
+	</select>
+	
+	<select id="showMessageListByStatus" parameterClass="java.util.HashMap" resultMap="messageResultMap">
+		SELECT msg.*,date_format(msg.MSG_BEGINN_DATE,'%Y-%c-%d') FORMAT_BEGIN_DATE,date_format(msg.MSG_END_DATE,'%Y-%c-%d') FORMAT_END_DATE 
+		FROM MESSAGE msg WHERE msg.STATUS_CD='1000'  AND 
+		<![CDATA[ msg.MSG_BEGINN_DATE <= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') AND msg.MSG_END_DATE >= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') ]]>
+		<dynamic>
+			<isNotNull prepend=" AND" property="msgType"> msg.MSG_TYPE = #msgType# </isNotNull>
+			<isNotNull prepend=" AND" property="query"> (msg.MSG_TITLE like concat('%',#query#,'%') or msg.MSG_SUBTITLE like concat('%',#query#,'%') or msg.MSG_CONTENT like concat('%',#query#,'%'))</isNotNull>
+			<isNotNull prepend="AND" property="tenantId">  msg.tenant_id=#tenantId#</isNotNull>
+		</dynamic>
+		AND msg.MSG_ID IN 
+			(SELECT MSG_ID FROM MESSAGE_RECIPENT m WHERE m.REC_ID=#orgId# AND m.STATUS_CD IN 
+		<dynamic>
+      	<isNotNull prepend="" property="status"> 
+      		<iterate  prepend="" property="status"  open="("  close=")"  conjunction="," >
+             				  #status[]#
+	  		</iterate>
+      	</isNotNull>
+      	<isNotNull prepend="AND" property="tenantId">  m.tenant_id=#tenantId#</isNotNull>
+      </dynamic>) 
+		LIMIT #begin#,#end#
+	</select>
+	
+	<select id="cntMessageListByStatus" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		SELECT count(1) FROM MESSAGE msg WHERE msg.STATUS_CD='1000' AND 
+		<![CDATA[ msg.MSG_BEGINN_DATE <= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') AND msg.MSG_END_DATE >= DATE_FORMAT(utc_timestamp(),'%Y-%m-%d %h:%i:%s') ]]>
+		<dynamic>
+			<isNotNull prepend=" AND" property="msgType"> msg.MSG_TYPE = #msgType# </isNotNull>
+			<isNotNull prepend=" AND" property="query"> (msg.MSG_TITLE like concat('%',#query#,'%') or msg.MSG_SUBTITLE like concat('%',#query#,'%') or msg.MSG_CONTENT like concat('%',#query#,'%'))</isNotNull>
+			<isNotNull prepend="AND" property="tenantId">  msg.tenant_id=#tenantId#</isNotNull>
+		</dynamic>
+		AND msg.MSG_ID IN 
+			(SELECT MSG_ID FROM MESSAGE_RECIPENT m WHERE m.REC_ID=#orgId# AND m.STATUS_CD IN 
+		<dynamic>
+      	<isNotNull prepend="" property="status"> 
+      		<iterate  prepend="" property="status"  open="("  close=")"  conjunction="," >
+             				  #status[]#
+	  		</iterate>
+      	</isNotNull>
+      	 <isNotNull prepend="AND" property="tenantId">  m.tenant_id=#tenantId#</isNotNull>
+      </dynamic>
+			) 
+	</select>
+
+	<select id="selectMessageRecipent" parameterClass="com.ailk.eaap.op2.bo.message.MessageRecipent"  resultClass="com.ailk.eaap.op2.bo.message.MessageRecipent">
+		select MSG_REC_ID msgRecId,REC_ID recId,MSG_ID msgId,MSG_DECISION msgDecision,
+		       STATUS_CD statusCd,STATUS_DATE statusDate,LOOK_TIMES lookTimes,CREATE_DATE createDate ,tenant_id tenantId
+		from message_recipent  
+		<dynamic prepend=" where ">
+			<isNotNull prepend="and" property="msgRecId"> MSG_REC_ID=#msgRecId# </isNotNull>
+	      	<isNotNull prepend="and" property="recId"> REC_ID=#recId# </isNotNull>
+	      	<isNotNull prepend="and" property="msgId"> MSG_ID=#msgId# </isNotNull>
+	      	<isNotNull prepend="and" property="statusCd"> STATUS_CD=#statusCd# </isNotNull>
+	      	<isNotNull prepend="and" property="lookTimes"> LOOK_TIMES >= #lookTimes# </isNotNull>
+	      	<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+	      	<isNotNull prepend="and" property="statusDate"> <![CDATA[ STATUS_DATE >= DATE_FORMAT(#statusDate#,'%Y-%m-%d %h:%i:%s') ]]></isNotNull>
+	      	<isNotNull prepend="and" property="createDate"> <![CDATA[ CREATE_DATE >= DATE_FORMAT(#createDate#,'%Y-%m-%d %h:%i:%s') ]]></isNotNull>
+	      </dynamic>
+	</select>
+	
+	<select id="countMessageRecipent" parameterClass="com.ailk.eaap.op2.bo.message.MessageRecipent"  resultClass="com.ailk.eaap.op2.bo.message.MessageRecipent">
+		select count(*) from MESSAGE_RECIPENT 
+		<dynamic prepend=" where ">
+	      	<isNotNull prepend="and" property="recId"> REC_ID=#recId# </isNotNull>
+	      	<isNotNull prepend="and" property="msgId"> MSG_ID=#msgId# </isNotNull>
+	      	<isNotNull prepend="and" property="statusCd"> STATUS_CD=#statusCd# </isNotNull>
+	      	<isNotNull prepend="and" property="lookTimes"> LOOK_TIMES >= #lookTimes# </isNotNull>
+	      	<isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+	      	<isNotNull prepend="and" property="statusDate"> <![CDATA[ STATUS_DATE >= DATE_FORMAT(#statusDate#,'%Y-%m-%d %h:%i:%s') ]]></isNotNull>
+	      	<isNotNull prepend="and" property="createDate"> <![CDATA[ CREATE_DATE >= DATE_FORMAT(#createDate#,'%Y-%m-%d %h:%i:%s') ]]></isNotNull>
+	      </dynamic>
+	</select>
+	
+	<select id="qryMessageByContentId" parameterClass="java.util.HashMap"  resultMap="messageResultMapDetail">
+		select * from Message where MSG_TITLE like concat('%',#titleQuery#,'%')  and tenant_id=#tenantId# ORDER BY CREATE_DATE desc;
+	</select>
+	
+	<update id="updateMessageRecipent" parameterClass="com.ailk.eaap.op2.bo.message.MessageRecipent" >
+		UPDATE MESSAGE_RECIPENT SET STATUS_DATE = utc_timestamp()
+		<dynamic>
+	      	<isNotNull prepend="," property="msgDecision"> MSG_DECISION=#msgDecision# </isNotNull>
+	      	<isNotNull prepend="," property="statusCd"> STATUS_CD=#statusCd# </isNotNull>
+	      	<isNotNull prepend="," property="lookTimes"> LOOK_TIMES = #lookTimes# </isNotNull>
+	      	<isNotNull prepend="," property="tenantId"> tenant_id=#tenantId#</isNotNull>
+	      </dynamic>
+	      WHERE MSG_REC_ID = #msgRecId#  and tenant_id=#tenantId#
+	</update>
+	
+	<insert id="insertMessageRecipent" parameterClass="com.ailk.eaap.op2.bo.message.MessageRecipent">
+		<selectKey resultClass="java.math.BigDecimal" keyProperty="msgRecId">
+		  SELECT nextval('SEQ_MESSAGE_RECIPENT') from dual
+   	    </selectKey>
+		INSERT INTO MESSAGE_RECIPENT 
+		(create_date,status_date
+		<dynamic>
+		    <isNotNull prepend="," property="msgRecId">MSG_REC_ID</isNotNull>
+		    <isNotNull prepend="," property="recId">REC_ID</isNotNull>
+		    <isNotNull prepend="," property="msgId">MSG_ID</isNotNull>
+		    <isNotNull prepend="," property="msgDecision">MSG_DECISION</isNotNull>
+		    <isNotNull prepend="," property="statusCd">STATUS_CD</isNotNull>
+		    <isNotNull prepend="," property="lookTimes">LOOK_TIMES</isNotNull>
+		    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+		  </dynamic>
+		  )
+		  values(utc_timestamp() ,utc_timestamp() 
+		  <dynamic>
+		    <isNotNull prepend="," property="msgRecId">#msgRecId#</isNotNull>
+		    <isNotNull prepend="," property="recId">#recId#</isNotNull>
+		    <isNotNull prepend="," property="msgId">#msgId#</isNotNull>
+		    <isNotNull prepend="," property="msgDecision">#msgDecision#</isNotNull>
+		    <isNotNull prepend="," property="statusCd">#statusCd#</isNotNull>
+		    <isNotNull prepend="," property="lookTimes">#lookTimes#</isNotNull>
+		     <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+		  </dynamic>
+		  )
+	</insert>
+
+</sqlMap>

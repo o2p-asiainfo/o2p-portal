@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-offerProdRel">
+   <delete id="deleteOfferProdRel" parameterClass="com.ailk.eaap.op2.bo.OfferProdRel">
+  delete OFFER_PROD_REL
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="offerProdRelaId"> OFFER_PROD_RELA_ID=#offerProdRelaId# </isNotNull>
+    <isNotNull prepend="and" property="prodOfferId"> PROD_OFFER_ID=#prodOfferId# </isNotNull>
+    <isNotNull prepend="and" property="productId"> PRODUCT_ID=#productId# </isNotNull>
+     <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</delete>
+<update id="updateOfferProdRel" parameterClass="com.ailk.eaap.op2.bo.OfferProdRel">
+  update OFFER_PROD_REL
+  <dynamic prepend="set">
+    <isNotNull prepend="," property="roleCd">ROLE_CD=#roleCd#</isNotNull>
+    <isNotNull prepend="," property="prodOfferId">PROD_OFFER_ID=#prodOfferId#</isNotNull>
+    <isNotNull prepend="," property="productId">PRODUCT_ID=#productId#</isNotNull>
+    <isNotNull prepend="," property="maxCount">MAX_COUNT=#maxCount#</isNotNull>
+    <isNotNull prepend="," property="minCount">MIN_COUNT=#minCount#</isNotNull>
+    <isNotNull prepend="," property="ruleType">RULE_TYPE=#ruleType#</isNotNull>
+    <isNotNull prepend="," property="defaultCount">DEFAULT_COUNT=#defaultCount#</isNotNull>
+    <isNotNull prepend="," property="prodExistType">PROD_EXIST_TYPE=#prodExistType#</isNotNull>
+    <isNotNull prepend="," property="compoentType">COMPOENT_TYPE=#compoentType#</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="offerProdRelaId"> OFFER_PROD_RELA_ID=#offerProdRelaId# </isNotNull>
+    <isNotNull prepend="and" property="prodOfferId"> PROD_OFFER_ID=#prodOfferId# </isNotNull>
+    <isNotNull prepend="and" property="productId"> PRODUCT_ID=#productId# </isNotNull>
+    <isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</update>
+<insert id="insertOfferProdRel" parameterClass="com.ailk.eaap.op2.bo.OfferProdRel">
+        <selectKey resultClass="int" keyProperty="offerProdRelaId">
+			SELECT SEQ_OFFER_PROD_REL.NEXTVAL FROM DUAL
+		</selectKey>	
+  insert into OFFER_PROD_REL
+  (RULE_TYPE
+ <dynamic>
+    <isNotNull prepend="," property="offerProdRelaId">OFFER_PROD_RELA_ID</isNotNull>
+    <isNotNull prepend="," property="roleCd">ROLE_CD</isNotNull>
+    <isNotNull prepend="," property="prodOfferId">PROD_OFFER_ID</isNotNull>
+    <isNotNull prepend="," property="productId">PRODUCT_ID</isNotNull>
+    <isNotNull prepend="," property="maxCount">MAX_COUNT</isNotNull>
+    <isNotNull prepend="," property="minCount">MIN_COUNT</isNotNull>
+    <isNotNull prepend="," property="defaultCount">DEFAULT_COUNT</isNotNull>
+    <isNotNull prepend="," property="prodExistType">PROD_EXIST_TYPE</isNotNull>
+    <isNotNull prepend="," property="compoentType">COMPOENT_TYPE</isNotNull>
+    <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+ </dynamic>
+ )
+  values 
+  ('1'
+  <dynamic>
+    <isNotNull prepend="," property="offerProdRelaId">#offerProdRelaId#</isNotNull>
+    <isNotNull prepend="," property="roleCd">#roleCd#</isNotNull>
+    <isNotNull prepend="," property="prodOfferId">#prodOfferId#</isNotNull>
+    <isNotNull prepend="," property="productId">#productId#</isNotNull>
+    <isNotNull prepend="," property="maxCount">#maxCount#</isNotNull>
+    <isNotNull prepend="," property="minCount">#minCount#</isNotNull>
+    <isNotNull prepend="," property="defaultCount">#defaultCount#</isNotNull>
+    <isNotNull prepend="," property="prodExistType">#prodExistType#</isNotNull>
+    <isNotNull prepend="," property="compoentType">#compoentType#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull>
+  </dynamic>
+  )
+</insert>
+<select id="selectOfferProdRel" parameterClass="com.ailk.eaap.op2.bo.OfferProdRel" resultClass="java.util.HashMap">
+  select * from OFFER_PROD_REL
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="offerProdRelaId"> OFFER_PROD_RELA_ID=#offerProdRelaId#</isNotNull>
+    <isNotNull prepend="and" property="roleCd"> ROLE_CD=#roleCd#</isNotNull>
+    <isNotNull prepend="and" property="prodOfferId"> PROD_OFFER_ID=#prodOfferId#</isNotNull>
+    <isNotNull prepend="and" property="productId"> PRODUCT_ID=#productId#</isNotNull>
+    <isNotNull prepend="and" property="maxCount"> MAX_COUNT=#maxCount#</isNotNull>
+    <isNotNull prepend="and" property="minCount"> MIN_COUNT=#minCount#</isNotNull>
+    <isNotNull prepend="and" property="ruleType"> RULE_TYPE=#ruleType#</isNotNull>
+    <isNotNull prepend="and" property="defaultCount"> DEFAULT_COUNT=#defaultCount#</isNotNull>
+    <isNotNull prepend="and" property="prodExistType"> PROD_EXIST_TYPE=#prodExistType#</isNotNull>
+    <isNotNull prepend="and" property="compoentType"> COMPOENT_TYPE=#compoentType#</isNotNull>
+     <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</select>
+
+
+<select id="queryOfferProdRel" parameterClass="com.ailk.eaap.op2.bo.OfferProdRel" resultClass="com.ailk.eaap.op2.bo.OfferProdRel">
+select offer_prod_rela_id offerProdRelaId,
+role_cd roleCd,
+prod_offer_id prodOfferId,
+product_id productId,
+max_count maxCount,
+min_count minCount,
+rule_type ruleType,
+default_count defaultCount,
+prod_exist_type prodExistType,
+compoent_type compoentType
+ from offer_prod_rel
+where prod_offer_id=#prodOfferId# and product_id=#productId#
+<dynamic>
+            <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+ </dynamic>  
+</select>
+</sqlMap>

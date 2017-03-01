@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="fileShare">
+  
+	<insert id="insertFileShare" parameterClass="com.ailk.eaap.op2.bo.FileShare">
+		<selectKey resultClass="int" keyProperty="sFileId">
+	SELECT nextval('SEQ_FILE_SHARE');
+		</selectKey>
+  insert into file_share
+  (STATE,CREATE_TIME,FILE_SHARE_CODE
+		<dynamic>
+			<isNotNull prepend=","  property="sFileId">S_FILE_ID</isNotNull>
+			<isNotNull prepend="," property="sFileName">S_FILE_NAME</isNotNull>
+			<isNotNull prepend="," property="sFileContent">S_FILE_CONTENT</isNotNull>
+			 <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+		</dynamic>
+  )
+  values
+  ('A' ,utc_timestamp(),uuid()
+		<dynamic >
+			<isNotNull prepend="," property="sFileId">#sFileId#</isNotNull>
+			<isNotNull prepend="," property="sFileName">#sFileName#</isNotNull>
+			<isNotNull prepend="," property="sFileContent">#sFileContent#</isNotNull>
+			<isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+		</dynamic>
+  )
+	</insert> 
+
+	<select id="selectFileShare" parameterClass="com.ailk.eaap.op2.bo.FileShare" resultClass="java.util.HashMap">
+	   select S_FILE_ID,
+	          S_FILE_NAME,
+	          S_FILE_CONTENT,
+	          STATE,
+	          CREATE_TIME,
+	          tenant_id
+	     from file_share
+		<dynamic prepend="where">
+			<isNotNull prepend="and" property="sFileId">  S_FILE_ID=#sFileId#</isNotNull>
+			<isNotNull prepend="and" property="tenantId">  tenant_id=#tenantId#</isNotNull>
+		</dynamic>
+	</select>
+	
+</sqlMap>

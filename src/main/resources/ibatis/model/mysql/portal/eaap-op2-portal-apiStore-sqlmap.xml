@@ -1,0 +1,365 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="eaap-op2-portal-apiStroe">
+
+	<resultMap class="com.ailk.eaap.op2.bo.Directory" id="directoryResult">
+		<result column="DIR_ID" property="dirId" />
+		<result column="FA_DIR_ID" property="faDirId" />
+		<result column="S_FILE_ID" property="sFileId" />
+		<result column="DIR_NAME" property="dirName" />
+		<result column="DIR_CODE" property="dirCode" />
+		<!-- <result column="DIR_CREATE_TIME" property="dirCreateTime" /> -->
+		<!-- <result column="DIR_STATE" property="dirState" /> -->
+		<!-- <result column="DIR_TYPE" property="dirType" /> -->
+		<!-- <result column="DIR_LASTEST_TIME" property="dirLastestTime" /> -->
+		<result column="TENANT_ID" property="tenantId" />
+	</resultMap>
+
+	<select id="quryApiOfferList" resultClass="java.util.HashMap">
+		<![CDATA[SELECT
+					AA.*, ifnull(BB.PAGE_VIEW,0) PAGE_VIEW,
+					ifnull(BB.COLLECT_CNT,0) COLLECT_CNT
+				FROM
+					(
+					SELECT
+						A.*
+					FROM
+						PROD_OFFER A,
+						offer_catalog_location B,
+						`directory` C
+					WHERE
+						A.prod_offer_id = B.prod_offer_id
+					AND B.dir_id = C.dir_id
+					AND A.COOPERATION_TYPE = '13'
+					AND B.DIR_ID = #dirId#
+					AND A.TENANT_ID = #tenantId#
+					AND B.TENANT_ID = #tenantId#
+					AND C.TENANT_ID = #tenantId#
+					AND C.DIR_STATE = 'A'
+					AND C.DIR_TYPE = '6'
+					AND A.exp_date >= NOW()
+					) AA
+				LEFT JOIN ITEM_CNT BB ON AA.PROD_OFFER_ID = BB.item_code 
+				AND BB.tenant_id = #tenantId# AND BB.item_type=1
+		]]>
+	</select>
+
+
+	
+
+	<select id="quryAllApiOfferList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT
+		AA.*, ifnull(BB.PAGE_VIEW,0) PAGE_VIEW,
+		ifnull(BB.COLLECT_CNT,0) COLLECT_CNT
+		FROM
+		(
+		SELECT
+		DISTINCT A.*
+		FROM
+		PROD_OFFER A,
+		offer_catalog_location B,
+		`directory` C
+		WHERE
+		A.prod_offer_id = B.prod_offer_id
+		AND B.dir_id = C.dir_id
+		AND A.COOPERATION_TYPE = '13'
+		AND A.STATUS_CD != '1300'
+		<dynamic>
+			<isNotNull prepend="AND" property="dirId"> B.DIR_ID in (select dir_id from directory where fa_dir_id = #dirId# or dir_id=#dirId#)
+			</isNotNull>
+		</dynamic>
+		AND A.TENANT_ID = #tenantId#
+		AND B.TENANT_ID = #tenantId#
+		AND C.TENANT_ID = #tenantId#
+		AND C.DIR_STATE = 'A'
+		AND C.DIR_TYPE = '6'
+		AND A.exp_date >= NOW()
+		) AA
+		LEFT JOIN ITEM_CNT BB ON AA.PROD_OFFER_ID = BB.item_code
+		AND BB.tenant_id = #tenantId#
+		left join item_sort its on AA.PROD_OFFER_ID = its.item_code
+		and its.item_type = 1
+		and its.sort_type = 1
+		and its.tenant_id = #tenantId#
+		order by sort_no desc,prod_offer_id desc
+		limit #startRow#,#pageSize#
+	</select>
+
+
+	<select id="queryNewApiList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		SELECT
+		AA.*, ifnull(BB.PAGE_VIEW,0) PAGE_VIEW,
+		ifnull(BB.COLLECT_CNT,0) COLLECT_CNT
+		FROM
+		(
+		SELECT
+		DISTINCT A.*
+		FROM
+		PROD_OFFER A,
+		offer_catalog_location B,
+		`directory` C
+		WHERE
+		A.prod_offer_id = B.prod_offer_id
+		AND B.dir_id = C.dir_id
+		AND A.COOPERATION_TYPE = '13'
+		AND A.STATUS_CD != '1300'
+		<dynamic>
+			<isNotNull prepend="AND" property="dirId"> B.DIR_ID in (select dir_id from directory where fa_dir_id = #dirId# or dir_id=#dirId#)
+			</isNotNull>
+		</dynamic>
+		AND A.TENANT_ID = #tenantId#
+		AND B.TENANT_ID = #tenantId#
+		AND C.TENANT_ID = #tenantId#
+		AND C.DIR_STATE = 'A'
+		AND C.DIR_TYPE = '6'
+		AND A.exp_date >= NOW()
+		AND A.EFF_DATE >= date_sub(curdate(),interval 7 day)
+		) AA
+		LEFT JOIN ITEM_CNT BB ON AA.PROD_OFFER_ID = BB.item_code
+		AND
+		BB.tenant_id = #tenantId# AND BB.item_type=1
+		ORDER BY AA.EFF_DATE
+		DESC,AA.PROD_OFFER_ID DESC
+		limit #startRow#,#pageSize#
+	</select>
+
+
+	<select id="quryApiOfferDealCount" resultClass="java.lang.Integer">
+		<![CDATA[SELECT
+				  count(*)
+				FROM
+					reg_stat_recent R,
+					(
+						SELECT
+							DISTINCT A.service_id,
+				      A.api_name,
+				      S.service_code,
+				      A.times_price
+						FROM
+							service S,
+							api A
+						WHERE
+							S.service_id = A.service_id
+					) SA
+				WHERE
+					R.intf_code = SA.service_code
+		]]>
+	</select>
+
+
+	<select id="quryApiOfferMenuType" parameterClass="com.ailk.eaap.op2.bo.ProdOffer"
+		resultClass="java.lang.String">
+		<![CDATA[SELECT
+					*
+				FROM
+					prod_offer p,
+					prod_offer_type o
+				WHERE
+					p.cooperation_type IN ('13')
+				AND p.status_cd != '1300'
+				AND p.offer_type = o.cd
+				AND p.prod_offer_id = #prodOfferId# 
+				ORDER BY
+					p.prod_offer_id DESC
+		]]>
+	</select>
+
+
+	<select id="quryApiOfferProviderName" parameterClass="com.ailk.eaap.op2.bo.Org"
+		resultClass="java.lang.String">
+		<![CDATA[SELECT
+					DISTINCT o.name
+				FROM
+					prod_offer p,
+					org o
+				WHERE
+					o.org_id = p.offer_provider_id
+				AND o.org_id = #orgId#
+		]]>
+	</select>
+
+
+	<!-- ApiOffer 下所属的API -->
+	<select id="quryApiOffersApi" parameterClass="com.ailk.eaap.op2.bo.ProdOffer"
+		resultClass="java.util.HashMap">
+		<![CDATA[   SELECT
+					 *
+					FROM
+						api
+					WHERE
+						service_id IN (
+							SELECT
+								service_id
+							FROM
+								service_product_real
+							WHERE
+								product_id IN (
+									SELECT
+										product_id
+									FROM
+										offer_prod_rel
+									WHERE
+										prod_offer_id = #prodOfferId# 
+								)
+						)
+		]]>
+	</select>
+
+
+	<insert id="insertApiOfferVisitorVolume" parameterClass="com.ailk.eaap.op2.bo.ProdOffer">
+		<selectKey resultClass="Integer" keyProperty="prodOfferId">
+			SELECT nextval('SEQ_prod_offer') from dual;
+		</selectKey>
+		insert into prod_offer
+		(
+		<dynamic>
+			<isNotNull prepend="," property="prodOfferId">prod_offer_id</isNotNull>
+			<isNotNull prepend="," property="visitorVolume">visitor_volume</isNotNull>
+		</dynamic>
+		)
+		values(
+		<dynamic>
+			<isNotNull prepend="," property="prodOfferId">prod_offer_id</isNotNull>
+			<isNotNull prepend="," property="visitorVolume">visitor_volume</isNotNull>
+		</dynamic>
+		)
+	</insert>
+
+
+	<select id="quryApiOfferType" resultClass="java.util.HashMap">
+		<![CDATA[SELECT
+					*
+				 FROM
+					offer_catalog_location ocl,
+					directory d
+				 WHERE ocl.dir_id = d.dir_id
+				 AND ocl.prod_offer_id = #prodOfferId# 
+		]]>
+	</select>
+
+
+	<select id="quryApiCataName" parameterClass="com.ailk.eaap.op2.bo.ProdOffer"
+		resultClass="java.lang.String">
+		<![CDATA[
+					SELECT
+						C.DIR_NAME
+					FROM
+						`directory` C
+					WHERE
+						  C.TENANT_ID = 1
+					AND C.DIR_STATE = 'A'
+					AND
+						C.dir_id = (
+							SELECT
+								d.dir_id
+							FROM
+								offer_catalog_location ocl,
+								DIRECTORY d
+							WHERE
+								ocl.dir_id = d.dir_id
+							AND ocl.prod_offer_id = #prodOfferId# 
+						)
+		]]>
+	</select>
+
+
+	<select id="queryApiCategory" parameterClass="java.util.HashMap"
+		resultMap="directoryResult">
+		select C.DIR_ID,C.FA_DIR_ID,C.S_FILE_ID,C.DIR_NAME,C.DIR_CODE,C.TENANT_ID
+		from `directory` C
+		where C.TENANT_ID = #tenantId#
+		AND C.DIR_STATE = 'A'
+		AND C.DIR_TYPE = '6'
+	</select>
+
+
+	<update id="updateVisitor" parameterClass="com.ailk.eaap.op2.bo.ItemCnt">
+		update ITEM_CNT set PAGE_VIEW= #pageView#
+		where ITEM_CODE = #itemCode#
+	</update>
+
+
+	<select id="quryApiOfferListByCategory" resultClass="java.util.HashMap">
+		<![CDATA[SELECT
+					AA.*, ifnull(BB.PAGE_VIEW,0) PAGE_VIEW,
+					ifnull(BB.COLLECT_CNT,0) COLLECT_CNT
+				FROM
+					(
+					SELECT
+						A.*
+					FROM
+						PROD_OFFER A,
+						offer_catalog_location B,
+						`directory` C
+					WHERE
+						A.prod_offer_id = B.prod_offer_id
+					AND B.dir_id = C.dir_id
+					AND A.COOPERATION_TYPE = '13'
+					AND B.DIR_ID IN
+					(
+						SELECT
+							t.dir_id
+						FROM
+							`directory` t
+						WHERE
+							t.fa_dir_id = #dirId#
+					)
+					AND A.TENANT_ID = #tenantId#
+					AND B.TENANT_ID = #tenantId#
+					AND C.TENANT_ID = #tenantId#
+					AND C.DIR_STATE = 'A'
+					AND C.DIR_TYPE = '6'
+					AND A.exp_date >= NOW()
+					) AA
+				LEFT JOIN ITEM_CNT BB ON AA.PROD_OFFER_ID = BB.item_code 
+				AND BB.tenant_id = #tenantId# AND BB.item_type=1
+		]]>
+	</select>
+
+
+	<select id="queryApiOfferCnt" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		SELECT COUNT(1) api_offer_cnt
+		FROM
+		(
+		SELECT
+		DISTINCT A.*
+		FROM
+		PROD_OFFER A,
+		offer_catalog_location B,
+		`directory` C
+		WHERE
+		A.prod_offer_id = B.prod_offer_id
+		AND B.dir_id = C.dir_id
+		AND A.COOPERATION_TYPE = '13'
+		AND A.STATUS_CD != '1300'
+		<dynamic>
+			<isNotNull prepend="AND" property="dirId"> B.DIR_ID in (select dir_id from directory where fa_dir_id = #dirId# or dir_id=#dirId#)
+			</isNotNull>
+		</dynamic>
+		AND A.TENANT_ID = #tenantId#
+		AND B.TENANT_ID = #tenantId#
+		AND C.TENANT_ID = #tenantId#
+		AND C.DIR_STATE = 'A'
+		AND C.DIR_TYPE = '6'
+		AND A.exp_date >= NOW()
+		) AA
+	</select>
+	
+	<select id="querySeriveCode" resultClass="java.lang.String">
+		SELECT
+			s.service_code
+		FROM
+			api a,
+			service s
+		WHERE
+			a.service_id = s.service_id
+		AND a.api_id = #apiId#
+	</select>
+	
+</sqlMap>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="org_role">
+ <select id="selectSysdate" resultClass="java.lang.String">
+		   select NAME from org_role where ORG_ROLE_ID = 1
+	</select>
+ 
+<insert id="insertOrgRole" parameterClass="com.ailk.eaap.op2.bo.OrgRole">
+        <selectKey resultClass="int" keyProperty="orgRoleId">
+			SELECT nextval('SEQ_ORG_ROLE');
+		</selectKey>
+  INSERT INTO org_role 
+  (CREATE_TIME  
+  <dynamic >
+    <isNotNull prepend=","  property="orgRoleId">ORG_ROLE_ID</isNotNull>
+    <isNotNull prepend="," property="roleCode">ROLE_CODE</isNotNull>
+    <isNotNull prepend="," property="orgId">ORG_ID</isNotNull>
+     <isNotNull prepend="," property="tenantId">tenant_id</isNotNull>
+  </dynamic>
+  )
+  values
+  (utc_timestamp()
+   <dynamic >
+    <isNotNull prepend="," property="orgRoleId">#orgRoleId#</isNotNull>
+    <isNotNull prepend="," property="roleCode">#roleCode#</isNotNull>
+    <isNotNull prepend="," property="orgId">#orgId#</isNotNull>
+    <isNotNull prepend="," property="tenantId">#tenantId#</isNotNull> 
+   </dynamic>
+  )
+</insert>
+
+<delete id="deleteOrgRole" parameterClass="com.ailk.eaap.op2.bo.OrgRole">
+  delete from org_role
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="orgId"> ORG_ID=#orgId#</isNotNull>
+    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+  </dynamic>
+</delete>
+
+
+<select id="selectOrgRole" parameterClass="com.ailk.eaap.op2.bo.OrgRole" resultClass="com.ailk.eaap.op2.bo.OrgRole">
+  select ORG_ROLE_ID ORGROLEID , ROLE_CODE  ROLECODE , ORG_ID ORGID ,CREATE_TIME CREATETIME,tenant_id  tenantId from org_role
+  <dynamic prepend="where">
+    <isNotNull prepend="and" property="orgRoleId"> ORG_ROLE_ID=#orgRoleId#</isNotNull>
+    <isNotNull prepend="and" property="roleCode"> ROLE_CODE=#roleCode#</isNotNull>
+    <isNotNull prepend="and" property="orgId"> ORG_ID=#orgId#</isNotNull>
+    <isNotNull prepend="and" property="createTime"> CREATE_TIME=#createTime#</isNotNull>
+    <isNotNull prepend="and" property="tenantId"> tenant_id=#tenantId#</isNotNull>
+   </dynamic>
+</select>
+
+
+</sqlMap>

@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+<sqlMap namespace="cms">
+	
+	<select id="qryTenantTheme" resultClass="java.util.HashMap">
+		SELECT tenant_id tenantId,theme FROM tenant
+	</select>
+	
+</sqlMap>

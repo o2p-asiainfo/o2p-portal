@@ -1,0 +1,667 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" "-//ibatis.apache.org//DTD SQL Map 2.0//EN">
+
+<sqlMap namespace="eaap-op2-portal-adapter">
+	<select id="queryContractAdapter" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from CONTRACT_ADAPTER where CONTRACT_ADAPTER_ID =
+		#transformerRuleId# and tenant_id=#tenantId#
+	</select>
+	<select id="querySrcById" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		select SRC_CTR_F_ID from CONTRACT_ADAPTER where
+		CONTRACT_ADAPTER_ID = #contractAdapterId# and tenant_id=#tenantId#
+	</select>
+	<select id="getEndPointSrcList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select CONTRACT_FORMATE_ID from CONTRACT_ADAPTER_ENDPOINT
+		where CONTRACT_ADAPTER_ID = #contractAdapterId# 	and tenant_id=#tenantId#
+	</select>
+	<!-- 统计协议与对应协议版本信息总数 -->
+	<select id="getCountContractListByMap" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		select count(*)
+		from CONTRACT_VERSION a, CONTRACT b, contract_format c
+		where a.contract_id = b.contract_id
+		and c.contract_version_id =
+		a.contract_version_id
+		and b.state = 'A'
+		and  a.tenant_id=#tenantId#
+		and b.tenant_id=#tenantId#
+	    and c.tenant_id=#tenantId#
+		<dynamic>
+			<isNotNull prepend="and" property="contractVersion"> a.version like
+				'%'||#contractVersion#||'%'</isNotNull>
+			<isNotNull prepend="and" property="contractName"> b.name like
+				'%'||#contractName#||'%'</isNotNull>
+			<isNotNull prepend="and" property="inArray">
+				c.tcp_ctr_f_id not in
+				<iterate property="inArray" conjunction="," close=")" open="(">
+					#inArray[]#
+				</iterate>
+			</isNotNull>
+			<isNotNull prepend="and" property="contractType"> c.con_type =
+				#contractType#</isNotNull>
+			<isNotNull prepend="and" property="httpType"> UPPER(c.REQ_RSP) =
+				UPPER(#httpType#)</isNotNull>
+		</dynamic>
+	</select>
+	<!-- 统计协议与对应协议版本信息 -->
+	<select id="getContractListByMap" parameterClass="java.util.Map"
+		resultClass="java.util.HashMap">
+		select * from (
+		select row_number() over( order by a.contract_id desc ) rn,
+		b.name NAME,
+		a.contract_id CONTRACTID,
+		a.version VERSION,
+		a.contract_version_id VERSIONID,
+		c.con_type CONTYPE,
+		c.REQ_RSP,
+		c.tcp_ctr_f_id TCPCTRFID
+		from CONTRACT_VERSION a, CONTRACT b, contract_format c
+		where a.contract_id = b.contract_id
+		and c.contract_version_id = a.contract_version_id
+		and b.state = 'A'
+		<dynamic>
+			<isNotNull prepend="and" property="contractVersion"> a.version like
+				'%'||#contractVersion#||'%'</isNotNull>
+			<isNotNull prepend="and" property="contractName"> b.name like
+				'%'||#contractName#||'%'</isNotNull>
+			<isNotNull prepend="and" property="inArray">
+				c.tcp_ctr_f_id not in
+				<iterate property="inArray" conjunction="," close=")" open="(">
+					#inArray[]#
+				</iterate>
+			</isNotNull>
+			<isNotNull prepend="and" property="contractType"> c.con_type =
+				#contractType#</isNotNull>
+			<isNotNull prepend="and" property="httpType"> UPPER(c.REQ_RSP) =
+				UPPER(#httpType#)</isNotNull>
+		</dynamic>
+		order by a.contract_id desc
+		) where rn between #startPage# and #endPage#
+	</select>
+	<select id="countVarMapType" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		select count(*) from VAR_MAP_TYPE
+		where  state='A'
+		<dynamic>
+			<isNotNull prepend="and" property="consMapCD"> CONS_MAP_CD like
+				'%'||#consMapCD#||'%'</isNotNull>
+			<isNotNull prepend="and" property="consMapName"> NAME like
+				'%'||#consMapName#||'%'</isNotNull>
+		</dynamic>
+		order by VAR_MAP_TYPE_ID desc
+	</select>
+	<select id="queryVarMapType" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from (
+		select row_number() over( order by VAR_MAP_TYPE_ID desc ) rn,
+		VAR_MAP_TYPE_ID,CONS_MAP_CD,NAME from VAR_MAP_TYPE
+		where  state='A'
+		<dynamic>
+			<isNotNull prepend="and" property="consMapCD"> CONS_MAP_CD like
+				'%'||#consMapCD#||'%'</isNotNull>
+			<isNotNull prepend="and" property="consMapName"> NAME like
+				'%'||#consMapName#||'%'</isNotNull>
+		</dynamic>
+		order by VAR_MAP_TYPE_ID desc
+		) where rn between #startPage# and #endPage#
+	</select>
+	<select id="getCountValableMapByMap" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		select count(*) from VARIABLE_MAP where STATE = 'A'
+		<dynamic>
+			<isNotNull prepend="and" property="consMapCD">
+				CONS_MAP_CD = #consMapCD#
+			</isNotNull>
+		</dynamic>
+	</select>
+	<select id="getValableMapByMap" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from (
+		select row_number() over( order by VAR_MAPING_ID desc ) rn,
+		VAR_MAPING_ID,DATA_SOURCE,KEY_EXPRESS,VAL_EXPRESS,VERSION,STATE,CONS_MAP_CD
+		from VARIABLE_MAP where STATE = 'A'
+		<dynamic>
+			<isNotNull prepend="and" property="consMapCD">
+				CONS_MAP_CD = #consMapCD#
+			</isNotNull>
+		</dynamic>
+		order by VAR_MAPING_ID desc
+		) where rn between #startPage# and
+		#endPage#
+	</select>
+	<select id="getContractAdapterById" parameterClass="java.lang.String"
+		resultClass="java.util.HashMap">
+		select cai.SRC_CTR_F_ID SRCCTRFID,cai.TAR_CTR_F_ID
+		TARCTRID,cf.CON_TYPE srcType,cf2.CON_TYPE tarType
+		from CONTRACT_ADAPTER
+		cai
+		left join CONTRACT_FORMAT cf on cf.TCP_CTR_F_ID = cai.SRC_CTR_F_ID
+		left join CONTRACT_FORMAT cf2 on cf2.TCP_CTR_F_ID = cai.TAR_CTR_F_ID
+		where cai.CONTRACT_ADAPTER_ID = #pageContractAdapterId#
+	</select>
+	<select id="getConAdaEndListById" parameterClass="java.lang.String"
+		resultClass="java.util.HashMap">
+		select cae.CONTRACT_FORMATE_id,cae.ACTION_TYPE
+		,cf.CON_TYPE
+		from CONTRACT_ADAPTER_ENDPOINT cae
+		left join
+		CONTRACT_FORMAT cf on cf.TCP_CTR_F_ID = cae.CONTRACT_FORMATE_id
+		where
+		CONTRACT_ADAPTER_ID = #pageContractAdapterId#
+	</select>
+		<!-- 得到基类协议的协议格式ID -->
+	<select id="getTcpCtrFIdByMap" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select cf.TCP_CTR_F_ID
+		from CONTRACT_FORMAT cf
+		where cf.CONTRACT_VERSION_ID =
+		(select cv.CONTRACT_VERSION_ID
+		from CONTRACT_VERSION cv
+		where cv.CONTRACT_ID =
+		(select BASE_CONTRACT_ID
+		from CONTRACT
+		where CONTRACT_ID =
+		(select CONTRACT_ID
+		from CONTRACT_VERSION
+		where CONTRACT_VERSION_ID =
+		(select CONTRACT_VERSION_ID
+		from CONTRACT_FORMAT
+		where cf.req_rsp = req_rsp and TCP_CTR_F_ID = #tcpCtrFId#)))) order by cf.TCP_CTR_F_ID desc
+	</select>
+	<select id="getNodeMapperListById" parameterClass="java.lang.String"
+		resultClass="java.util.HashMap">
+		select
+		ndm.SRC_NODE_DESC_ID,ndm.TAR_NODE_DESC_ID,ndm.ACTION_TYPE_CD
+		,nd.TCP_CTR_F_ID srcTcpId,nd2.TCP_CTR_F_ID tarTcpId
+		from
+		NODE_DESC_MAPER ndm
+		left join NODE_DESC nd on nd.NODE_DESC_ID =
+		ndm.SRC_NODE_DESC_ID
+		left join NODE_DESC nd2 on nd2.NODE_DESC_ID =
+		ndm.TAR_NODE_DESC_ID
+		where ndm.CONTRACT_ADAPTER_ID =
+		#pageContractAdapterId#
+	</select>
+		<!-- 根据协议ID查找节点描述 -->
+	<select id="queryNodeByContractId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	     select nd.*,
+		(select count(1) from node_desc cnd where
+		nd.node_desc_id =
+		cnd.parent_node_id) child_count
+		from node_desc nd
+		where nd.tcp_ctr_f_id = #tcpCtrFId#
+		<dynamic>
+		<isNotNull prepend="or" property="baseTcpFId">
+		  nd.tcp_ctr_f_id = #baseTcpFId#
+		</isNotNull>
+		</dynamic>
+		order by nd.tcp_ctr_f_id
+	</select>
+	<select id="getContractNameById" parameterClass="java.lang.String"
+		resultClass="java.lang.String">
+		select con.NAME
+		from CONTRACT con
+		left join CONTRACT_VERSION
+		cv on cv.CONTRACT_ID = con.CONTRACT_ID
+		left join CONTRACT_FORMAT cf on
+		cf.CONTRACT_VERSION_ID =
+		cv.CONTRACT_VERSION_ID
+		where cf.TCP_CTR_F_ID =
+		#contractFormateId#
+	</select>
+	<update id="updateContractAdapter" parameterClass="java.util.HashMap">
+		UPDATE CONTRACT_ADAPTER
+		<dynamic prepend="SET">
+			<isNotNull prepend="," property="srcTcpCtrFId">SRC_CTR_F_ID=#srcTcpCtrFId#
+			</isNotNull>
+			<isNotNull prepend="," property="tarTcpCtrFId">TAR_CTR_F_ID=#tarTcpCtrFId#
+			</isNotNull>
+			<isNotNull prepend="," property="adapterName">APAPTER_NAME=#adapterName#
+			</isNotNull>
+			<isNotNull prepend="," property="adapterType">ADAPTER_TYPE=#adapterType#
+			</isNotNull>
+			<isNotNull prepend="," property="scriptSrc">SCRIPT_SRC=#scriptSrc#
+			</isNotNull>
+			<isNotNull prepend="," property="state">STATE=#state#</isNotNull>
+		</dynamic>
+		where CONTRACT_ADAPTER_ID = #contractAdapterId# and STATE in ('A','S')
+	</update>
+	<!-- *****协议适配 -->
+	<select id="queryContractAdapterId" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		select SEQ_CONTRACT_ADAPTER.Nextval FROM DUAL
+	</select>
+	<insert id="insertContractAdapter" parameterClass="java.util.HashMap">
+		insert into CONTRACT_ADAPTER
+		( CREATE_DT,CONTRACT_ADAPTER_CODE
+		<dynamic>
+			<isNotNull prepend="," property="contract_adapter_id">CONTRACT_ADAPTER_ID
+			</isNotNull>
+			<isNotNull prepend="," property="state">STATE</isNotNull>
+			<isNotNull prepend="," property="sid">SRC_CTR_F_ID</isNotNull>
+			<isNotNull prepend="," property="tid">TAR_CTR_F_ID</isNotNull>
+			<isNotNull prepend="," property="adapter_name">APAPTER_NAME</isNotNull>
+			<isNotNull prepend="," property="type">ADAPTER_TYPE</isNotNull>
+			<isNotNull prepend="," property="script_src">SCRIPT_SRC</isNotNull>
+		</dynamic>
+		)
+		values(SYS_EXTRACT_UTC(current_timestamp)+0,sys_guid()
+		<dynamic>
+			<isNotNull prepend="," property="contract_adapter_id">#contract_adapter_id#
+			</isNotNull>
+			<isNotNull prepend="," property="state">#state#</isNotNull>
+			<isNotNull prepend="," property="sid">#sid#</isNotNull>
+			<isNotNull prepend="," property="tid">#tid#</isNotNull>
+			<isNotNull prepend="," property="adapter_name">#adapter_name#</isNotNull>
+			<isNotNull prepend="," property="type">#type#</isNotNull>
+			<isNotNull prepend="," property="script_src">#script_src#</isNotNull>
+		</dynamic>
+		)
+	</insert>
+	<select id="getConAdaEndId" resultClass="java.lang.String">
+		select
+		to_char(SEQ_CONTRACT_ADAPTER_ENDPOINT.nextval) from dual
+	</select>
+	<insert id="addConAdaEnd" parameterClass="java.util.HashMap">
+		insert into CONTRACT_ADAPTER_ENDPOINT
+		( CREATE_DATE,CONTRACT_ADAPTER_ENDPOINT_CODE
+		<dynamic>
+			<isNotNull prepend="," property="conAdaEndId">CONTRACT_ADAPTER_ENDPOINT_ID
+			</isNotNull>
+			<isNotNull prepend="," property="contractAdapterId">CONTRACT_ADAPTER_ID
+			</isNotNull>
+			<isNotNull prepend="," property="endPointId">ENDPOINT_ID</isNotNull>
+			<isNotNull prepend="," property="srcTcpCtrFId">CONTRACT_FORMATE_ID
+			</isNotNull>
+			<isNotNull prepend="," property="actionType">ACTION_TYPE</isNotNull>
+		</dynamic>
+		)
+		values(SYS_EXTRACT_UTC(current_timestamp)+0,sys_guid()
+		<dynamic>
+			<isNotNull prepend="," property="conAdaEndId">#conAdaEndId#</isNotNull>
+			<isNotNull prepend="," property="contractAdapterId">#contractAdapterId#
+			</isNotNull>
+			<isNotNull prepend="," property="endPointId">#endPointId#</isNotNull>
+			<isNotNull prepend="," property="srcTcpCtrFId">#srcTcpCtrFId#</isNotNull>
+			<isNotNull prepend="," property="actionType">#actionType#</isNotNull>
+		</dynamic>
+		)
+	</insert>
+	<update id="updateContractRecords" parameterClass="java.util.HashMap">
+		update
+		CONTRACT_ADAPTER set SRC_CTR_F_ID=0
+		where
+		CONTRACT_ADAPTER_ID=#contractAdapterId# and SRC_CTR_F_ID=#tcpCrtFId#
+	</update>
+	<delete id="delConAdaEndByMap" parameterClass="java.util.HashMap">
+		delete from
+		CONTRACT_ADAPTER_ENDPOINT
+		where CONTRACT_ADAPTER_ID=#contractAdapterId#
+		and CONTRACT_FORMATE_ID=#tcpCrtFId#
+	</delete>
+	<select id="queryActionById" parameterClass="java.lang.String"
+		resultClass="java.lang.Integer">
+		select count(*) from CONTRACT_ADAPTER_ENDPOINT where
+		CONTRACT_ADAPTER_ID = #pageContractAdapterId# and ACTION_TYPE = 'R'
+	</select>
+	<select id="isExitOper" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		select count(*) from NODE_DESC_MAPER
+		where CONTRACT_ADAPTER_ID =
+		#contractAdapterId#
+		and ACTION_TYPE_CD = #operator#
+		<dynamic>
+			<isNotNull prepend="and" property="tarNodeDescId">
+				TAR_NODE_DESC_ID =
+				#tarNodeDescId#
+			</isNotNull>
+			<isNotNull prepend="and" property="srcNodeDescId">
+				SRC_NODE_DESC_ID =
+				#srcNodeDescId#
+			</isNotNull>
+		</dynamic>
+	</select>
+	<select id="getFormatId" parameterClass="java.lang.String"
+		resultClass="java.lang.String">
+		select TCP_CTR_F_ID from NODE_DESC where NODE_DESC_ID =
+		#srcNodeDescId#
+	</select>
+	<select id="getNodeMapper" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from NODE_DESC_MAPER where CONTRACT_ADAPTER_ID =
+		#contractAdapterId# and TAR_NODE_DESC_ID = #tarNodeDescId#
+	</select>
+	<select id="getActionValue" parameterClass="java.util.Map"
+		resultClass="java.lang.String">
+	    select ACTION_TYPE from CONTRACT_ADAPTER_ENDPOINT where CONTRACT_ADAPTER_ID= #contractAdapterId#   and CONTRACT_FORMATE_ID = #contractFormatId#
+	</select>
+	<select id="isExitSrcTcpCtrFId" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		select count(*) from CONTRACT_ADAPTER_ENDPOINT where
+		CONTRACT_ADAPTER_ID = #contractAdapterId#  and CONTRACT_FORMATE_ID = #srcTcpCtrFId#
+	</select>
+	<update id="updateConAdaEndpoint" parameterClass="java.util.HashMap">
+		update
+		CONTRACT_ADAPTER_ENDPOINT set ACTION_TYPE = #actionType# where
+		CONTRACT_ADAPTER_ID = #contractAdapterId# 
+		and CONTRACT_FORMATE_ID = #srcTcpCtrFId#
+	</update>
+	<select id="isExitInAdapter" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		select SRC_CTR_F_ID from CONTRACT_ADAPTER where
+		CONTRACT_ADAPTER_ID = #contractAdapterId#
+	</select>
+	<select id="getNodeValAdaReq" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from NODE_VAL_ADAPTER_REQ where NODE_DESC_ID =
+		#tarNodeDescId#
+		and CONTRACT_ADAPTER_ID = #contractAdapterId#
+	</select>
+	<select id="isExitNodeValReq" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		select count(*) from NODE_VAL_ADAPTER_REQ where
+		NODE_DESC_ID = #nodeDescId# and CONTRACT_ADAPTER_ID =
+		#contractAdapterId#
+	</select>
+	<update id="updateNodeValAdapterRes" parameterClass="java.util.HashMap">
+		update NODE_VAL_ADAPTER_REQ set VERSION = SYS_EXTRACT_UTC(current_timestamp)+0
+		<dynamic>
+			<isNotNull prepend="," property="nodeValueSourceCd">NODE_VALUE_SOURCE_CD=#nodeValueSourceCd#
+			</isNotNull>
+			<isNotNull prepend="," property="valueExpress">VALUE_EXPRESS=#valueExpress#
+			</isNotNull>
+			<isNotNull prepend="," property="script">SCRIPT=#script#</isNotNull>
+			<isNotNull prepend="," property="triggerExpress">TRIGGER_EXPRESS=#triggerExpress#
+			</isNotNull>
+			<isNotNull prepend="," property="state">STATE=#state#</isNotNull>
+		</dynamic>
+		where NODE_DESC_ID = #nodeDescId#
+		and
+		CONTRACT_ADAPTER_ID=#contractAdapterId#
+	</update>
+	<select id="nodeValAdapterResID" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		select SEQ_NODE_VAL_ADAPTER_REQ.NEXTVAL from dual
+	</select>
+	<!--*********** 取值要求 -->
+	<insert id="saveNodeValAdapterRes" parameterClass="java.util.HashMap">
+		insert into NODE_VAL_ADAPTER_REQ
+		( VERSION,STATE,NODE_VAL_ADAPTER_REQ_CODE
+		<dynamic>
+			<isNotNull prepend="," property="nodeId">NODE_VAL_ADAPTER_REQ_ID
+			</isNotNull>
+			<isNotNull prepend="," property="nodeDescId">NODE_DESC_ID</isNotNull>
+			<isNotNull prepend="," property="contractAdapterId">CONTRACT_ADAPTER_ID
+			</isNotNull>
+			<isNotNull prepend="," property="nodeValueSourceCd">NODE_VALUE_SOURCE_CD
+			</isNotNull>
+			<isNotNull prepend="," property="valueExpress">VALUE_EXPRESS</isNotNull>
+			<isNotNull prepend="," property="script">SCRIPT</isNotNull>
+			<isNotNull prepend="," property="triggerExpress">TRIGGER_EXPRESS</isNotNull>
+		</dynamic>
+		)
+		values(SYS_EXTRACT_UTC(current_timestamp)+0,'A',sys_guid()
+		<dynamic>
+			<isNotNull prepend="," property="nodeId">#nodeId#</isNotNull>
+			<isNotNull prepend="," property="nodeDescId">#nodeDescId#</isNotNull>
+			<isNotNull prepend="," property="contractAdapterId">#contractAdapterId#
+			</isNotNull>
+			<isNotNull prepend="," property="nodeValueSourceCd">#nodeValueSourceCd#
+			</isNotNull>
+			<isNotNull prepend="," property="valueExpress">#valueExpress#</isNotNull>
+			<isNotNull prepend="," property="script">#script#</isNotNull>
+			<isNotNull prepend="," property="triggerExpress">#triggerExpress#
+			</isNotNull>
+		</dynamic>
+		)
+	</insert>
+	<select id="isVarMapTypeExit" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		select count(*) from VAR_MAP_TYPE where CONS_MAP_CD =
+		#consMapCD#
+	</select>
+	<select id="queryVarMapTypeID" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		select SEQ_VAR_MAP_TYPE.NEXTVAL FROM DUAL
+	</select>
+	<!--*********** 变量映射类型 -->
+	<insert id="saveVarMapType" parameterClass="java.util.HashMap">
+		insert into
+		VAR_MAP_TYPE (STATE
+		<dynamic>
+			<isNotNull prepend="," property="varMapTypeID">VAR_MAP_TYPE_ID</isNotNull>
+			<isNotNull prepend="," property="consMapCD">CONS_MAP_CD</isNotNull>
+			<isNotNull prepend="," property="name">NAME</isNotNull>
+			<isNotNull prepend="," property="orgId">ORG_ID</isNotNull>
+		</dynamic>
+		) values ('A'
+		<dynamic>
+			<isNotNull prepend="," property="varMapTypeID">#varMapTypeID#</isNotNull>
+			<isNotNull prepend="," property="consMapCD">#consMapCD#</isNotNull>
+			<isNotNull prepend="," property="name">#name#</isNotNull>
+			<isNotNull prepend="," property="orgId">#orgId#</isNotNull>
+		</dynamic>
+		)
+	</insert>
+	<select id="getVarMapTypeName" parameterClass="java.util.HashMap"
+		resultClass="java.lang.String">
+		select NAME from VAR_MAP_TYPE where CONS_MAP_CD =
+		#consMapCD#
+	</select>
+	<select id="varVariableMapID" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		select SEQ_VARIABLE_MAP.Nextval from dual
+	</select>
+	<!--*********** 变量映射表 -->
+	<insert id="saveVariableMap" parameterClass="java.util.HashMap">
+		insert into VARIABLE_MAP
+		(VAR_MAPING_ID, CONS_MAP_CD, DATA_SOURCE,
+		KEY_EXPRESS
+		<dynamic>
+			<isNotNull prepend="," property="valExpress">VAL_EXPRESS</isNotNull>
+		</dynamic>
+		, STATE , VERSION,VARIABLE_MAP_CODE
+		)
+		values
+		(#varMapingID#, #consMapCD#, #dataSource#,
+		#keyExpress#
+		<dynamic>
+			<isNotNull prepend="," property="valExpress">#valExpress#</isNotNull>
+		</dynamic>
+		, 'A' , SYS_EXTRACT_UTC(current_timestamp)+0,sys_guid())
+	</insert>
+	<!--*********** 协议转换对应的脚本变量 -->
+	<insert id="saveTransScript" parameterClass="java.util.HashMap">
+		insert into
+		TRANS_SCRIPT_2_PARAM
+		(CONTRACT_ADAPTER_ID, VAR_MAPING_ID, STATE)
+		values
+		(#contractAdapterId#, #varMapingID#, 'A')
+	</insert>
+	<update id="updateVariableMap" parameterClass="java.util.HashMap">
+		update VARIABLE_MAP set VERSION=SYS_EXTRACT_UTC(current_timestamp)+0
+		<dynamic>
+			<isNotNull prepend="," property="keyExpress"> KEY_EXPRESS=#keyExpress#
+			</isNotNull>
+			<isNotNull prepend="," property="valExpress"> VAL_EXPRESS=#valExpress#
+			</isNotNull>
+			<isNotNull prepend="," property="dataSource"> DATA_SOURCE=#dataSource#
+			</isNotNull>
+			<isNotNull prepend="," property="consMapCD"> CONS_MAP_CD=#consMapCD#
+			</isNotNull>
+			<isNotNull prepend="," property="state">STATE=#state# </isNotNull>
+		</dynamic>
+		<dynamic prepend="WHERE">
+			<isNotNull prepend="and" property="consMapCD"> CONS_MAP_CD=#consMapCD#
+			</isNotNull>
+			<isNotNull prepend="and" property="varMapingId">
+				VAR_MAPING_ID=#varMapingId#
+			</isNotNull>
+		</dynamic>
+	</update>
+	<select id="getContractFormat" parameterClass="java.util.Map"
+		resultClass="java.util.HashMap">
+	    select * from CONTRACT_ADAPTER_ENDPOINT  where CONTRACT_ADAPTER_ID = #contractAdapterId# and CONTRACT_FORMATE_ID = #contractFormatId#
+	</select>
+	<update id="updateResult" parameterClass="java.util.HashMap">
+		update
+		CONTRACT_ADAPTER_ENDPOINT set ENDPOINT_ID=#endPointId#
+		where
+		CONTRACT_ADAPTER_ID=#contractAdapterId# and CONTRACT_FORMATE_ID=#contractFormatId#
+	</update>
+	<update id="deleteVarMapType" parameterClass="java.util.HashMap">
+	   update VAR_MAP_TYPE set state= 'D' where VAR_MAP_TYPE_ID = #varMapTypeId#
+	</update>
+	<delete id="delNodeMaper" parameterClass="java.util.HashMap">
+		delete  from NODE_DESC_MAPER where CONTRACT_ADAPTER_ID =#contractAdapterId#
+	</delete>
+	<delete id="delAdapterReq" parameterClass="java.util.HashMap">
+		delete  from NODE_VAL_ADAPTER_REQ where CONTRACT_ADAPTER_ID =#contractAdapterId#
+	</delete>
+	<delete id="delAdapterEndpoint" parameterClass="java.lang.String">
+		delete from
+		CONTRACT_ADAPTER_ENDPOINT
+		where
+		CONTRACT_ADAPTER_ID=#pageContractAdapterId#
+	</delete>
+	<insert id="insertContractAdapterScript" parameterClass="java.util.HashMap">
+		<selectKey resultClass="int" keyProperty="contractAdapterId">
+			select SEQ_CONTRACT_ADAPTER.Nextval FROM DUAL
+		</selectKey>
+		INSERT INTO CONTRACT_ADAPTER
+		(CREATE_DT,CONTRACT_ADAPTER_CODE
+		<dynamic>
+			<isNotNull prepend="," property="contractAdapterId">CONTRACT_ADAPTER_ID
+			</isNotNull>
+			<isNotNull prepend="," property="srcTcpCtrFId">SRC_CTR_F_ID</isNotNull>
+			<isNotNull prepend="," property="tarTcpCtrFId">TAR_CTR_F_ID</isNotNull>
+			<isNotNull prepend="," property="adapterName">APAPTER_NAME</isNotNull>
+			<isNotNull prepend="," property="adapterType">ADAPTER_TYPE</isNotNull>
+			<isNotNull prepend="," property="scriptSrc">SCRIPT_SRC</isNotNull>
+			<isNotNull prepend="," property="state">STATE</isNotNull>
+		</dynamic>
+		)
+		values
+		(SYS_EXTRACT_UTC(current_timestamp)+0,sys_guid()
+		<dynamic>
+			<isNotNull prepend="," property="contractAdapterId">#contractAdapterId#
+			</isNotNull>
+			<isNotNull prepend="," property="srcTcpCtrFId">#srcTcpCtrFId#</isNotNull>
+			<isNotNull prepend="," property="tarTcpCtrFId">#tarTcpCtrFId#</isNotNull>
+			<isNotNull prepend="," property="adapterName">#adapterName#</isNotNull>
+			<isNotNull prepend="," property="adapterType">#adapterType#</isNotNull>
+			<isNotNull prepend="," property="scriptSrc">#scriptSrc#</isNotNull>
+			<isNotNull prepend="," property="state">#state#</isNotNull>
+		</dynamic>
+		)
+	</insert>
+	<update id="delVariableMap" parameterClass="java.lang.Integer">
+		update VARIABLE_MAP
+		set state='D' where VAR_MAPING_ID=#varMapingID#
+	</update>
+	<update id="updateTransScript" parameterClass="java.util.HashMap">
+		update TRANS_SCRIPT_2_PARAM
+		set STATE='D'
+		where
+		CONTRACT_ADAPTER_ID=#contractAdapterId#
+		<dynamic>
+			<isNotNull prepend="and" property="varMapingId">
+				VAR_MAPING_ID=#varMapingId#
+			</isNotNull>
+		</dynamic>
+	</update>
+	<select id="isNodeMapDecExit" parameterClass="java.util.HashMap"
+		resultClass="java.lang.Integer">
+		SELECT count(*) from NODE_DESC_MAPER
+		where
+		TAR_NODE_DESC_ID=#tar_node_desc_id#
+		<dynamic>
+			<isNotNull prepend="and" property="src_node_desc_id"> SRC_NODE_DESC_ID=
+				#src_node_desc_id#
+			</isNotNull>
+		</dynamic>
+		and CONTRACT_ADAPTER_ID= #contract_adapter_id#
+	</select>
+	<select id="queryNodeDecMapID" resultClass="java.lang.Integer">
+		select SEQ_NODE_DESC_MAPER.Nextval FROM DUAL
+	</select>
+	<!--*********** 节点映射 -->
+	<insert id="saveAdapterConfig" parameterClass="java.util.HashMap">
+		insert into
+		NODE_DESC_MAPER
+		(NODE_DESC_MAPER_ID, SRC_NODE_DESC_ID,
+		TAR_NODE_DESC_ID, CONTRACT_ADAPTER_ID,
+		ACTION_TYPE_CD, CREATE_DT,NODE_DESC_MAPER_CODE)
+		values
+		(#node_desc_id#, #src_node_desc_id#, #tar_node_desc_id#,
+		#contract_adapter_id#,
+		#action_type_cd#, SYS_EXTRACT_UTC(current_timestamp)+0,sys_guid())
+	</insert>
+	<update id="updateNodeDecMap" parameterClass="java.util.HashMap">
+		update NODE_DESC_MAPER set ACTION_TYPE_CD = #action_type_cd#
+		where
+		TAR_NODE_DESC_ID = #tar_node_desc_id#
+		and CONTRACT_ADAPTER_ID =
+		#contract_adapter_id#
+		<dynamic>
+			<isNotNull prepend="and " property="src_node_desc_id"> SRC_NODE_DESC_ID=#src_node_desc_id#
+			</isNotNull>
+		</dynamic>
+	</update>
+	<select id="queryValAdapterResByMapingID" parameterClass="java.lang.Integer"
+		resultClass="java.util.HashMap">
+		select * from NODE_VAL_ADAPTER_REQ
+		where
+		NODE_VAL_ADAPTER_REQ_ID=#nodeValAdapterReqId#
+		and STATE = 'A'
+	</select>
+	<update id="updateVarMapType" parameterClass="java.util.HashMap">
+		update VAR_MAP_TYPE
+		<dynamic prepend="SET">
+			<isNotNull prepend="," property="consMapCD">CONS_MAP_CD=#consMapCD#
+			</isNotNull>
+			<isNotNull prepend="," property="name">NAME=#name# </isNotNull>
+			<isNotNull prepend="," property="state">STATE=#state# </isNotNull>
+		</dynamic>
+		<dynamic prepend="WHERE">
+			<isNotNull prepend="and" property="consMapCD"> CONS_MAP_CD=#consMapCD#
+			</isNotNull>
+			<isNotNull prepend="or" property="varMapTypeId">
+				VAR_MAP_TYPE_ID=#varMapTypeId#
+			</isNotNull>
+		</dynamic>
+	</update>
+	<select id="queryVariableMap" parameterClass="java.lang.String"
+		resultClass="java.util.HashMap">
+		select VAR_MAPING_ID, CONS_MAP_CD, DATA_SOURCE,
+		KEY_EXPRESS, VAL_EXPRESS, VERSION , STATE
+		from VARIABLE_MAP
+		where
+		state='A' AND CONS_MAP_CD=#consMapCD#
+	</select>
+	<delete id="delNodeDecMap" parameterClass="java.util.HashMap">
+		DELETE FROM NODE_DESC_MAPER WHERE
+		CONTRACT_ADAPTER_ID=#contractAdapterId#
+		<dynamic>
+			<isNotNull prepend="and" property="nodeDescId">
+				TAR_NODE_DESC_ID=#nodeDescId#
+			</isNotNull>
+			<isNotNull prepend="and" property="sid"> SRC_NODE_DESC_ID=#sid#
+			</isNotNull>
+		</dynamic>
+	</delete>
+	<delete id="delNodeValAdapterRea" parameterClass="java.util.HashMap">
+		delete  from NODE_VAL_ADAPTER_REQ where node_desc_id  =#nodeDescId# and CONTRACT_ADAPTER_ID =#contractAdapterId#
+	</delete>
+	
+	<select id="getCountVarMay" parameterClass="java.util.Map" resultClass="java.lang.Integer">
+	    SELECT COUNT(*) FROM VAR_MAP_TYPE WHERE var_map_type_id = #varMapTypeId# AND org_id = #orgId#;
+	</select>
+	
+	<select id="getCountVarMayByCode" parameterClass="java.util.Map" resultClass="java.lang.Integer">
+	    SELECT COUNT(*) FROM VAR_MAP_TYPE WHERE cons_map_cd = #consMapCD# AND org_id = #orgId#;
+	</select>
+</sqlMap>
